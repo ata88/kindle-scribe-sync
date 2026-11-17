@@ -1,8 +1,9 @@
 """Amazon marketplaces that serve Kindle for Web.
 
-The notebook endpoints live on the Kindle-for-Web host of the marketplace the
-Kindle account is registered to. A German account (Scribe bought on amazon.de)
-normally lives on lesen.amazon.de; `kss login` detects the right one.
+Kindle Scribe notebooks are served by read.amazon.com for every account: a
+German account (Scribe bought on amazon.de) signs in there with the same
+credentials. lesen.amazon.de has no notebook API (it answers with errors or
+hangs), so "us" is the default and the other hosts are kept only as a fallback.
 """
 
 from __future__ import annotations
@@ -34,7 +35,7 @@ REGIONS: dict[str, Region] = {
 }
 
 # Order in which `kss login --region auto` tries marketplaces.
-AUTO_ORDER = ["de", "us", "uk", "fr", "es", "it", "ca", "au", "jp"]
+AUTO_ORDER = ["us", "de", "uk", "fr", "es", "it", "ca", "au", "jp"]
 
 
 def region_for_host(host: str) -> Region | None:

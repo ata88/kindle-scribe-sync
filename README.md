@@ -49,7 +49,7 @@ kss setup
 
 `kss setup` erledigt alles in einem Durchgang:
 
-1. **Amazon-Login** in einem Browserfenster. Den Haken bei „Angemeldet bleiben“ setzen. Region ist `de`, wenn du den Scribe bei amazon.de gekauft hast.
+1. **Amazon-Login** in einem Browserfenster. Den Haken bei „Angemeldet bleiben“ setzen. Region ist `us` (read.amazon.com), **auch für amazon.de-Konten** – nur dort gibt es die Notizbuch-API; einfach mit den normalen Zugangsdaten anmelden.
 2. **KI wählen:** lokal mit Ollama (kostenlos) oder Claude per API-Key. Der Key wird im macOS-Schlüsselbund gespeichert.
 3. **Ersten Sync** ausführen.
 4. **Hintergrunddienste** (launchd) installieren: Sync alle 5 Minuten, Web-App dauerhaft.

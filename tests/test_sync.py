@@ -204,3 +204,26 @@ def test_prepare_image_flattens_transparency():
     im = Image.open(io.BytesIO(base64.b64decode(b64)))
     assert mt == "image/png" and im.mode == "L" and max(im.size) == 2000
     assert im.getpixel((5, 5)) == 255  # transparent -> white, not black
+
+
+def test_marketplace_fallback_for_german_account(env):
+    """A DE account on read.amazon.com: openNotebook only works with the DE marketplace id."""
+    import json as _json
+
+    from kss.amazon import AmazonClient, CookieStore
+    from kss.config import cookies_path
+
+    fake, cfg, store, amazon, tmp = env
+    fake.required_marketplace = "A1PA6795UKMFR9"
+    fake.add("nb", "Notiz", [page_png("a")], mtime=1)
+    us = AmazonClient("us", CookieStore(cookies_path()), base_url=fake.url, request_delay=0)
+    meta = us.open_notebook("nb")
+    assert meta.total_pages == 1
+    us.close()
+    assert _json.loads(cookies_path().read_text())["marketplace_id"] == "A1PA6795UKMFR9"
+    # remembered: next client tries DE first
+    us2 = AmazonClient("us", CookieStore(cookies_path()), base_url=fake.url, request_delay=0)
+    calls = fake.open_calls
+    us2.open_notebook("nb")
+    assert fake.open_calls == calls + 1
+    us2.close()

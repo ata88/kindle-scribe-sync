@@ -63,7 +63,8 @@ def _api_status(ctx: Any, host: str) -> tuple[int, str, list[Any] | None]:
                 return r.status, ctype, data["itemsList"]
         return r.status, ctype, None
     except Exception as e:
-        return 0, str(e)[:80], None
+        lines = [ln for ln in str(e).splitlines() if ln.strip() and 'Call log' not in ln]
+        return 0, (lines[0] if lines else type(e).__name__)[:200], None
 
 
 def _try_api(ctx: Any, host: str) -> list[Any] | None:
