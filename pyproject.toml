@@ -1,0 +1,32 @@
+[project]
+name = "kindle-scribe-sync"
+version = "0.1.0"
+description = "Kindle Scribe notebooks automatically synced to your Mac: AI handwriting transcription into Apple Notes, Markdown and a local web app."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "anthropic>=2.9",
+    "httpx>=0.27",
+    "pillow>=10",
+    "markdown>=3.5",
+    "playwright>=1.45",
+    "tomli>=2; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+kss = "kss.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kss"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
