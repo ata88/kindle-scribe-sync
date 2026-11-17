@@ -90,6 +90,16 @@ class AppleNotesError(Exception):
     pass
 
 
+def _script_file(name: str, source: str) -> Path:
+    """AppleScript source as a file (osascript <file> args… is the documented form)."""
+    from .config import home_dir
+
+    path = home_dir() / f"{name}.applescript"
+    if not path.exists() or path.read_text("utf-8") != source:
+        path.write_text(source, "utf-8")
+    return path
+
+
 def available() -> bool:
     return sys.platform == "darwin"
 
@@ -108,8 +118,9 @@ def upsert(html_body: str, *, note_id: str | None, account: str, folder_path: st
         tmp = Path(f.name)
     try:
         out = subprocess.run(
-            ["osascript", "-", str(tmp), note_id or "", account, folder_path],
-            input=UPSERT_SCRIPT, capture_output=True, text=True, timeout=180,
+            ["osascript", str(_script_file("notes-upsert", UPSERT_SCRIPT)), str(tmp), note_id or "", account,
+             folder_path],
+            capture_output=True, text=True, timeout=180,
         )
     finally:
         tmp.unlink(missing_ok=True)
@@ -124,4 +135,5 @@ def upsert(html_body: str, *, note_id: str | None, account: str, folder_path: st
 
 def delete(note_id: str) -> None:
     if available() and note_id:
-        subprocess.run(["osascript", "-", note_id], input=DELETE_SCRIPT, capture_output=True, text=True, timeout=60)
+        subprocess.run(["osascript", str(_script_file("notes-delete", DELETE_SCRIPT)), note_id],
+                       capture_output=True, text=True, timeout=60)
