@@ -73,14 +73,16 @@ def cmd_login(args: argparse.Namespace, cfg: Config) -> int:
     print(f"✓ Angemeldet ({reg.read_host}). {n} Einträge in der obersten Ebene deiner Scribe-Notizbücher gefunden.")
     if n == 0:
         print("  Hinweis: 0 Einträge. Ist auf dem Scribe WLAN an und die Synchronisierung aktiv?\n"
-              "  Falls dein Konto in einem anderen Amazon-Shop registriert ist: `kss login --region us` usw.")
+              "  Sonst andere Region probieren, z. B. `kss login --region us`.")
     return 0
 
 
 def _ask_region(cfg: Config) -> str:
-    codes = ", ".join(AUTO_ORDER)
-    default = cfg.region if cfg.region in REGIONS and cfg.region != "us" else "de"
-    ans = input(f"In welchem Amazon-Shop ist dein Kindle-Konto? [{codes}] (Enter = {default}): ").strip().lower()
+    # read.amazon.com serves Scribe notebooks for accounts from every country (incl. amazon.de)
+    default = cfg.region if cfg.region in REGIONS else "us"
+    print("Hinweis: Scribe-Notizbücher liegen für alle Länder (auch amazon.de-Konten) auf read.amazon.com.\n"
+          "Melde dich dort mit deinen normalen Amazon-Zugangsdaten an.")
+    ans = input(f"Region [{', '.join(AUTO_ORDER)}] (Enter = {default}): ").strip().lower()
     return ans if ans in REGIONS else default
 
 

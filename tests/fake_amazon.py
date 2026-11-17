@@ -42,6 +42,7 @@ class FakeAmazon:
         self.tokens: dict[str, str] = {}
         self.render_calls = 0
         self.open_calls = 0
+        self.required_marketplace: str | None = None
         self._srv = ThreadingHTTPServer(("127.0.0.1", 0), self._handler())
         self.url = f"http://127.0.0.1:{self._srv.server_address[1]}"
         threading.Thread(target=self._srv.serve_forever, daemon=True).start()
@@ -93,6 +94,8 @@ class FakeAmazon:
                                      {"Set-Cookie": "session-token=refreshed; Path=/"})
                 if u.path == "/openNotebook":
                     fake.open_calls += 1
+                    if fake.required_marketplace and q.get("marketplaceId") != fake.required_marketplace:
+                        return self._out(500, b"<html>We're sorry!</html>", "text/html")
                     nb = fake.notebooks.get(q.get("notebookId", ""))
                     if not nb:
                         return self._out(404, b"{}", "application/json")

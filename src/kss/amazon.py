@@ -99,7 +99,7 @@ class AmazonClient:
         *,
         base_url: str | None = None,
         request_delay: float = 0.4,
-        timeout: float = 60.0,
+        timeout: float = 30.0,
     ):
         self.region = REGIONS[region] if isinstance(region, str) else region
         self.base_url = (base_url or f"https://{self.region.read_host}").rstrip("/")
@@ -161,18 +161,19 @@ class AmazonClient:
             time.sleep(wait)
         self._last_request = time.monotonic()
 
-    def _get(self, path: str, *, headers: dict[str, str] | None = None, expect: str = "json") -> httpx.Response:
+    def _get(self, path: str, *, headers: dict[str, str] | None = None, expect: str = "json",
+             retries: int = 3) -> httpx.Response:
         self._throttle()
         url = path if path.startswith("http") else self.base_url + path
-        for attempt in range(4):
+        for attempt in range(retries + 1):
             try:
                 r = self.http.get(url, headers=headers)
             except httpx.TransportError as e:
-                if attempt == 3:
+                if attempt == retries:
                     raise AmazonError(f"network error: {e}") from e
                 time.sleep(2 ** attempt)
                 continue
-            if r.status_code in (500, 502, 503, 504, 429) and attempt < 3:
+            if r.status_code in (500, 502, 503, 504, 429) and attempt < retries:
                 time.sleep(2 ** (attempt + 1))
                 continue
             break
@@ -214,24 +215,51 @@ class AmazonClient:
         walk(items, [])
         return out
 
+    def _marketplace_candidates(self) -> list[str]:
+        """The working marketplace first; an amazon.de account on read.amazon.com may need DE's id."""
+        known = self._state.get("marketplace_id")
+        order = [known, self.region.marketplace_id, REGIONS["de"].marketplace_id,
+                 *(r.marketplace_id for r in REGIONS.values())]
+        return list(dict.fromkeys(m for m in order if m))
+
     def open_notebook(self, notebook_id: str) -> NotebookMeta:
-        r = self._get(
-            f"/openNotebook?notebookId={quote(notebook_id, safe='')}"
-            f"&marketplaceId={self.region.marketplace_id}",
-            headers={"Accept": "application/json"},
-        )
-        data = r.json()
-        meta = data.get("metadata", {})
-        token = data.get("renderingToken")
-        if not token:
-            raise AmazonError(f"openNotebook returned no renderingToken: {str(data)[:200]}")
-        return NotebookMeta(
-            title=meta.get("title", ""),
-            total_pages=int(meta.get("totalPages", 0)),
-            modification_time=str(meta.get("modificationTime", "")),
-            rendering_token=token,
-            raw=data,
-        )
+        last: Exception | None = None
+        for mp in self._marketplace_candidates():
+            try:
+                probing = self._state.get("marketplace_id") != mp
+                r = self._get(
+                    f"/openNotebook?notebookId={quote(notebook_id, safe='')}&marketplaceId={mp}",
+                    headers={"Accept": "application/json"},
+                    retries=0 if probing else 3,
+                )
+                data = r.json()
+            except AuthExpired as e:
+                # 403 can also mean "wrong marketplace" here – but only if listing still works
+                last = e
+                if self._state.get("marketplace_id") == mp:
+                    raise
+                continue
+            except (AmazonError, ValueError) as e:
+                last = e
+                continue
+            token = data.get("renderingToken")
+            if not token:
+                last = AmazonError(f"openNotebook returned no renderingToken: {str(data)[:200]}")
+                continue
+            if self._state.get("marketplace_id") != mp:
+                log.info("using marketplaceId %s", mp)
+                self._state["marketplace_id"] = mp
+                self.persist_cookies()
+            meta = data.get("metadata", {})
+            return NotebookMeta(
+                title=meta.get("title", ""),
+                total_pages=int(meta.get("totalPages", 0)),
+                modification_time=str(meta.get("modificationTime", "")),
+                rendering_token=token,
+                raw=data,
+            )
+        assert last is not None
+        raise last
 
     def render_range(self, token: str, start: int, end: int, *, width: int, height: int, dpi: int) -> list[bytes]:
         """Render pages start..end (inclusive). Returns PNGs in page order."""
