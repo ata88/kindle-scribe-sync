@@ -66,7 +66,11 @@ class Config:
     render_height: int = 1754
     render_dpi: int = 150
 
-    # AI transcription
+    # AI transcription: "claude" (API, best quality) or "ollama" (local, free)
+    ocr_backend: str = "claude"
+    ollama_model: str = "qwen3.5:9b"
+    ollama_url: str = "http://127.0.0.1:11434"
+    ollama_num_ctx: int = 8192
     model: str = "claude-opus-5-5"
     effort: str = "medium"  # low | medium | high | xhigh | max
     language_hint: str = "Deutsch und Englisch"

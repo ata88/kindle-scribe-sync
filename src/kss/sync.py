@@ -86,7 +86,14 @@ class Syncer:
 
     def run(self, *, force: bool = False, only: str | None = None) -> SyncReport:
         with _Lock(home_dir() / "sync.lock"):
-            return self._run(force=force, only=only)
+            try:
+                return self._run(force=force, only=only)
+            finally:
+                # local models: evict from RAM as soon as the pass is over
+                close = getattr(self._transcriber, "close", None)
+                if close:
+                    close()
+                self._transcriber = None
 
     def _run(self, *, force: bool, only: str | None) -> SyncReport:
         rep = SyncReport()
@@ -201,7 +208,8 @@ class Syncer:
                                     model=None, error=str(e))
                 return False
 
-        with ThreadPoolExecutor(max_workers=max(1, self.cfg.ocr_concurrency)) as pool:
+        workers = 1 if self.cfg.ocr_backend == "ollama" else max(1, self.cfg.ocr_concurrency)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
             results = list(pool.map(work, todo))
         return results.count(False)
 

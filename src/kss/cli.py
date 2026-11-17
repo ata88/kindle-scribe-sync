@@ -44,6 +44,18 @@ def _client(cfg: Config) -> AmazonClient:
     return AmazonClient(region, store, request_delay=cfg.request_delay)
 
 
+def make_transcriber(cfg: Config):
+    """Created lazily by the syncer – only when there actually are new pages."""
+    if cfg.ocr_backend == "ollama":
+        from .ocr_local import OllamaTranscriber
+
+        return OllamaTranscriber(model=cfg.ollama_model, url=cfg.ollama_url, languages=cfg.language_hint,
+                                 num_ctx=cfg.ollama_num_ctx)
+    from .ocr import ClaudeTranscriber
+
+    return ClaudeTranscriber(model=cfg.model, effort=cfg.effort, languages=cfg.language_hint)
+
+
 # -- commands -----------------------------------------------------------------
 
 def cmd_login(args: argparse.Namespace, cfg: Config) -> int:
@@ -86,14 +98,13 @@ def cmd_set_key(args: argparse.Namespace, cfg: Config) -> int:
 
 def _run_sync(cfg: Config, *, force: bool, only: str | None, quiet: bool) -> int:
     from .login import silent_refresh
-    from .ocr import ClaudeTranscriber
     from .sync import SyncLocked, Syncer
 
     say = (lambda s: log.info(s)) if quiet else print
     store = Store(db_path())
 
     def factory():
-        return ClaudeTranscriber(model=cfg.model, effort=cfg.effort, languages=cfg.language_hint)
+        return make_transcriber(cfg)
 
     for attempt in range(2):
         try:
@@ -179,11 +190,30 @@ def cmd_doctor(args: argparse.Namespace, cfg: Config) -> int:
     except AmazonError as e:
         ok = False
         print(f"✗ Amazon: {e}")
-    if resolve_api_key():
+    if cfg.ocr_backend == "ollama":
+        import httpx
+
+        try:
+            httpx.get(cfg.ollama_url + "/api/version", timeout=3).raise_for_status()
+            r = httpx.post(cfg.ollama_url + "/api/show", json={"model": cfg.ollama_model}, timeout=10)
+            if r.status_code == 200:
+                print(f"✓ Lokale KI: Ollama mit {cfg.ollama_model} (wird nur bei neuen Seiten geladen)")
+            else:
+                ok = False
+                print(f"✗ Modell {cfg.ollama_model} fehlt → `kss local-setup`")
+        except httpx.HTTPError:
+            import shutil
+
+            if shutil.which("ollama"):
+                print(f"• Ollama läuft gerade nicht – wird beim Sync automatisch gestartet ({cfg.ollama_model})")
+            else:
+                ok = False
+                print("✗ Ollama nicht installiert → https://ollama.com oder `brew install ollama`")
+    elif resolve_api_key():
         print(f"✓ Anthropic API-Key vorhanden (Modell {cfg.model}, effort {cfg.effort})")
     else:
         ok = False
-        print("✗ Kein Anthropic API-Key → `kss set-key`")
+        print("✗ Kein Anthropic API-Key → `kss set-key` (oder lokal: `kss local-setup`)")
     if cfg.apple_notes:
         print("✓ Apple Notes aktiv" if apple_notes.available() else "• Apple Notes: nur auf macOS")
     if cfg.markdown_path:
@@ -237,17 +267,82 @@ def cmd_open(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def cmd_local_setup(args: argparse.Namespace, cfg: Config) -> int:
+    """Switch to local transcription: check Ollama, pick a model for this Mac, download it."""
+    import shutil
+    import subprocess
+
+    import httpx
+
+    from .ocr import TranscriptionError
+    from .ocr_local import OllamaTranscriber, pull_model, recommended_model, system_ram_gb
+
+    if not shutil.which("ollama"):
+        print("Ollama fehlt. Installieren mit `brew install ollama` oder von https://ollama.com – "
+              "danach `kss local-setup` erneut ausführen.")
+        return 1
+    ram = system_ram_gb()
+    model = args.model or recommended_model(ram)
+    print(f"Arbeitsspeicher: {ram:.0f} GB → Modell {model}")
+    if ram and ram < 16 and not args.model:
+        print("  Hinweis: Mit unter 16 GB RAM ist die lokale Erkennung spürbar schwächer als Claude.")
+    try:
+        t = OllamaTranscriber(model=model, url=cfg.ollama_url, languages=cfg.language_hint)
+        t.close()
+        print(f"✓ {model} ist bereits vorhanden")
+    except TranscriptionError as e:
+        if "fehlt" not in str(e):
+            print(f"✗ {e}")
+            return 1
+        print(f"Lade {model} herunter (einmalig, mehrere GB) …")
+        proc = None  # make sure a server runs for the download
+        try:
+            httpx.get(cfg.ollama_url + "/api/version", timeout=3)
+        except httpx.HTTPError:
+            proc = subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                    start_new_session=True)
+            time.sleep(3)
+        try:
+            pull_model(model, cfg.ollama_url)
+        finally:
+            if proc:
+                proc.terminate()
+        print(f"✓ {model} installiert")
+    cfg.ocr_backend = "ollama"
+    cfg.ollama_model = model
+    cfg.save()
+    print("✓ Lokale Handschrifterkennung aktiv. Das Modell wird nur geladen, wenn neue Seiten da sind, "
+          "und danach sofort aus dem RAM entfernt.")
+    return 0
+
+
+def cmd_use_claude(args: argparse.Namespace, cfg: Config) -> int:
+    cfg.ocr_backend = "claude"
+    cfg.save()
+    print("✓ Claude-API aktiv. Tipp: `kss sync --force --only \"Titel\"` liest ein Notizbuch damit neu ein.")
+    return 0
+
+
 def cmd_setup(args: argparse.Namespace, cfg: Config) -> int:
     from .ocr import resolve_api_key
 
     print("== Kindle Scribe Sync – Einrichtung ==\n")
     if cmd_login(argparse.Namespace(region=None), cfg) != 0:
         return 1
-    if not resolve_api_key():
-        print("\nFür die KI-Handschrifterkennung wird ein Anthropic API-Key benötigt "
-              "(console.anthropic.com → API Keys).")
-        if cmd_set_key(argparse.Namespace(key=None), cfg) != 0:
+    print("\nWelche KI soll die Handschrift lesen?\n"
+          "  1) lokal auf diesem Mac (kostenlos, privat, Ollama – Modell nur während des Syncs im RAM)\n"
+          "  2) Claude über die Anthropic API (beste Qualität, ca. 5 Cent/Seite, API-Key nötig)")
+    choice = input("Auswahl [1]: ").strip() or "1"
+    if choice == "1":
+        if cmd_local_setup(argparse.Namespace(model=None), cfg) != 0:
             return 1
+    else:
+        cfg.ocr_backend = "claude"
+        cfg.save()
+        if not resolve_api_key():
+            print("\nAPI-Key erstellen: platform.claude.com → API Keys (Guthaben vorher aufladen).")
+            if cmd_set_key(argparse.Namespace(key=None), cfg) != 0:
+                return 1
     print("\nErster Sync (kann bei vielen Seiten ein paar Minuten dauern) …")
     rc = _run_sync(cfg, force=False, only=None, quiet=False)
     if sys.platform == "darwin":
@@ -267,6 +362,9 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--region", choices=sorted(REGIONS), help="Amazon-Shop deines Kindle-Kontos")
     s = sub.add_parser("set-key", help="Anthropic API-Key im Schlüsselbund speichern")
     s.add_argument("key", nargs="?")
+    s = sub.add_parser("local-setup", help="Lokale KI (Ollama) einrichten statt Claude-API")
+    s.add_argument("--model", help="z. B. gemma4:31b, qwen3.5:9b, qwen3-vl:8b")
+    s = sub.add_parser("use-claude", help="Zurück zur Claude-API wechseln")
     s = sub.add_parser("sync", help="Jetzt synchronisieren")
     s.add_argument("--force", action="store_true", help="Alles neu laden und neu transkribieren")
     s.add_argument("--only", help="Nur dieses Notizbuch (Titel oder ID)")
@@ -288,7 +386,7 @@ def main(argv: list[str] | None = None) -> int:
     handler = {
         "setup": cmd_setup, "login": cmd_login, "set-key": cmd_set_key, "sync": cmd_sync,
         "doctor": cmd_doctor, "serve": cmd_serve, "install": cmd_install, "uninstall": cmd_uninstall,
-        "status": cmd_status, "open": cmd_open,
+        "status": cmd_status, "open": cmd_open, "local-setup": cmd_local_setup, "use-claude": cmd_use_claude,
     }[args.cmd]
     try:
         return handler(args, cfg)

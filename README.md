@@ -50,7 +50,7 @@ kss setup
 `kss setup` erledigt alles in einem Durchgang:
 
 1. **Amazon-Login** in einem Browserfenster. Den Haken bei „Angemeldet bleiben“ setzen. Region ist `de`, wenn du den Scribe bei amazon.de gekauft hast.
-2. **Anthropic API-Key** abfragen ([console.anthropic.com](https://console.anthropic.com) → API Keys). Er wird im macOS-Schlüsselbund gespeichert.
+2. **KI wählen:** lokal mit Ollama (kostenlos) oder Claude per API-Key. Der Key wird im macOS-Schlüsselbund gespeichert.
 3. **Ersten Sync** ausführen.
 4. **Hintergrunddienste** (launchd) installieren: Sync alle 5 Minuten, Web-App dauerhaft.
 
@@ -79,7 +79,9 @@ Die Datei liegt unter `~/Library/Application Support/kindle-scribe-sync/config.t
 
 ```toml
 poll_interval = 300            # Sekunden
-model = "claude-opus-5-5"      # beste Handschrifterkennung
+ocr_backend = "ollama"         # "ollama" (lokal) oder "claude"
+ollama_model = "qwen3.5:9b"
+model = "claude-opus-5-5"      # Modell für ocr_backend = "claude"
 effort = "medium"              # "high" = noch gründlicher, teurer
 language_hint = "Deutsch und Englisch"
 apple_notes = true
@@ -93,12 +95,53 @@ render_height = 1754
 
 Nach einer Änderung `kss install` erneut ausführen, damit launchd das neue Intervall übernimmt.
 
-## Kosten
+## KI: lokal (kostenlos) oder Claude (beste Qualität)
+
+`kss setup` fragt, welche KI die Handschrift lesen soll. Umstellen kannst du jederzeit mit `kss local-setup` oder `kss use-claude`.
+
+### Lokal mit Ollama (kostenlos, privat)
+
+```bash
+brew install ollama
+```
+
+```bash
+kss local-setup
+```
+
+`kss local-setup` erkennt deinen Arbeitsspeicher, wählt ein passendes Modell und lädt es einmalig herunter:
+
+| RAM | Modell | Download | Fehlerquote deutsche Handschrift* |
+|---|---|---|---|
+| ab 36 GB | `gemma4:31b` | ~20 GB | ~0,8 % |
+| 16–32 GB | `qwen3.5:9b` | ~7 GB | ~1,6 % |
+| 8 GB | `qwen3-vl:4b` | ~3 GB | deutlich schlechter |
+
+\* Zeichenfehlerrate auf deutschen Handschrift-Scans laut [diesem Test](https://taggedsync.com/blog/best-local-model-for-handwriting) (Apple M5 Max, 4–9 s/Seite). Deine Handschrift kann abweichen.
+
+**RAM-Verhalten:**
+
+- Gibt es keine neuen Seiten, wird nichts geladen, Ollama wird gar nicht kontaktiert.
+- Gibt es neue Seiten, wird das Modell für diesen einen Sync-Durchlauf geladen und danach **sofort entladen** (`keep_alive=0`).
+- Läuft Ollama nicht, startet `kss` den Server selbst und beendet ihn danach wieder.
+- Stürzt `kss` ab, wirft Ollama das Modell nach spätestens 2 Minuten selbst raus.
+
+Ein anderes Modell wählst du mit `kss local-setup --model qwen3-vl:8b`.
+
+### Claude über die API
 
 Pro neu transkribierter Seite fallen grob **5 Cent** an (Claude Opus 5.5,
-`effort = "medium"`). Unveränderte Seiten kosten nichts. Bei 10 neuen Seiten
-pro Tag sind das etwa 15 € im Monat. Für weniger Kosten `model = "claude-sonnet-5-5"`
-setzen, das ist etwa halb so teuer.
+`effort = "medium"`). Unveränderte Seiten kosten nichts.
+
+- Der API-Key ist **nicht** im Claude-Pro-Abo enthalten. Du brauchst ein Konto mit aufgeladenem Guthaben in der Claude Console.
+- Max-, Ultra- und Team-Abos enthalten ein monatliches API-Guthaben.
+- Etwa halb so teuer: `model = "claude-sonnet-5-5"`.
+
+Ein Notizbuch später mit der anderen KI neu einlesen:
+
+```bash
+kss sync --force --only "Titel"
+```
 
 ## Wichtig zu wissen
 
@@ -106,7 +149,7 @@ setzen, das ist etwa halb so teuer.
 - **Notizen in Apple Notes nicht bearbeiten.** Beim nächsten Sync des Notizbuchs wird die Notiz überschrieben. Zum Weiterarbeiten Text herauskopieren.
 - **Gelöschte Notizbücher** werden nur als gelöscht markiert. Note und Markdown-Datei bleiben erhalten.
 - **Sitzung.** Amazon-Cookies liegen nur lokal (`cookies.json`, Rechte 600). Läuft die Session ab, versucht `kss` sie still über das gespeicherte Browserprofil zu erneuern. Erst wenn das scheitert, kommt eine Mitteilung „kss login“.
-- **Datenschutz.** Seitenbilder gehen zur Transkription an die Anthropic API, sonst nirgendwohin.
+- **Datenschutz.** Mit Ollama bleibt alles auf deinem Mac. Mit Claude gehen die Seitenbilder zur Transkription an die Anthropic API, sonst nirgendwohin.
 
 ## Optional: auf einem Server
 
