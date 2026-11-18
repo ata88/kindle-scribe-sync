@@ -109,10 +109,6 @@ struct PageSection: View {
     @State private var misspelled: Set<String> = []
     @State private var hovering = false
 
-    private var live: String? {
-        guard let p = model.livePreview, p.notebookID == notebook.id, p.page == page.index else { return nil }
-        return p.text
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -203,22 +199,7 @@ struct PageSection: View {
                 BlockStack(notebook: notebook, page: page, misspelled: misspelled)
                     .onTapGesture(count: 2) { startEditing() }
             case .pending:
-                VStack(alignment: .leading, spacing: 10) {
-                    if let live, !live.isEmpty {
-                        Text(live).font(Theme.bodyFont).lineSpacing(Theme.bodyLineSpacing)
-                            .foregroundStyle(.secondary)
-                            .animation(.default, value: live)
-                        Label(L("Die KI liest diese Seite …"), systemImage: "sparkles")
-                            .font(.caption).foregroundStyle(Theme.accent)
-                    } else if page.ocrText != nil {
-                        BlockStack(notebook: notebook, page: page, misspelled: []).opacity(0.55)
-                        Label(L("Seite wurde ergänzt – wird neu erkannt"), systemImage: "hourglass")
-                            .font(.caption).foregroundStyle(.secondary)
-                    } else {
-                        SkeletonLines()
-                        Label(waitingText, systemImage: "hourglass").font(.caption).foregroundStyle(.secondary)
-                    }
-                }
+                PendingPageView(notebook: notebook, page: page, waitingText: waitingText, live: model.live)
             case .failed:
                 Surface {
                     VStack(alignment: .leading, spacing: 8) {
@@ -263,6 +244,39 @@ struct PageSection: View {
     private func copy() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(page.text, forType: .string)
+    }
+}
+
+/// A page that is waiting for / being read by the model. Only this view observes
+/// the live text, so the rest of the reader does not redraw five times a second.
+struct PendingPageView: View {
+    let notebook: NotebookRecord
+    let page: PageRecord
+    let waitingText: String
+    @ObservedObject var live: LivePreview
+
+    private var text: String? {
+        guard let p = live.value, p.notebookID == notebook.id, p.page == page.index, !p.text.isEmpty else { return nil }
+        return p.text
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let text {
+                Text(text).font(Theme.bodyFont).lineSpacing(Theme.bodyLineSpacing)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Label(L("Die KI liest diese Seite …"), systemImage: "sparkles")
+                    .font(.caption).foregroundStyle(Theme.accent)
+            } else if page.ocrText != nil {
+                BlockStack(notebook: notebook, page: page, misspelled: []).opacity(0.55)
+                Label(L("Seite wurde ergänzt – wird neu erkannt"), systemImage: "hourglass")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else {
+                SkeletonLines()
+                Label(waitingText, systemImage: "hourglass").font(.caption).foregroundStyle(.secondary)
+            }
+        }
     }
 }
 

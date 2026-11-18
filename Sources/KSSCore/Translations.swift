@@ -24,6 +24,7 @@ enum Translations {
         "Netzteil angeschlossen": "power adapter connected",
         "%@ bereit – Texterkennung startet": "%@ ready – starting handwriting recognition",
         "Modell bereit": "model ready",
+        "Nachholen": "catch-up",
         "Zeitplan": "schedule",
         "Mac aufgewacht (%@)": "Mac woke up (%@)",
         "nach dem Aufwachen": "after wake",

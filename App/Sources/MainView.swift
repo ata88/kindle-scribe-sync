@@ -209,12 +209,7 @@ struct ActivityPanel: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(model.activityLine ?? L("Synchronisiere …")).font(.callout)
                     if let f = model.progressFraction { ProgressView(value: f) } else { ProgressView().progressViewStyle(.linear) }
-                    if let live = model.livePreview, !live.text.isEmpty {
-                        Text(live.text.suffix(220))
-                            .font(.caption).foregroundStyle(.secondary).lineLimit(4)
-                            .padding(8).frame(maxWidth: .infinity, alignment: .leading)
-                            .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.5)))
-                    }
+                    LiveSnippet(live: model.live)
                     Button(L("Abbrechen")) { model.cancelSync() }.controlSize(.small)
                 }
             } else {
@@ -245,6 +240,18 @@ struct ActivityPanel: View {
         }
         .padding(16)
         .frame(width: 340)
+    }
+}
+
+private struct LiveSnippet: View {
+    @ObservedObject var live: LivePreview
+    var body: some View {
+        if let v = live.value, !v.text.isEmpty {
+            Text(v.text.suffix(220))
+                .font(.caption).foregroundStyle(.secondary).lineLimit(4)
+                .padding(8).frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 6).fill(.quaternary.opacity(0.5)))
+        }
     }
 }
 

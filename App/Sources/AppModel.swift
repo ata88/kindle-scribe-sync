@@ -4,6 +4,12 @@ import KSSCore
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Live recognition text, observed only by the few views that display it.
+@MainActor
+final class LivePreview: ObservableObject {
+    @Published var value: (notebookID: String, page: Int, text: String)?
+}
+
 enum SidebarItem: Hashable {
     case all, recent, tasks, review
     case folder(String)
@@ -66,7 +72,11 @@ final class AppModel: ObservableObject {
     @Published var showInspector = false
 
     // library + sync state
-    @Published private(set) var notebooks: [NotebookRecord] = []
+    @Published private(set) var notebooks: [NotebookRecord] = [] { didSet { recomputeDerived() } }
+    /// Computed once per library change, not on every redraw.
+    @Published private(set) var folders: [String] = []
+    @Published private(set) var allTasks: [TaskItem] = []
+    @Published private(set) var reviewCount = 0
     @Published private(set) var progress: SyncProgress = .idle
     @Published private(set) var isSyncing = false
     @Published private(set) var lastSync: Date?
@@ -74,12 +84,14 @@ final class AppModel: ObservableObject {
     @Published private(set) var lastError: String?
     @Published private(set) var modelLoaded = false
     @Published private(set) var recentEvents: [EventLog.Event] = []
-    /// Text the model has read so far for the page it is working on.
-    @Published private(set) var livePreview: (notebookID: String, page: Int, text: String)?
+    /// Text the model has read so far – separate object so only the views that show it redraw.
+    let live = LivePreview()
     /// A page currently being edited (for the quit prompt).
     @Published var activeEdit: (notebookID: String, page: Int, text: String)?
 
     private var syncTask: Task<Void, Never>?
+    /// A sync was requested while one was running (e.g. model finished downloading).
+    private var resyncRequested = false
     private var observers: [NSObjectProtocol] = []
     private var cancellables: Set<AnyCancellable> = []
     private var started = false
@@ -185,10 +197,11 @@ final class AppModel: ObservableObject {
         }
     }
 
-    var folders: [String] {
-        Array(Set(notebooks.compactMap { $0.folderPath.isEmpty ? nil : $0.folderPath.joined(separator: "/") })).sorted {
-            $0.localizedStandardCompare($1) == .orderedAscending
-        }
+    private func recomputeDerived() {
+        folders = Array(Set(notebooks.compactMap { $0.folderPath.isEmpty ? nil : $0.folderPath.joined(separator: "/") }))
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        allTasks = Tasks.items(in: notebooks)
+        reviewCount = notebooks.filter { $0.pages.contains { Self.needsReview($0) } }.count
     }
 
     /// Notebooks of the current sidebar entry, filtered by the search field.
@@ -215,13 +228,12 @@ final class AppModel: ObservableObject {
     }
 
     var taskItems: [TaskItem] {
-        let items = Tasks.items(in: notebooks)
+        let items = allTasks
         let q = search.trimmingCharacters(in: .whitespaces).lowercased()
         return q.isEmpty ? items : items.filter { $0.text.lowercased().contains(q) || $0.notebookTitle.lowercased().contains(q) }
     }
 
-    var openTaskCount: Int { Tasks.items(in: notebooks).filter { !$0.done }.count }
-    var reviewCount: Int { notebooks.filter { $0.pages.contains { Self.needsReview($0) } }.count }
+    var openTaskCount: Int { allTasks.filter { !$0.done }.count }
 
     // MARK: attention
 
@@ -236,7 +248,7 @@ final class AppModel: ObservableObject {
     // MARK: sync
 
     func syncNow(reason: String, force: Bool = false) {
-        guard !isSyncing else { return }
+        guard !isSyncing else { resyncRequested = true; return }
         syncTask = Task { await runSync(reason: reason, force: force) }
     }
 
@@ -294,7 +306,7 @@ final class AppModel: ObservableObject {
     }
 
     private func publishPreview(_ id: String, _ page: Int, _ text: String) {
-        livePreview = (id, page, text)
+        live.value = (id, page, text)
     }
 
     func runSync(reason: String, force: Bool = false) async {
@@ -310,7 +322,13 @@ final class AppModel: ObservableObject {
         }
         isSyncing = true
         lastError = nil
-        defer { isSyncing = false; progress = .idle; livePreview = nil }
+        defer {
+            isSyncing = false; progress = .idle; live.value = nil
+            if resyncRequested {
+                resyncRequested = false
+                syncNow(reason: L("Nachholen"))
+            }
+        }
         let recognizedBefore = Dictionary(uniqueKeysWithValues: notebooks.map {
             ($0.id, $0.pages.filter { $0.status == .recognized }.map(\.imageHash))
         })

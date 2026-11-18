@@ -139,7 +139,10 @@ final class ModelManager: ObservableObject {
             let tmp = try await FileDownload.fetch(src) { [weak self] written in
                 Task { @MainActor in
                     guard let self else { return }
-                    self.progress = Double(base + written) / Double(total)
+                    let p = Double(base + written) / Double(total)
+                    // at most ~200 updates for the whole download – keeps the UI smooth
+                    guard p - self.progress >= 0.005 || p >= 1 else { return }
+                    self.progress = p
                     self.progressText = L("%@ von %@", ProcessMemory.format(UInt64(base + written)), ProcessMemory.format(UInt64(total)))
                 }
             }
