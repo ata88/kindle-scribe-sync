@@ -20,7 +20,7 @@ struct SettingsView: View {
     }
 }
 
-private struct GeneralSettings: View {
+struct GeneralSettings: View {
     @EnvironmentObject var model: AppModel
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var languageChanged = false
@@ -78,7 +78,7 @@ private struct GeneralSettings: View {
     }
 }
 
-private struct SyncSettingsView: View {
+struct SyncSettingsView: View {
     @EnvironmentObject var model: AppModel
 
     var body: some View {
@@ -116,7 +116,7 @@ private struct SyncSettingsView: View {
     }
 }
 
-private struct RecognitionSettings: View {
+struct RecognitionSettings: View {
     @EnvironmentObject var model: AppModel
 
     var body: some View {
@@ -173,7 +173,7 @@ private struct RecognitionSettings: View {
     }
 }
 
-private struct NotesSettings: View {
+struct NotesSettings: View {
     @EnvironmentObject var model: AppModel
     @State private var accounts: [String] = []
 
@@ -202,7 +202,7 @@ private struct NotesSettings: View {
     }
 }
 
-private struct AccountSettings: View {
+struct AccountSettings: View {
     @EnvironmentObject var model: AppModel
 
     var body: some View {
@@ -231,7 +231,7 @@ private struct AccountSettings: View {
     }
 }
 
-private struct UpdateSettings: View {
+struct UpdateSettings: View {
     @EnvironmentObject var model: AppModel
 
     var body: some View {

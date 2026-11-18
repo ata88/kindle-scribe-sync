@@ -30,14 +30,9 @@ enum Screenshots {
         }
         let screen = (NSScreen.main ?? NSScreen.screens[0]).visibleFrame
         print("screen \(screen) default window \(main.frame)")
-        capture(main, dir, "0-default-size")
-        dumpScrollViews(main)
         main.setFrame(screen.insetBy(dx: 8, dy: 8), display: true)
         main.makeKeyAndOrderFront(nil)
         await pause(2)
-
-        print("window minSize \(main.minSize) contentMinSize \(main.contentMinSize) maxSize \(main.maxSize)")
-        measureMinimumHeights()
 
         for appearance in [NSAppearance.Name.aqua, .darkAqua] {
             NSApp.appearance = NSAppearance(named: appearance)
@@ -46,13 +41,6 @@ enum Screenshots {
             model.selectedNotebookID = "demo-kickoff"
             await pause(1.5)
             capture(main, dir, "1-reader-\(suffix)")
-            if suffix == "light" {
-                dumpScrollViews(main)
-                scrollAllToTop(main)
-                await pause(0.8)
-                capture(main, dir, "1b-reader-top-\(suffix)")
-                dumpScrollViews(main)
-            }
             model.showInspector = true
             await pause(1.5)
             capture(main, dir, "2-reader-inspector-\(suffix)")
@@ -77,11 +65,14 @@ enum Screenshots {
             await pause(1)
             capture(diag, dir, "6-diagnostics")
         }
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        await pause(2)
-        if let settings = NSApp.windows.first(where: { $0.isVisible && $0 !== main && !($0.identifier?.rawValue ?? "").hasPrefix("diagnostics")
-            && $0.frame.width > 300 && $0.frame.width < 900 }) {
-            capture(settings, dir, "7-settings")
+        // settings tabs, rendered one by one (the Settings scene can't be opened programmatically)
+        let tabs: [(String, AnyView)] = [
+            ("general", AnyView(GeneralSettings())), ("sync", AnyView(SyncSettingsView())),
+            ("recognition", AnyView(RecognitionSettings())), ("notes", AnyView(NotesSettings())),
+            ("amazon", AnyView(AccountSettings())), ("updates", AnyView(UpdateSettings())),
+        ]
+        for (name, view) in tabs {
+            render(view.environmentObject(model).tint(Theme.accent), size: NSSize(width: 600, height: 560), dir, "7-settings-\(name)")
         }
 
         // views that live in popovers / other states, rendered offscreen
@@ -90,57 +81,6 @@ enum Screenshots {
         render(OnboardingView().environmentObject(model).tint(Theme.accent), size: NSSize(width: 900, height: 820), dir, "10-onboarding")
         print("screenshots written to \(dir.path)")
         exit(0)
-    }
-
-    /// Prints how tall each building block wants to be when offered very little height.
-    private static func measureMinimumHeights() {
-        let model = AppModel.shared
-        func measure<V: View>(_ name: String, width: CGFloat, _ view: V) {
-            let host = NSHostingController(rootView: view.environmentObject(model))
-            let small = host.sizeThatFits(in: CGSize(width: width, height: 50))
-            let tall = host.sizeThatFits(in: CGSize(width: width, height: 5000))
-            print("measure \(name): min≈\(small) max≈\(tall)")
-        }
-        measure("MainView", width: 1000, MainView())
-        measure("SidebarView", width: 240, SidebarView())
-        measure("SidebarStatus", width: 240, SidebarStatus())
-        measure("NotebookListView", width: 320, NotebookListView())
-        measure("TaskListView", width: 320, TaskListView())
-        measure("DetailRoot", width: 440, DetailRoot())
-        if let nb = model.notebook("demo-kickoff") {
-            measure("ReaderView", width: 440, ReaderView(notebook: nb))
-            measure("ScanInspector", width: 360, ScanInspector(notebook: nb, page: 0))
-            measure("ZoomableImage", width: 360, ZoomableImage(url: model.store.url(for: nb.pages[0].imageFile)))
-        }
-        measure("OnboardingView", width: 440, OnboardingView())
-    }
-
-    private static func scrollViews(in view: NSView) -> [NSScrollView] {
-        var out: [NSScrollView] = []
-        if let s = view as? NSScrollView { out.append(s) }
-        for v in view.subviews { out += scrollViews(in: v) }
-        return out
-    }
-
-    private static func dumpScrollViews(_ window: NSWindow) {
-        guard let root = window.contentView?.superview ?? window.contentView else { return }
-        print("window frame \(window.frame) content \(window.contentLayoutRect)")
-        for s in scrollViews(in: root) {
-            let doc = s.documentView
-            print("scroll \(type(of: s)) frame=\(s.convert(s.bounds, to: nil)) insets=\(s.contentInsets) auto=\(s.automaticallyAdjustsContentInsets)",
-                  "doc=\(doc.map { String(describing: type(of: $0)) } ?? "nil") docFrame=\(doc?.frame ?? .zero) flipped=\(doc?.isFlipped ?? false)",
-                  "visible=\(s.documentVisibleRect)")
-        }
-    }
-
-    private static func scrollAllToTop(_ window: NSWindow) {
-        guard let root = window.contentView?.superview ?? window.contentView else { return }
-        for s in scrollViews(in: root) {
-            guard let doc = s.documentView else { continue }
-            let y = doc.isFlipped ? -s.contentInsets.top : max(0, doc.frame.height - s.contentView.bounds.height)
-            s.contentView.scroll(to: NSPoint(x: 0, y: y))
-            s.reflectScrolledClipView(s.contentView)
-        }
     }
 
     private static func pause(_ seconds: Double) async {
