@@ -20,9 +20,15 @@ jobs:
         run: |
           apt-get update -qq && apt-get install -y -qq git >/dev/null
           git config --global --add safe.directory '*'
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh build.log
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh build.log core-linux
   app:
-    runs-on: macos-latest
+    # two runner images: arm64 macOS capacity on GitHub is sometimes short,
+    # whichever image gets a machine first delivers the logs/screenshots
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-26, macos-15]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +49,7 @@ jobs:
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: scripts/publish-ci-log.sh build.log
+        run: scripts/publish-ci-log.sh build.log build-${{ matrix.os }}
       - name: Inspect app bundle
         run: |
           B="build/Build/Products/Release/Scribe Sync.app"
@@ -62,7 +68,7 @@ jobs:
           perl -e 'alarm 120; exec @ARGV' "$APP" --self-test 2>&1 | tee -a selftest.log
           RC=$?
           echo "exit=$RC" | tee -a selftest.log
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-1 || true
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-1-${{ matrix.os }} || true
           exit $RC
       - name: Screenshots of the UI (demo library)
         continue-on-error: true
@@ -74,12 +80,12 @@ jobs:
           perl -e 'alarm 240; exec @ARGV' "$APP" --screenshots "$RUNNER_TEMP/shots" 2>&1 | tail -40 | tee -a selftest.log
           echo "exit=${PIPESTATUS[0]}" | tee -a selftest.log
           ls -l "$RUNNER_TEMP/shots" 2>&1 | tee -a selftest.log
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-2 || true
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-2-${{ matrix.os }} || true
       - name: Publish screenshots
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: scripts/publish-ci-files.sh "$RUNNER_TEMP/shots" shots || true
+        run: scripts/publish-ci-files.sh "$RUNNER_TEMP/shots" shots-${{ matrix.os }} || true
       - name: Download small test model (same family as the default)
         run: python3 scripts/download_model.py mlx-community/Qwen3.5-2B-4bit "$RUNNER_TEMP/model" | tail -2
       - name: Self-test recognition (needs Metal in the runner VM)
@@ -111,4 +117,4 @@ jobs:
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: test -f selftest.log && scripts/publish-ci-log.sh selftest.log selftest || true
+        run: test -f selftest.log && scripts/publish-ci-log.sh selftest.log selftest-${{ matrix.os }} || true
