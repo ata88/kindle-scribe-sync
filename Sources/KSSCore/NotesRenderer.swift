@@ -8,9 +8,12 @@ public enum NotesRenderer {
         public var contentHash: String
     }
 
+    /// Images are referenced by file URL (`figureURL`/`pageURL`). Apple Notes turns
+    /// `<img src="file://…">` into real inline image attachments; base64 data URIs
+    /// end up as anonymous "file" blocks (verified on macOS 26 in CI).
     public static func render(_ nb: NotebookRecord,
-                              figurePNG: (PageRecord, Figure) -> Data?,
-                              pagePNG: ((PageRecord) -> Data?)? = nil,
+                              figureURL: (PageRecord, Figure) -> URL?,
+                              pageURL: ((PageRecord) -> URL?)? = nil,
                               stamp: Date = Date()) -> Output {
         var parts: [String] = ["<div><h1>\(escape(nb.title))</h1></div>"]
         if !nb.folderPath.isEmpty {
@@ -22,18 +25,18 @@ public enum NotesRenderer {
             switch page.status {
             case .recognized:
                 parts.append(markdownToHTML(page.text) { id in
-                    guard let fig = page.figures.first(where: { $0.id == id }), let png = figurePNG(page, fig) else {
+                    guard let fig = page.figures.first(where: { $0.id == id }), let url = figureURL(page, fig) else {
                         return nil
                     }
-                    return "<div><img src=\"data:image/png;base64,\(png.base64EncodedString())\"></div>"
+                    return "<div><img src=\"\(escape(url.absoluteString))\" /></div>"
                 })
             case .pending:
                 parts.append("<div><i>\(escape(L("(wird erkannt …)")))</i></div>")
             case .failed:
                 parts.append("<div><i>\(escape(L("(Texterkennung fehlgeschlagen – wird erneut versucht)")))</i></div>")
             }
-            if let pagePNG, let png = pagePNG(page) {
-                parts.append("<div><img src=\"data:image/png;base64,\(png.base64EncodedString())\"></div>")
+            if let pageURL, let url = pageURL(page) {
+                parts.append("<div><img src=\"\(escape(url.absoluteString))\" /></div>")
             }
         }
         let body = parts.joined(separator: "\n")
@@ -42,7 +45,11 @@ public enum NotesRenderer {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         let footer = "<div><br></div><div><font color=\"#8a8a8a\"><small>\(escape(L("Kindle Scribe · zuletzt synchronisiert %@ · Korrekturen bitte in der App Scribe Sync vornehmen.", formatter.string(from: stamp))))</small></font></div>"
-        return Output(html: "<html><body>\n\(body)\n\(footer)\n</body></html>", contentHash: fnv1a(body))
+        // image files keep their paths when their content changes: hash the pixels' identity too
+        let imageKey = nb.pages.map { p in
+            p.imageHash + p.figures.map { "\($0.id):\($0.box.x0),\($0.box.y0),\($0.box.x1),\($0.box.y1)" }.joined(separator: ";")
+        }.joined(separator: "|")
+        return Output(html: "<html><body>\n\(body)\n\(footer)\n</body></html>", contentHash: fnv1a(body + imageKey))
     }
 
     // MARK: Markdown → HTML (the subset the recognizer produces)

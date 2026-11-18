@@ -329,8 +329,10 @@ public actor SyncEngine {
         guard !nb.pages.isEmpty, !nb.pages.contains(where: { $0.status == .pending }) else { return nil }
         let folder = [settings.notesRootFolder] + nb.folderPath
         let folderKey = folder.joined(separator: "/")
-        let out = NotesRenderer.render(nb, figurePNG: { _, fig in fig.imageFile.flatMap(self.store.readImage) },
-                                       pagePNG: settings.attachPageImages ? { self.store.readImage($0.imageFile) } : nil)
+        let store = self.store
+        let out = NotesRenderer.render(nb, figureURL: { _, fig in
+            fig.imageFile.map { store.url(for: $0) }.flatMap { FileManager.default.fileExists(atPath: $0.path) ? $0 : nil }
+        }, pageURL: settings.attachPageImages ? { store.url(for: $0.imageFile) } : nil)
         if nb.noteID != nil, nb.publishedHash == out.contentHash, nb.noteFolder == folderKey { return nil }
         onProgress(SyncProgress(phase: .publishing, detail: nb.title, done: 0, total: 1))
         do {

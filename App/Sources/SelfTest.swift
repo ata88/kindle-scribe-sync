@@ -60,8 +60,8 @@ enum SelfTest {
                        figures: [Figure(id: 1, box: NormRect(x0: 0, y0: 0, x1: 0.5, y1: 0.5), imageFile: "x")],
                        status: .recognized)])
         nb.folderPath = ["A"]
-        let html = NotesRenderer.render(nb, figurePNG: { _, _ in page }).html
-        check("notes-html-figure", html.contains("data:image/png;base64,"))
+        let html = NotesRenderer.render(nb, figureURL: { _, _ in URL(fileURLWithPath: "/tmp/fig 1.png") }).html
+        check("notes-html-figure", html.contains("<img src=\"file:///tmp/fig%201.png\" />"))
 
         // 4. optional: real recognition with a small model of the same family
         if CommandLine.arguments.contains("--self-test-recognition") {
