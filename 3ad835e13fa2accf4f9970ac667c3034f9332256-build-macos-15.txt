@@ -1,0 +1,54 @@
+commit 3ad835e13fa2accf4f9970ac667c3034f9332256 job app run 44346224381
+ProductName:		macOS
+ProductVersion:		15.8.2
+BuildVersion:		24H232
+Xcode 26.3
+Build version 17C529
+
+== errors ==
+xcodebuild: error: Could not resolve package dependencies:
+
+== tail ==
+Command line invocation:
+    /Applications/Xcode_26.3.app/Contents/Developer/usr/bin/xcodebuild -project ScribeSync.xcodeproj -scheme ScribeSync -configuration Release -derivedDataPath /Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/build -destination platform=macOS,arch=arm64 -skipMacroValidation -skipPackagePluginValidation MARKETING_VERSION=0.0.0 CURRENT_PROJECT_VERSION=23 ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build
+
+Build settings from command line:
+    ARCHS = arm64
+    CODE_SIGNING_ALLOWED = NO
+    CURRENT_PROJECT_VERSION = 23
+    MARKETING_VERSION = 0.0.0
+    ONLY_ACTIVE_ARCH = YES
+
+Resolve Package Graph
+
+Fetching from https://github.com/sparkle-project/Sparkle
+
+Fetching from https://github.com/huggingface/swift-transformers
+
+Fetching from https://github.com/ml-explore/mlx-swift-lm
+
+Fetching from https://github.com/ml-explore/mlx-swift
+
+Fetching from https://github.com/swiftlang/swift-syntax.git
+
+Resolve Package Graph
+
+Updating from https://github.com/sparkle-project/Sparkle
+
+Updating from https://github.com/ml-explore/mlx-swift-lm
+
+Updating from https://github.com/huggingface/swift-transformers
+
+Updating from https://github.com/ml-explore/mlx-swift
+
+Updating from https://github.com/swiftlang/swift-syntax.git
+
+
+Resolved source packages:
+  kindle-scribe-sync: (null)
+
+2026-11-18 16:22:48.927 xcodebuild[2263:9937] Writing error result bundle to /var/folders/9d/l02zfgrs7c16twd3wbpdmhkc0000gn/T/ResultBundle_2026-18-11_16-22-0048.xcresult
+xcodebuild: error: Could not resolve package dependencies:
+  Failed to resolve dependencies Dependencies could not be resolved because root depends on 'mlx-swift-lm' 3.33.0.
+'mlx-swift-lm' 3.33.0 cannot be used because 'mlx-swift-lm' 3.33.0 depends on 'mlx-swift' 0.33.0..<0.34.0 and 'mlx-swift' >= 0.31.5 contains incompatible tools version (6.3.0).
+
