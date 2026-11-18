@@ -1,0 +1,35 @@
+commit e01b2023893114aa7b372fba57cb419835365ac4 job app run 44330088376
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== release dry run ==
+1 identity imported.
+Identifier=io.github.ata88.scribesync
+Signature size=1729
+Authority=Scribe Sync Signing
+TeamIdentifier=not set
+sparkle:edSignature="v8aHZWLM+hD79qEAj5FWaw7wdcs3OMrIfmuGtYqcTymNSXjHXzh5AZf1xfmH+ThDAVMXNTMYdZuBXH3YRSZ7Bw==" length="2021331"
+ZIP=/Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/ScribeSync-0.0.0.zip
+NOTES=/Users/runner/work/_temp/notes.md
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Scribe Sync</title>
+    <link>https://github.com/ata88/kindle-scribe-sync</link>
+    <item>
+      <title>Version 0.0.0</title>
+      <pubDate>Wed, 18 Nov 2026 15:11:06 GMT</pubDate>
+      <sparkle:version>14</sparkle:version>
+      <sparkle:shortVersionString>0.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<p>Scribe Sync 0.0.0</p>]]></description>
+      <enclosure url="https://github.com/ata88/kindle-scribe-sync/releases/download/v0.0.0/ScribeSync-0.0.0.zip" length="2021331" type="application/octet-stream" sparkle:edSignature="v8aHZWLM+hD79qEAj5FWaw7wdcs3OMrIfmuGtYqcTymNSXjHXzh5AZf1xfmH+ThDAVMXNTMYdZuBXH3YRSZ7Bw=="/>
+    </item>
+  </channel>
+</rss>
