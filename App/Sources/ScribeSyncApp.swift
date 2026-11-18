@@ -14,7 +14,7 @@ struct ScribeSyncApp: App {
                 .frame(minWidth: 980, minHeight: 600)
                 .tint(Theme.accent)
         }
-        .defaultSize(width: 1320, height: 840)
+        .defaultSize(WindowSizing.main)
         .commands { AppCommands(model: model) }
 
         Window(L("Diagnose"), id: "diagnostics") {
@@ -23,7 +23,7 @@ struct ScribeSyncApp: App {
                 .frame(minWidth: 820, minHeight: 560)
                 .tint(Theme.accent)
         }
-        .defaultSize(width: 980, height: 720)
+        .defaultSize(WindowSizing.diagnostics)
 
         Settings {
             SettingsView()
@@ -117,4 +117,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.shutdown()
         return .terminateNow
     }
+}
+
+/// Default window sizes that always fit the screen – a window taller than the
+/// display would otherwise be laid out with its top and bottom cut off.
+enum WindowSizing {
+    static func fitted(_ width: CGFloat, _ height: CGFloat) -> CGSize {
+        guard let screen = (NSScreen.main ?? NSScreen.screens.first)?.visibleFrame else {
+            return CGSize(width: width, height: height)
+        }
+        return CGSize(width: min(width, (screen.width * 0.92).rounded()),
+                      height: min(height, (screen.height * 0.92).rounded()))
+    }
+    static var main: CGSize { fitted(1320, 840) }
+    static var diagnostics: CGSize { fitted(980, 720) }
 }

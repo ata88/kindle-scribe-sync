@@ -29,7 +29,9 @@ enum Screenshots {
             print("no main window"); exit(1)
         }
         let screen = (NSScreen.main ?? NSScreen.screens[0]).visibleFrame
-        print("screen \(screen)")
+        print("screen \(screen) default window \(main.frame)")
+        capture(main, dir, "0-default-size")
+        dumpScrollViews(main)
         main.setFrame(screen.insetBy(dx: 8, dy: 8), display: true)
         main.makeKeyAndOrderFront(nil)
         await pause(2)
