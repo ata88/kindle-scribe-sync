@@ -1,0 +1,126 @@
+commit 3a46a22f0dd55e872ef9c61a233fb84175f57758 job app run 44405226827
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 56M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 49M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 99496
+drwxr-xr-x  3 runner  staff        96 Nov 18 22:01 .
+drwxr-xr-x  7 runner  staff       224 Nov 18 22:01 ..
+-rwxr-xr-x  1 runner  staff  50939352 Nov 18 22:01 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 18 22:01 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 367x420 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8733870967741936, y1: 0.774230330672748)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
+== screenshots
+screen (0.0, 60.0, 1024.0, 677.0)
+saved 1-reader-light (screencapture)
+saved 2-reader-inspector-light (screencapture)
+saved 3-figures-light (screencapture)
+saved 4-pending-light (screencapture)
+saved 5-tasks-light (screencapture)
+saved 1-reader-dark (screencapture)
+saved 2-reader-inspector-dark (screencapture)
+saved 3-figures-dark (screencapture)
+saved 4-pending-dark (screencapture)
+saved 5-tasks-dark (screencapture)
+saved 6-diagnostics (screencapture)
+saved 8-menubar
+saved 9-activity
+saved 10-onboarding
+screenshots written to /Users/runner/work/_temp/shots
+exit=0
+total 1280
+-rw-r--r--@ 1 runner  staff  64987 Nov 18 22:02 1-reader-dark.png
+-rw-r--r--@ 1 runner  staff  68988 Nov 18 22:02 1-reader-light.png
+-rw-r--r--  1 runner  staff  82580 Nov 18 22:02 10-onboarding.png
+-rw-r--r--@ 1 runner  staff  25666 Nov 18 22:02 2-reader-inspector-dark.png
+-rw-r--r--@ 1 runner  staff  25360 Nov 18 22:02 2-reader-inspector-light.png
+-rw-r--r--@ 1 runner  staff  37853 Nov 18 22:02 3-figures-dark.png
+-rw-r--r--@ 1 runner  staff  48386 Nov 18 22:02 3-figures-light.png
+-rw-r--r--@ 1 runner  staff  33282 Nov 18 22:02 4-pending-dark.png
+-rw-r--r--@ 1 runner  staff  33510 Nov 18 22:02 4-pending-light.png
+-rw-r--r--@ 1 runner  staff  33349 Nov 18 22:02 5-tasks-dark.png
+-rw-r--r--@ 1 runner  staff  33832 Nov 18 22:02 5-tasks-light.png
+-rw-r--r--@ 1 runner  staff  75766 Nov 18 22:02 6-diagnostics.png
+-rw-r--r--  1 runner  staff  39550 Nov 18 22:02 8-menubar.png
+-rw-r--r--  1 runner  staff  16501 Nov 18 22:02 9-activity.png
+== recognition
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 367x420 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8733870967741936, y1: 0.774230330672748)
+PASS flatten-white-background
+PASS notes-html-figure
+INFO model loaded in 11 s, footprint 42.2 MB → 1.15 GB, MLX active 1,010.7 MB
+INFO recognized in 32 s
+----- markdown -----
+Einkaufsliste
+
+- Milch
+- Brot
+- Äpfel
+
+Termin mit Anna am Montag
+
+[[Grafik 1]]
+----- figures: ["1: NormRect(x0: 0.64, y0: 0.547, x1: 0.82, y1: 0.753)"] -----
+INFO after release: footprint 157.2 MB, MLX active 44 bytes, cache Zero KB
+PASS recognition-reads-text
+PASS model-memory-released (MLX active 44 bytes)
+SELFTEST OK
+exit=0
+== release dry run ==
+1 identity imported.
+/Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/build/Build/Products/Release/Scribe Sync.app: replacing existing signature
+Identifier=io.github.ata88.scribesync
+Signature size=1696
+Authority=Scribe Sync Signing
+TeamIdentifier=not set
+sparkle:edSignature="cO+U+ZZ8SUO1sohlZ7Gz0P2gzI0nTMyUqMb2qUxiPf30d0xEGEwPRLhMdYmlHjfpFoaClqPifNrFoKyjbxYyDg==" length="13125770"
+ZIP=/Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/ScribeSync-0.0.0.zip
+NOTES=/Users/runner/work/_temp/notes.md
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Scribe Sync</title>
+    <link>https://github.com/ata88/kindle-scribe-sync</link>
+    <item>
+      <title>Version 0.0.0</title>
+      <pubDate>Wed, 18 Nov 2026 22:04:12 GMT</pubDate>
+      <sparkle:version>28</sparkle:version>
+      <sparkle:shortVersionString>0.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<p>Scribe Sync 0.0.0</p>]]></description>
+      <enclosure url="https://github.com/ata88/kindle-scribe-sync/releases/download/v0.0.0/ScribeSync-0.0.0.zip" length="13125770" type="application/octet-stream" sparkle:edSignature="cO+U+ZZ8SUO1sohlZ7Gz0P2gzI0nTMyUqMb2qUxiPf30d0xEGEwPRLhMdYmlHjfpFoaClqPifNrFoKyjbxYyDg=="/>
+    </item>
+  </channel>
+</rss>
