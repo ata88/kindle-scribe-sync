@@ -135,6 +135,32 @@ AS
 )
 echo "id=$id7"; case "$id7" in x-coredata*) sleep 4; report "$id7"; shot "$id7" V7;; esac
 
+echo "== V9 file URLs with spaces, two images, order + repeated updates"
+SP="$OUT/Application Support/Scribe Sync/pages"; mkdir -p "$SP"
+cp "$OUT/rgb.png" "$SP/fig 1.png"; cp "$OUT/gray.png" "$SP/fig-2.png"
+U1=$(python3 -c "import pathlib,sys; print(pathlib.Path(sys.argv[1]).as_uri())" "$SP/fig 1.png")
+U2=$(python3 -c "import pathlib,sys; print(pathlib.Path(sys.argv[1]).as_uri())" "$SP/fig-2.png")
+echo "U1=$U1"
+printf '<div><h1>V9 file urls</h1></div><div>ERSTER TEXT</div><div><img src="%s" /></div><div>ZWEITER TEXT</div><div><img src="%s" /></div><div>DRITTER TEXT</div>' "$U1" "$U2" > "$OUT/v9.html"
+id9=$(mk V9 "$OUT/v9.html"); echo "id=$id9"; sleep 4; report "$id9"
+dump() {
+  osa - "$1" <<'AS' | sed -E 's/base64,[A-Za-z0-9+\/=]{20,}/base64,…/g'
+on run argv
+  tell application "Notes" to return body of note id (item 1 of argv)
+end run
+AS
+}
+echo "-- body V9:"; dump "$id9"
+for k in 1 2 3; do
+  osa - "$id9" "$OUT/v9.html" <<'AS'
+on run argv
+  set htmlBody to read (POSIX file (item 2 of argv)) as «class utf8»
+  tell application "Notes" to set body of note id (item 1 of argv) to htmlBody
+end run
+AS
+  sleep 3; echo "-- after update $k:"; report "$id9"
+done
+echo "-- body V9 after updates:"; dump "$id9"
 echo "== V8 update existing V1 note body again (does the image survive / duplicate?)"
 if [ -n "${ID1:-}" ]; then
   osa - "$ID1" "$OUT/v1.html" <<'AS'
