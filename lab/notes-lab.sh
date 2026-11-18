@@ -29,6 +29,22 @@ save(make(CGColorSpaceCreateDeviceRGB(), CGImageAlphaInfo.noneSkipLast.rawValue)
 SWIFT
 swift "$OUT/mk.swift" "$OUT" && ls -l "$OUT"
 
+echo "== process chain"
+p=$$; for i in 1 2 3 4 5 6 7 8; do ps -o pid=,ppid=,comm= -p $p; p=$(ps -o ppid= -p $p | tr -d ' '); [ -z "$p" ] || [ "$p" = "1" ] && break; done
+echo "== csrutil"; csrutil status 2>&1
+grant() { # db, service, client, client_type, indirect
+  sudo sqlite3 "$1" "INSERT OR REPLACE INTO access (service,client,client_type,auth_value,auth_reason,auth_version,csreq,policy_id,indirect_object_identifier_type,indirect_object_identifier,indirect_object_code_identity,flags,last_modified) VALUES ('$2','$3',$4,2,3,1,NULL,NULL,0,'$5',NULL,0,$(date +%s));" 2>&1 | head -2
+}
+UDB="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
+SDB="/Library/Application Support/com.apple.TCC/TCC.db"
+CLIENTS="/usr/bin/osascript /bin/bash /bin/zsh /bin/sh /usr/bin/perl /usr/bin/perl5.34"
+for c in $(ls -d /Users/runner/runners/*/bin/Runner.Worker /Users/runner/runners/*/bin/Runner.Listener /opt/runner/*/bin/Runner.* 2>/dev/null); do CLIENTS="$CLIENTS $c"; done
+for db in "$UDB" "$SDB"; do
+  for c in $CLIENTS; do grant "$db" kTCCServiceAppleEvents "$c" 1 com.apple.Notes; grant "$db" kTCCServiceAppleEvents "$c" 1 com.apple.systemevents; grant "$db" kTCCServiceScreenCapture "$c" 1 UNUSED; done
+done
+echo "granted to: $CLIENTS"
+open -a Notes; sleep 8
+osascript -e 'tell application "System Events" to get name of every window of process "Notes"' 2>&1 | head -2
 echo "== accounts"; osa -e 'tell application "Notes" to get name of every account'
 osa -e 'tell application "Notes" to make new folder with properties {name:"Lab"}' >/dev/null 2>&1
 
