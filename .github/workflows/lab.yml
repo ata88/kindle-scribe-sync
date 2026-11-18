@@ -1,0 +1,27 @@
+name: Lab
+# Experiments on a real macOS runner; results go to the ci-logs branch under lab/.
+on:
+  push:
+    branches: ["lab/**"]
+permissions:
+  contents: write
+jobs:
+  notes:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Notes image lab
+        run: lab/notes-lab.sh lab-out || true
+      - name: Publish results
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          D=$(mktemp -d); cd "$D"; git init -q
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth 1 origin ci-logs; then git checkout -q -b ci-logs FETCH_HEAD; else git checkout -q --orphan ci-logs; fi
+          mkdir -p "lab/${GITHUB_SHA}"
+          cp "$GITHUB_WORKSPACE"/lab-out/*.txt "$GITHUB_WORKSPACE"/lab-out/*.png "lab/${GITHUB_SHA}/" 2>/dev/null
+          git add lab && git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -q -m "lab ${GITHUB_SHA}" && git push -q origin ci-logs
