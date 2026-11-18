@@ -1,0 +1,96 @@
+commit 0e58fd515e19c393921ff88dcdabe653b290c7a1 job app run 44410640811
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 56M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 49M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 99560
+drwxr-xr-x  3 runner  staff        96 Nov 18 22:33 .
+drwxr-xr-x  7 runner  staff       224 Nov 18 22:33 ..
+-rwxr-xr-x  1 runner  staff  50973704 Nov 18 22:33 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 18 22:33 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 367x420 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8733870967741936, y1: 0.774230330672748)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
+== screenshots
+screen (0.0, 60.0, 1024.0, 677.0)
+window minSize (980.0, 652.0) contentMinSize (980.0, 652.0) maxSize (1.7976931348623157e+308, 1.7976931348623157e+308)
+measure MainView: min≈(1000.0, 50.0) max≈(1000.0, 5000.0)
+measure SidebarView: min≈(240.0, 241.544921875) max≈(240.0, 5000.0)
+measure SidebarStatus: min≈(240.0, 241.544921875) max≈(240.0, 241.544921875)
+measure NotebookListView: min≈(320.0, 50.0) max≈(320.0, 5000.0)
+measure TaskListView: min≈(320.0, 50.0) max≈(320.0, 5000.0)
+measure DetailRoot: min≈(440.0, 50.0) max≈(440.0, 5000.0)
+measure ReaderView: min≈(440.0, 50.0) max≈(440.0, 5000.0)
+measure ScanInspector: min≈(360.0, 124.0) max≈(360.0, 5000.0)
+measure ZoomableImage: min≈(360.0, 50.0) max≈(360.0, 5000.0)
+measure OnboardingView: min≈(440.0, 50.0) max≈(440.0, 5000.0)
+saved 1-reader-light (screencapture)
+window frame (8.0, 68.0, 1008.0, 661.0) content (0.0, 0.0, 1008.0, 609.0)
+scroll ListCoreScrollView frame=(0.0, -317.0, 568.0, 1243.0) insets=NSEdgeInsets(top: 52.0, left: 248.0, bottom: 0.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 320.0, 1191.0) flipped=true visible=(-248.0, -52.0, 568.0, 1243.0)
+scroll HostingScrollView frame=(569.0, -317.0, 439.0, 1243.0) insets=NSEdgeInsets(top: 52.0, left: 0.0, bottom: 0.0, right: 0.0) auto=false doc=DocumentView docFrame=(0.0, 0.0, 439.0, 791.0) flipped=true visible=(0.0, -52.0, 439.0, 1243.0)
+scroll ListCoreScrollView frame=(8.0, -309.0, 240.0, 1227.0) insets=NSEdgeInsets(top: 90.0, left: 0.0, bottom: 242.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 240.0, 895.0) flipped=true visible=(0.0, -90.0, 240.0, 1227.0)
+saved 1b-reader-top-light (screencapture)
+window frame (8.0, 68.0, 1008.0, 661.0) content (0.0, 0.0, 1008.0, 609.0)
+scroll ListCoreScrollView frame=(0.0, -317.0, 568.0, 1243.0) insets=NSEdgeInsets(top: 52.0, left: 248.0, bottom: 0.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 320.0, 1191.0) flipped=true visible=(0.0, -52.0, 568.0, 1243.0)
+scroll HostingScrollView frame=(569.0, -317.0, 439.0, 1243.0) insets=NSEdgeInsets(top: 52.0, left: 0.0, bottom: 0.0, right: 0.0) auto=false doc=DocumentView docFrame=(0.0, 0.0, 439.0, 791.0) flipped=true visible=(0.0, -52.0, 439.0, 1243.0)
+scroll ListCoreScrollView frame=(8.0, -309.0, 240.0, 1227.0) insets=NSEdgeInsets(top: 90.0, left: 0.0, bottom: 242.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 240.0, 895.0) flipped=true visible=(0.0, -90.0, 240.0, 1227.0)
+saved 2-reader-inspector-light (screencapture)
+saved 3-figures-light (screencapture)
+saved 4-pending-light (screencapture)
+saved 5-tasks-light (screencapture)
+saved 1-reader-dark (screencapture)
+saved 2-reader-inspector-dark (screencapture)
+saved 3-figures-dark (screencapture)
+saved 4-pending-dark (screencapture)
+saved 5-tasks-dark (screencapture)
+saved 6-diagnostics (screencapture)
+saved 8-menubar
+saved 9-activity
+saved 10-onboarding
+screenshots written to /Users/runner/work/_temp/shots
+exit=0
+total 1432
+-rw-r--r--@ 1 runner  staff  64987 Nov 18 22:34 1-reader-dark.png
+-rw-r--r--@ 1 runner  staff  68988 Nov 18 22:34 1-reader-light.png
+-rw-r--r--  1 runner  staff  82580 Nov 18 22:34 10-onboarding.png
+-rw-r--r--@ 1 runner  staff  68983 Nov 18 22:34 1b-reader-top-light.png
+-rw-r--r--@ 1 runner  staff  25666 Nov 18 22:34 2-reader-inspector-dark.png
+-rw-r--r--@ 1 runner  staff  25360 Nov 18 22:34 2-reader-inspector-light.png
+-rw-r--r--@ 1 runner  staff  37853 Nov 18 22:34 3-figures-dark.png
+-rw-r--r--@ 1 runner  staff  48386 Nov 18 22:34 3-figures-light.png
+-rw-r--r--@ 1 runner  staff  33282 Nov 18 22:34 4-pending-dark.png
+-rw-r--r--@ 1 runner  staff  33510 Nov 18 22:34 4-pending-light.png
+-rw-r--r--@ 1 runner  staff  33349 Nov 18 22:34 5-tasks-dark.png
+-rw-r--r--@ 1 runner  staff  33832 Nov 18 22:34 5-tasks-light.png
+-rw-r--r--@ 1 runner  staff  83024 Nov 18 22:34 6-diagnostics.png
+-rw-r--r--  1 runner  staff  39534 Nov 18 22:34 8-menubar.png
+-rw-r--r--  1 runner  staff  16501 Nov 18 22:34 9-activity.png
