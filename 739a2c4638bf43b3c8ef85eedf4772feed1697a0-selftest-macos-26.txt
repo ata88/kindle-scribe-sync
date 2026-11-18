@@ -1,0 +1,152 @@
+commit 739a2c4638bf43b3c8ef85eedf4772feed1697a0 job app run 44415002917
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 56M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 49M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 99560
+drwxr-xr-x  3 runner  staff        96 Nov 18 23:00 .
+drwxr-xr-x  7 runner  staff       224 Nov 18 23:00 ..
+-rwxr-xr-x  1 runner  staff  50972840 Nov 18 23:00 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 18 23:00 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 367x420 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8733870967741936, y1: 0.774230330672748)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
+== screenshots
+saved 0-default-size (screencapture)
+window frame (22.0, 72.0, 980.0, 652.0) content (0.0, 0.0, 980.0, 600.0)
+scroll ListCoreScrollView frame=(0.0, 0.0, 568.0, 652.0) insets=NSEdgeInsets(top: 52.0, left: 248.0, bottom: 0.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 320.0, 600.0) flipped=true visible=(-248.0, -52.0, 568.0, 652.0)
+scroll HostingScrollView frame=(569.0, 0.0, 411.0, 652.0) insets=NSEdgeInsets(top: 52.0, left: 0.0, bottom: 0.0, right: 0.0) auto=false doc=DocumentView docFrame=(0.0, 0.0, 394.0, 823.0) flipped=true visible=(0.0, -52.0, 394.0, 652.0)
+scroll ListCoreScrollView frame=(8.0, 8.0, 240.0, 636.0) insets=NSEdgeInsets(top: 90.0, left: 0.0, bottom: 242.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 240.0, 304.0) flipped=true visible=(0.0, -90.0, 240.0, 636.0)
+window minSize (980.0, 652.0) contentMinSize (980.0, 652.0) maxSize (1.7976931348623157e+308, 1.7976931348623157e+308)
+measure MainView: min≈(1000.0, 50.0) max≈(1000.0, 5000.0)
+measure SidebarView: min≈(240.0, 227.544921875) max≈(240.0, 5000.0)
+measure SidebarStatus: min≈(240.0, 227.544921875) max≈(240.0, 241.544921875)
+measure NotebookListView: min≈(320.0, 50.0) max≈(320.0, 5000.0)
+measure TaskListView: min≈(320.0, 50.0) max≈(320.0, 5000.0)
+measure DetailRoot: min≈(440.0, 50.0) max≈(440.0, 5000.0)
+measure ReaderView: min≈(440.0, 50.0) max≈(440.0, 5000.0)
+measure ScanInspector: min≈(360.0, 124.0) max≈(360.0, 5000.0)
+measure ZoomableImage: min≈(360.0, 50.0) max≈(360.0, 5000.0)
+measure OnboardingView: min≈(440.0, 50.0) max≈(440.0, 5000.0)
+saved 1-reader-light (screencapture)
+window frame (8.0, 68.0, 1008.0, 661.0) content (0.0, 0.0, 1008.0, 609.0)
+scroll ListCoreScrollView frame=(0.0, 0.0, 568.0, 661.0) insets=NSEdgeInsets(top: 52.0, left: 248.0, bottom: 0.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 320.0, 609.0) flipped=true visible=(-248.0, -52.0, 568.0, 661.0)
+scroll HostingScrollView frame=(569.0, 0.0, 439.0, 661.0) insets=NSEdgeInsets(top: 52.0, left: 0.0, bottom: 0.0, right: 0.0) auto=false doc=DocumentView docFrame=(0.0, 0.0, 422.0, 791.0) flipped=true visible=(0.0, -52.0, 422.0, 661.0)
+scroll ListCoreScrollView frame=(8.0, 8.0, 240.0, 645.0) insets=NSEdgeInsets(top: 90.0, left: 0.0, bottom: 242.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 240.0, 313.0) flipped=true visible=(0.0, -90.0, 240.0, 645.0)
+saved 1b-reader-top-light (screencapture)
+window frame (8.0, 68.0, 1008.0, 661.0) content (0.0, 0.0, 1008.0, 609.0)
+scroll ListCoreScrollView frame=(0.0, 0.0, 568.0, 661.0) insets=NSEdgeInsets(top: 52.0, left: 248.0, bottom: 0.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 320.0, 609.0) flipped=true visible=(0.0, -52.0, 568.0, 661.0)
+scroll HostingScrollView frame=(569.0, 0.0, 439.0, 661.0) insets=NSEdgeInsets(top: 52.0, left: 0.0, bottom: 0.0, right: 0.0) auto=false doc=DocumentView docFrame=(0.0, 0.0, 422.0, 791.0) flipped=true visible=(0.0, -52.0, 422.0, 661.0)
+scroll ListCoreScrollView frame=(8.0, 8.0, 240.0, 645.0) insets=NSEdgeInsets(top: 90.0, left: 0.0, bottom: 242.0, right: 0.0) auto=true doc=SwiftUIOutlineListView docFrame=(0.0, 0.0, 240.0, 313.0) flipped=true visible=(0.0, -90.0, 240.0, 645.0)
+saved 2-reader-inspector-light (screencapture)
+saved 3-figures-light (screencapture)
+saved 4-pending-light (screencapture)
+saved 5-tasks-light (screencapture)
+saved 1-reader-dark (screencapture)
+saved 2-reader-inspector-dark (screencapture)
+saved 3-figures-dark (screencapture)
+saved 4-pending-dark (screencapture)
+saved 5-tasks-dark (screencapture)
+saved 6-diagnostics (screencapture)
+saved 8-menubar
+saved 9-activity
+saved 10-onboarding
+screenshots written to /Users/runner/work/_temp/shots
+exit=0
+total 3032
+-rw-r--r--@ 1 runner  staff  126726 Nov 18 23:01 0-default-size.png
+-rw-r--r--@ 1 runner  staff  125834 Nov 18 23:01 1-reader-dark.png
+-rw-r--r--@ 1 runner  staff  130453 Nov 18 23:01 1-reader-light.png
+-rw-r--r--  1 runner  staff   82579 Nov 18 23:01 10-onboarding.png
+-rw-r--r--@ 1 runner  staff  108201 Nov 18 23:01 1b-reader-top-light.png
+-rw-r--r--@ 1 runner  staff  101149 Nov 18 23:01 2-reader-inspector-dark.png
+-rw-r--r--@ 1 runner  staff   99802 Nov 18 23:01 2-reader-inspector-light.png
+-rw-r--r--@ 1 runner  staff  107043 Nov 18 23:01 3-figures-dark.png
+-rw-r--r--@ 1 runner  staff  119810 Nov 18 23:01 3-figures-light.png
+-rw-r--r--@ 1 runner  staff  100525 Nov 18 23:01 4-pending-dark.png
+-rw-r--r--@ 1 runner  staff  101601 Nov 18 23:01 4-pending-light.png
+-rw-r--r--@ 1 runner  staff   86121 Nov 18 23:01 5-tasks-dark.png
+-rw-r--r--@ 1 runner  staff   86833 Nov 18 23:01 5-tasks-light.png
+-rw-r--r--@ 1 runner  staff   82885 Nov 18 23:01 6-diagnostics.png
+-rw-r--r--  1 runner  staff   39549 Nov 18 23:01 8-menubar.png
+-rw-r--r--  1 runner  staff   16500 Nov 18 23:01 9-activity.png
+== recognition
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 367x420 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8733870967741936, y1: 0.774230330672748)
+PASS flatten-white-background
+PASS notes-html-figure
+INFO model loaded in 7 s, footprint 44.5 MB → 1.16 GB, MLX active 1,010.7 MB
+INFO recognized in 28 s
+----- markdown -----
+Einkaufsliste
+
+- Milch
+- Brot
+- Äpfel
+
+Termin mit Anna am Montag
+
+[[Grafik 1]]
+----- figures: ["1: NormRect(x0: 0.64, y0: 0.547, x1: 0.82, y1: 0.753)"] -----
+INFO after release: footprint 173.9 MB, MLX active 44 bytes, cache Zero KB
+PASS recognition-reads-text
+PASS model-memory-released (MLX active 44 bytes)
+SELFTEST OK
+exit=0
+== release dry run ==
+1 identity imported.
+/Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/build/Build/Products/Release/Scribe Sync.app: replacing existing signature
+Identifier=io.github.ata88.scribesync
+Signature size=1729
+Authority=Scribe Sync Signing
+TeamIdentifier=not set
+sparkle:edSignature="xFQG2koH8wK5wpkMiaV7O2scoO6gR6nANX2ppBUs2kh2uCuOZ+vxAyNeCcRm2FbVJQ4S/QdnO2HOj0ISqhKuBw==" length="13134355"
+ZIP=/Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/ScribeSync-0.0.0.zip
+NOTES=/Users/runner/work/_temp/notes.md
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Scribe Sync</title>
+    <link>https://github.com/ata88/kindle-scribe-sync</link>
+    <item>
+      <title>Version 0.0.0</title>
+      <pubDate>Wed, 18 Nov 2026 23:03:05 GMT</pubDate>
+      <sparkle:version>32</sparkle:version>
+      <sparkle:shortVersionString>0.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<p>Scribe Sync 0.0.0</p>]]></description>
+      <enclosure url="https://github.com/ata88/kindle-scribe-sync/releases/download/v0.0.0/ScribeSync-0.0.0.zip" length="13134355" type="application/octet-stream" sparkle:edSignature="xFQG2koH8wK5wpkMiaV7O2scoO6gR6nANX2ppBUs2kh2uCuOZ+vxAyNeCcRm2FbVJQ4S/QdnO2HOj0ISqhKuBw=="/>
+    </item>
+  </channel>
+</rss>
