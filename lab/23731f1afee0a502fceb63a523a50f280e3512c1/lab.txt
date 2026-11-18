@@ -1,0 +1,95 @@
+total 80
+-rw-r--r--  1 runner  staff   4191 Nov 18 15:37 gray.png
+-rw-r--r--  1 runner  staff      0 Nov 18 15:37 lab.txt
+-rw-r--r--  1 runner  staff   1171 Nov 18 15:37 mk.swift
+-rw-r--r--  1 runner  staff  16813 Nov 18 15:37 rgb.jpg
+-rw-r--r--  1 runner  staff   7996 Nov 18 15:37 rgb.png
+== process chain
+ 1136  1135 bash
+ 1135   999 /bin/bash
+  999   987 /Users/runner/actions-runner/cached/bin/Runner.Worker
+  987   973 /Users/runner/actions-runner/cached/bin/Runner.Listener
+  973   962 /opt/hca/hosted-compute-agent
+  962     1 /bin/bash
+== csrutil
+System Integrity Protection status: disabled.
+granted to: /usr/bin/osascript /bin/bash /bin/zsh /bin/sh /usr/bin/perl /usr/bin/perl5.34 /opt/hca/hosted-compute-agent /Users/runner/actions-runner/cached/bin/Runner.Listener /Users/runner/actions-runner/cached/bin/Runner.Worker
+== Notes windows/buttons
+Notes, missing value, missing value, missing value
+Notes, missing value, missing value, missing value
+== accounts
+On My Mac
+== V1 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7
+name=V1 png data self-closed attachments=1
+   att name=missing value cid=cid:37A5BD5A-72B1-4665-934A-D6BD77008E99@localhost
+   body length=144
+== V2 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p9
+name=V2 jpeg data attachments=1
+   att name=missing value cid=cid:048562BD-22E1-4708-8742-91E17AD11BF4@localhost
+   body length=133
+== V3 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p11
+name=V3 gray png data (old app) attachments=1
+   att name=missing value cid=cid:A6D4BC87-C088-4DB0-AF10-72D59754EAD9@localhost
+   body length=147
+== V4 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p13
+name=V4 file url attachments=1
+   att name=rgb.png cid=cid:FE13CD63-B3B1-449E-A5F6-ED660F4E37CF@localhost
+   body length=212 has-img-tag has-data-uri
+== V5 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p15
+name=V5 p-wrapped png with size attachments=1
+   att name=missing value cid=cid:27F6D82E-7E65-4323-8D1C-2A9FA1F2F5B7@localhost
+   body length=147
+== V6 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p19
+name=V6 two images attachments=2
+   att name=missing value cid=cid:9390F974-CFD1-4116-AA70-B370B914A1EF@localhost
+   att name=missing value cid=cid:F8ED8110-9F1D-4E4E-9486-88BAC3B9258B@localhost
+   body length=148
+== V7 attachment command
+id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p20
+name=V7 attachment attachments=2
+   att name=rgb.png cid=cid:58650DEB-2C57-46D4-AE2C-E16B2E35F627@localhost
+   att name=rgb.png cid=cid:58650DEB-2C57-46D4-AE2C-E16B2E35F627@localhost
+   body length=21610 has-img-tag has-data-uri
+== V9 file URLs with spaces, two images, order + repeated updates
+U1=file:///Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/lab-out/Application%20Support/Scribe%20Sync/pages/fig%201.png
+id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p27
+name=V9 file urls attachments=2
+   att name=fig 1.png cid=cid:6E3A5BD4-8046-4499-A8D1-23B3704B8EA0@localhost
+   att name=fig-2.png cid=cid:214121AA-FBBD-44F9-BD9D-9700C55FCB11@localhost
+   body length=339 has-img-tag has-data-uri
+-- body V9:
+<div><b><span style="font-size: 24px">V9 file urls</span></b></div>
+<div>ERSTER TEXT</div>
+<div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div>
+<div>ZWEITER TEXT</div>
+<div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div>
+<div>DRITTER TEXT</div>
+
+-- after update 1:
+name=V9 file urls attachments=2
+   att name=fig 1.png cid=cid:00E7D573-C2EE-4548-95E1-EFEC678ED52F@localhost
+   att name=fig-2.png cid=cid:8DC82C00-07AC-4DBB-88D0-B4B7D42ADCE0@localhost
+   body length=339 has-img-tag has-data-uri
+-- after update 2:
+name=V9 file urls attachments=2
+   att name=fig 1.png cid=cid:1E5CFC07-45B6-4096-AD83-6E19EA72EE92@localhost
+   att name=fig-2.png cid=cid:084327DD-909B-417C-AFA4-37432292150B@localhost
+   body length=339 has-img-tag has-data-uri
+-- after update 3:
+name=V9 file urls attachments=2
+   att name=fig 1.png cid=cid:179D2339-2BA6-43BB-BC9D-E5EED70932BE@localhost
+   att name=fig-2.png cid=cid:93098508-B36A-448E-963B-A2CDDE15D770@localhost
+   body length=339 has-img-tag has-data-uri
+-- body V9 after updates:
+<div><b><span style="font-size: 24px">V9 file urls</span></b></div>
+<div>ERSTER TEXT</div>
+<div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div>
+<div>ZWEITER TEXT</div>
+<div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div>
+<div>DRITTER TEXT</div>
+
+== V8 update existing V1 note body again (does the image survive / duplicate?)
+name=V1 png data self-closed attachments=1
+   att name=missing value cid=cid:1D263145-D290-430E-9AD6-925E13CE5585@localhost
+   body length=144
+== done
