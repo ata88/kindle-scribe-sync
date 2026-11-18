@@ -76,7 +76,7 @@ brew install xcodegen
 scripts/build-app.sh
 ```
 
-Ein Release erstellen: Release-Notes in `docs/releases/<version>.md` ablegen, dann den Tag `vX.Y.Z` pushen. Der Workflow `.github/workflows/release.yml` baut, signiert und veröffentlicht App und Update-Feed. Er braucht die Repository-Secrets `SPARKLE_PRIVATE_KEY` und `SIGNING_CERT_P12`.
+Ein Release erstellen: Release-Notes als `docs/releases/<version>.md` nach `main` bringen. Der Workflow `.github/workflows/release.yml` baut, signiert, legt den Tag `v<version>` an und veröffentlicht App und Update-Feed. Er braucht die Repository-Secrets `SPARKLE_PRIVATE_KEY` und `SIGNING_CERT_P12`.
 
 Den Umstieg vom früheren Kommandozeilen-Tool `kss` beschreibt [docs/MIGRATION.md](docs/MIGRATION.md).
 
