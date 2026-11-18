@@ -50,25 +50,25 @@ enum MarkdownParser {
                 if out.last != .spacer && !out.isEmpty { out.append(.spacer) }
                 continue
             }
-            if let m = t.firstMatch(of: /^\[\[Grafik (\d+)\]\]$/), let id = Int(m.1) { out.append(.figure(id)); continue }
-            if let m = t.firstMatch(of: /^(#{1,3})\s+(.*)$/) { out.append(.heading(level: m.1.count, text: String(m.2))); continue }
+            if let m = t.firstMatch(of: #/^\[\[Grafik (\d+)\]\]$/#), let id = Int(m.1) { out.append(.figure(id)); continue }
+            if let m = t.firstMatch(of: #/^(#{1,3})\s+(.*)$/#) { out.append(.heading(level: m.1.count, text: String(m.2))); continue }
             if t.hasPrefix(">") {
                 out.append(.quote(String(t.dropFirst()).trimmingCharacters(in: .whitespaces))); continue
             }
             let indent = line.prefix { $0 == " " }.count / 2
-            if let m = t.firstMatch(of: /^[-*•]\s+\[( |x|X)\]\s+(.*)$/) {
+            if let m = t.firstMatch(of: #/^[-*•]\s+\[( |x|X)\]\s+(.*)$/#) {
                 out.append(.item(indent: indent, marker: .check(m.1 != " "), text: String(m.2), line: lineNo)); continue
             }
-            if let m = t.firstMatch(of: /^[-*•]\s+(.*)$/) {
+            if let m = t.firstMatch(of: #/^[-*•]\s+(.*)$/#) {
                 out.append(.item(indent: indent, marker: .bullet, text: String(m.1), line: lineNo)); continue
             }
-            if let m = t.firstMatch(of: /^(\d+)[.)]\s+(.*)$/) {
+            if let m = t.firstMatch(of: #/^(\d+)[.)]\s+(.*)$/#) {
                 out.append(.item(indent: indent, marker: .number(Int(m.1) ?? 1), text: String(m.2), line: lineNo)); continue
             }
             // inline figure inside a text line: split it out
             if t.contains("[[Grafik ") {
                 var rest = Substring(t)
-                while let m = rest.firstMatch(of: /\[\[Grafik (\d+)\]\]/) {
+                while let m = rest.firstMatch(of: #/\[\[Grafik (\d+)\]\]/#) {
                     let before = rest[..<m.range.lowerBound].trimmingCharacters(in: .whitespaces)
                     if !before.isEmpty { out.append(.paragraph(before)) }
                     out.append(.figure(Int(m.1) ?? 0))
@@ -93,7 +93,7 @@ enum InlineStyler {
         var result = AttributedString()
         var rest = Substring(text)
         // tokens: **bold**, *italic*, `code`
-        let pattern = /(\*\*[^*]+\*\*)|(\*[^*\s][^*]*\*)|(`[^`]+`)/
+        let pattern = #/(\*\*[^*]+\*\*)|(\*[^*\s][^*]*\*)|(`[^`]+`)/#
         while let m = rest.firstMatch(of: pattern) {
             result += styledWords(String(rest[..<m.range.lowerBound]), misspelled: misspelled)
             let token = String(rest[m.range])
@@ -121,14 +121,14 @@ enum InlineStyler {
         var a = AttributedString(s)
         guard !s.isEmpty else { return a }
         if !misspelled.isEmpty {
-            for m in s.matches(of: /[\p{L}\p{M}'’-]+/) {
+            for m in s.matches(of: #/[\p{L}\p{M}'’-]+/#) {
                 let word = String(s[m.range])
                 guard misspelled.contains(word.lowercased()),
                       let r = Range(m.range, in: a) else { continue }
                 a[r].underlineStyle = Text.LineStyle(pattern: .dot, color: .red)
             }
         }
-        for m in s.matches(of: /\S*\[\?\]|\[unleserlich\]|\[illegible\]/) {
+        for m in s.matches(of: #/\S*\[\?\]|\[unleserlich\]|\[illegible\]/#) {
             if let r = Range(m.range, in: a) {
                 a[r].backgroundColor = Color.yellow.opacity(0.28)
             }

@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import KSSCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 enum SidebarItem: Hashable {
     case all, recent, tasks, review
