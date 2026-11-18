@@ -82,7 +82,20 @@ enum Screenshots {
         try? await Task.sleep(for: .seconds(seconds))
     }
 
+    /// Real window pixels via screencapture (needs Screen Recording permission – CI grants it);
+    /// falls back to drawing the view hierarchy, which misses materials and Metal layers.
     private static func capture(_ window: NSWindow, _ dir: URL, _ name: String) {
+        let url = dir.appendingPathComponent(name + ".png")
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        p.arguments = ["-x", "-o", "-l", String(window.windowNumber), url.path]
+        try? p.run()
+        p.waitUntilExit()
+        if p.terminationStatus == 0, let size = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int,
+           size > 20_000 {
+            print("saved \(name) (screencapture)")
+            return
+        }
         guard let view = window.contentView?.superview ?? window.contentView else { return }
         save(view, dir, name)
     }

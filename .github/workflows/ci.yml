@@ -73,6 +73,13 @@ jobs:
         run: |
           set -o pipefail
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          # let the app record its own windows (SIP is off on hosted runners)
+          ABS="$GITHUB_WORKSPACE/$APP"
+          for db in "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "/Library/Application Support/com.apple.TCC/TCC.db"; do
+            for c in "$ABS|1" "io.github.ata88.scribesync|0" "/usr/sbin/screencapture|1"; do
+              sudo sqlite3 "$db" "INSERT OR REPLACE INTO access (service,client,client_type,auth_value,auth_reason,auth_version,csreq,policy_id,indirect_object_identifier_type,indirect_object_identifier,indirect_object_code_identity,flags,last_modified) VALUES ('kTCCServiceScreenCapture','${c%|*}',${c#*|},2,3,1,NULL,NULL,0,'UNUSED',NULL,0,$(date +%s));" || true
+            done
+          done
           export SCRIBE_SYNC_HOME="$RUNNER_TEMP/shots-home"
           echo "== screenshots" | tee -a selftest.log
           perl -e 'alarm 240; exec @ARGV' "$APP" --screenshots "$RUNNER_TEMP/shots" 2>&1 | tail -40 | tee -a selftest.log
