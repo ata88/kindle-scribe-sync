@@ -1,9 +1,13 @@
 name: Release
-# Push a tag like v1.2.0 -> builds, signs and publishes the app + Sparkle appcast.
-# Release notes: docs/releases/<version>.md (falls back to the tag message).
+# A new docs/releases/<version>.md merged to main (or a pushed tag vX.Y.Z)
+# builds, signs and publishes the app + Sparkle appcast. The workflow creates
+# the tag itself; an already published version is skipped.
 on:
   push:
     tags: ["v*"]
+    branches: [main]
+    paths: ["docs/releases/**"]
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -16,32 +20,53 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Determine version
+        id: v
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION=$(ls docs/releases/*.md | xargs -n1 basename | sed 's/\.md$//' | sort -V | tail -1)
+          fi
+          TAG="v${VERSION}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "BUILD=${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+          echo "SPARKLE_VERSION=$SPARKLE_VERSION" >> "$GITHUB_ENV"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG exists already – nothing to do"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Releasing $TAG (build ${GITHUB_RUN_NUMBER})"
+          fi
       - name: Select newest Xcode
+        if: steps.v.outputs.skip != 'true'
         run: |
           XC=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
           sudo xcode-select -s "$XC"
           xcodebuild -version
           xcodebuild -downloadComponent MetalToolchain || echo "MetalToolchain not needed/available"
-      - run: brew install xcodegen
+      - if: steps.v.outputs.skip != 'true'
+        run: brew install xcodegen
       - name: Build
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          echo "SPARKLE_VERSION=$SPARKLE_VERSION" >> "$GITHUB_ENV"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "BUILD=${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
-          scripts/build-app.sh "$VERSION" "${GITHUB_RUN_NUMBER}"
+        if: steps.v.outputs.skip != 'true'
+        run: scripts/build-app.sh "$VERSION" "$BUILD"
       - name: Sign, package, appcast
+        if: steps.v.outputs.skip != 'true'
         env:
           SIGNING_CERT_P12: ${{ secrets.SIGNING_CERT_P12 }}
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          scripts/package-release.sh "$VERSION" "$BUILD" "$GITHUB_REF_NAME" 2>&1 | tee -a build.log
+          scripts/package-release.sh "$VERSION" "$BUILD" "$TAG" 2>&1 | tee -a build.log
           test "${PIPESTATUS[0]}" -eq 0
       - name: Publish GitHub release
+        if: steps.v.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "$ZIP" appcast.xml \
+          gh release create "$TAG" "$ZIP" appcast.xml --target "$GITHUB_SHA" \
             --title "Scribe Sync ${VERSION}" --notes-file "$NOTES" --latest
       - name: Publish log
         if: failure()
