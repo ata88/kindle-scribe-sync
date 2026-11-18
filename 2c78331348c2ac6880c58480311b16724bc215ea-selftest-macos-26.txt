@@ -1,0 +1,94 @@
+commit 2c78331348c2ac6880c58480311b16724bc215ea job app run 44420075551
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 56M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 49M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 99512
+drwxr-xr-x  3 runner  staff        96 Nov 18 23:31 .
+drwxr-xr-x  7 runner  staff       224 Nov 18 23:31 ..
+-rwxr-xr-x  1 runner  staff  50948632 Nov 18 23:31 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 18 23:31 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 367x420 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8733870967741936, y1: 0.774230330672748)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
+== screenshots
+== recognition
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 367x420 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8733870967741936, y1: 0.774230330672748)
+PASS flatten-white-background
+PASS notes-html-figure
+INFO model loaded in 5 s, footprint 44.7 MB → 1.15 GB, MLX active 1,010.7 MB
+INFO recognized in 34 s
+----- markdown -----
+Einkaufsliste
+
+- Milch
+- Brot
+- Äpfel
+
+Termin mit Anna am Montag
+
+[[Grafik 1]]
+----- figures: ["1: NormRect(x0: 0.64, y0: 0.547, x1: 0.82, y1: 0.753)"] -----
+INFO after release: footprint 159.6 MB, MLX active 44 bytes, cache Zero KB
+PASS recognition-reads-text
+PASS model-memory-released (MLX active 44 bytes)
+SELFTEST OK
+exit=0
+== release dry run ==
+1 identity imported.
+/Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/build/Build/Products/Release/Scribe Sync.app: replacing existing signature
+Identifier=io.github.ata88.scribesync
+Signature size=1696
+Authority=Scribe Sync Signing
+TeamIdentifier=not set
+sparkle:edSignature="91B5hPFHJeW7ayG0Tl8Sw0AS08U+y/f0VdzSR5NDc2DcSXQGlVjgYeI+ZQ+pM0zG+FvrY09rBLXIjoPvrTUpDw==" length="13129242"
+ZIP=/Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/ScribeSync-0.0.0.zip
+NOTES=/Users/runner/work/_temp/notes.md
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Scribe Sync</title>
+    <link>https://github.com/ata88/kindle-scribe-sync</link>
+    <item>
+      <title>Version 0.0.0</title>
+      <pubDate>Wed, 18 Nov 2026 23:34:03 GMT</pubDate>
+      <sparkle:version>34</sparkle:version>
+      <sparkle:shortVersionString>0.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<p>Scribe Sync 0.0.0</p>]]></description>
+      <enclosure url="https://github.com/ata88/kindle-scribe-sync/releases/download/v0.0.0/ScribeSync-0.0.0.zip" length="13129242" type="application/octet-stream" sparkle:edSignature="91B5hPFHJeW7ayG0Tl8Sw0AS08U+y/f0VdzSR5NDc2DcSXQGlVjgYeI+ZQ+pM0zG+FvrY09rBLXIjoPvrTUpDw=="/>
+    </item>
+  </channel>
+</rss>
