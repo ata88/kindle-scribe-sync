@@ -25,6 +25,7 @@ struct ReaderView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollPosition(id: $visiblePage, anchor: .top)
+            .defaultScrollAnchor(.top)
             .background(Theme.paper)
             .onAppear { jump(proxy) }
             .onChange(of: model.scrollTarget) { _, _ in jump(proxy) }
@@ -439,12 +440,35 @@ struct ScanInspector: View {
     }
 }
 
-/// NSScrollView with pinch/scroll zoom – smooth on large scans.
+/// NSScrollView with pinch/scroll zoom – smooth on large scans. Starts fitted
+/// to the width and aligned to the top of the page.
 struct ZoomableImage: NSViewRepresentable {
     let url: URL
 
+    final class FlippedImageView: NSImageView {
+        override var isFlipped: Bool { true }
+    }
+
+    final class FittingScrollView: NSScrollView {
+        var imageSize: NSSize = .zero
+        private var fitted = false
+
+        override func layout() {
+            super.layout()
+            fitIfNeeded()
+        }
+
+        func fitIfNeeded(force: Bool = false) {
+            guard imageSize.width > 0, contentSize.width > 10, !fitted || force else { return }
+            fitted = true
+            let fit = max(minMagnification, contentSize.width / imageSize.width)
+            magnification = fit
+            documentView?.scroll(.zero)   // flipped: (0,0) is the top-left corner
+        }
+    }
+
     func makeNSView(context: Context) -> NSScrollView {
-        let scroll = NSScrollView()
+        let scroll = FittingScrollView()
         scroll.hasVerticalScroller = true
         scroll.hasHorizontalScroller = true
         scroll.autohidesScrollers = true
@@ -453,20 +477,16 @@ struct ZoomableImage: NSViewRepresentable {
         scroll.maxMagnification = 6
         scroll.backgroundColor = .white
         scroll.drawsBackground = true
-        let imageView = NSImageView()
-        imageView.imageScaling = .scaleProportionallyUpOrDown
+        let imageView = FlippedImageView()
+        imageView.imageScaling = .scaleAxesIndependently
         scroll.documentView = imageView
-        Task {
-            let img = await ImageCache.shared.image(at: url, maxPixel: 2400)
-            await MainActor.run {
-                guard let img else { return }
-                let size = NSSize(width: img.width, height: img.height)
-                imageView.image = NSImage(cgImage: img, size: size)
-                imageView.frame = NSRect(origin: .zero, size: size)
-                let fit = max(0.1, (scroll.contentSize.width - 2) / size.width)
-                scroll.magnification = fit
-                scroll.documentView?.scroll(NSPoint(x: 0, y: size.height))
-            }
+        Task { @MainActor in
+            guard let img = await ImageCache.shared.image(at: url, maxPixel: 2400) else { return }
+            let size = NSSize(width: img.width, height: img.height)
+            imageView.image = NSImage(cgImage: img, size: size)
+            imageView.frame = NSRect(origin: .zero, size: size)
+            scroll.imageSize = size
+            scroll.fitIfNeeded(force: true)
         }
         return scroll
     }

@@ -28,7 +28,9 @@ enum Screenshots {
         guard let main = NSApp.windows.first(where: { ($0.identifier?.rawValue ?? "").hasPrefix("main") }) else {
             print("no main window"); exit(1)
         }
-        main.setFrame(NSRect(x: 40, y: 40, width: 1440, height: 900), display: true)
+        let screen = (NSScreen.main ?? NSScreen.screens[0]).visibleFrame
+        print("screen \(screen)")
+        main.setFrame(screen.insetBy(dx: 8, dy: 8), display: true)
         main.makeKeyAndOrderFront(nil)
         await pause(2)
 
@@ -59,7 +61,7 @@ enum Screenshots {
         NotificationCenter.default.post(name: .openDiagnosticsWindow, object: nil)
         await pause(2)
         if let diag = NSApp.windows.first(where: { ($0.identifier?.rawValue ?? "").hasPrefix("diagnostics") }) {
-            diag.setFrame(NSRect(x: 60, y: 60, width: 1000, height: 720), display: true)
+            diag.setFrame(screen.insetBy(dx: 30, dy: 20), display: true)
             await pause(1)
             capture(diag, dir, "6-diagnostics")
         }

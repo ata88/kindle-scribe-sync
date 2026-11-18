@@ -19,9 +19,9 @@ struct DiagnosticsView: View {
     }
 
     var body: some View {
-        VSplitView {
+        VStack(spacing: 0) {
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 270), spacing: 12, alignment: .top)], spacing: 12) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 12, alignment: .top)], spacing: 12) {
                     syncCard
                     MemoryCard()
                     powerCard
@@ -30,8 +30,11 @@ struct DiagnosticsView: View {
                     processCard
                 }
                 .padding(16)
+                .frame(maxWidth: .infinity)
             }
-            .frame(minHeight: 240, idealHeight: 330)
+            .frame(maxWidth: .infinity)
+            .frame(height: 330)
+            Divider()
 
             VStack(spacing: 0) {
                 HStack(spacing: 10) {
@@ -68,8 +71,9 @@ struct DiagnosticsView: View {
                 }
                 .listStyle(.plain)
             }
-            .frame(minHeight: 200)
+            .frame(maxWidth: .infinity, minHeight: 200, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(L("Diagnose"))
     }
 
