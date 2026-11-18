@@ -116,6 +116,7 @@ enum Translations {
         "Jetzt synchronisieren (⌘R)": "Sync now (⌘R)",
         "Bibliothek": "Library",
         "Ordner": "Folders",
+        "Ordner in Notizen": "Folder in Notes",
         "KI-Modell aktiv": "AI model active",
         "Amazon-Anmeldung nötig": "Amazon sign-in needed",
         "KI-Modell fehlt": "AI model missing",

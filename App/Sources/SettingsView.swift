@@ -187,7 +187,7 @@ struct NotesSettings: View {
                     ForEach(Array(Set(accounts + [model.settings.notesAccount])).sorted(), id: \.self) { Text($0).tag($0) }
                 }
                 .task { accounts = NotesScripting.accountNames() }
-                TextField(L("Ordner"), text: Binding(get: { model.settings.notesFolder }, set: { model.settings.notesFolder = $0 }))
+                TextField(L("Ordner in Notizen"), text: Binding(get: { model.settings.notesFolder }, set: { model.settings.notesFolder = $0 }))
                 Toggle(L("Komplettes Seitenbild zusätzlich anhängen"), isOn: Binding(get: { model.settings.attachPageImages },
                                                                                      set: { model.settings.attachPageImages = $0 }))
             } footer: {
