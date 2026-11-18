@@ -9,6 +9,11 @@ public struct TaskItem: Identifiable, Hashable, Sendable {
     public var text: String
     public var done: Bool
     public var id: String { "\(notebookID)#\(pageIndex)#\(line)" }
+
+    public init(notebookID: String, notebookTitle: String, pageIndex: Int, line: Int, text: String, done: Bool) {
+        self.notebookID = notebookID; self.notebookTitle = notebookTitle; self.pageIndex = pageIndex
+        self.line = line; self.text = text; self.done = done
+    }
 }
 
 public enum Tasks {
