@@ -32,8 +32,22 @@ public struct RecognitionContext: Sendable {
 public protocol PageRecognizer: Sendable {
     var modelName: String { get }
     func prepare() async throws
-    func recognize(png: Data, context: RecognitionContext) async throws -> RecognitionResult
+    /// `onPartial` receives the text read so far (for a live preview), already
+    /// stripped of the answer format.
+    func recognize(png: Data, context: RecognitionContext,
+                   onPartial: @escaping @Sendable (String) -> Void) async throws -> RecognitionResult
     func release() async
+}
+
+extension RecognitionPrompt {
+    /// The readable part of a partial model answer (inside <text>, without figure JSON).
+    public static func previewText(_ partial: String) -> String {
+        var s = partial.replacingOccurrences(of: #"<think>[\s\S]*?(</think>|$)"#, with: "", options: .regularExpression)
+        if let r = s.range(of: "<text>") { s = String(s[r.upperBound...]) }
+        if let r = s.range(of: "</text>") { s = String(s[..<r.lowerBound]) }
+        if let r = s.range(of: "<grafiken>") { s = String(s[..<r.lowerBound]) }
+        return s.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 public enum RecognitionPrompt {

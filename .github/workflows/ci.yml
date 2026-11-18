@@ -48,6 +48,18 @@ jobs:
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
           perl -e 'alarm 120; exec @ARGV' "$APP" --self-test 2>&1 | tee selftest.log
           test "${PIPESTATUS[0]}" -eq 0
+      - name: Screenshots of the UI (demo library)
+        continue-on-error: true
+        run: |
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          export SCRIBE_SYNC_HOME="$RUNNER_TEMP/shots-home"
+          perl -e 'alarm 240; exec @ARGV' "$APP" --screenshots "$RUNNER_TEMP/shots" 2>&1 | tail -20
+          ls -l "$RUNNER_TEMP/shots" || true
+      - name: Publish screenshots
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/publish-ci-files.sh "$RUNNER_TEMP/shots" shots || true
       - name: Download small test model (same family as the default)
         run: python3 scripts/download_model.py mlx-community/Qwen3.5-2B-4bit "$RUNNER_TEMP/model" | tail -2
       - name: Self-test recognition (needs Metal in the runner VM)

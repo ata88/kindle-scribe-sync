@@ -7,15 +7,15 @@ import Security
 // MARK: - Settings
 
 enum BatteryMode: String, CaseIterable, Identifiable {
-    case normal          // fetch and recognize on battery too
-    case deferRecognition // fetch on battery, recognize when plugged in
-    case pause           // do nothing on battery
+    case normal            // fetch and recognize on battery too
+    case deferRecognition  // fetch on battery, recognize when plugged in
+    case pause             // do nothing on battery
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .normal: return "Normal weiterarbeiten"
-        case .deferRecognition: return "Nur abrufen, Texterkennung am Netzteil"
-        case .pause: return "Pausieren bis zum Netzteil"
+        case .normal: return L("Normal weiterarbeiten")
+        case .deferRecognition: return L("Nur abrufen, Texterkennung am Netzteil")
+        case .pause: return L("Pausieren bis zum Netzteil")
         }
     }
 }
@@ -24,9 +24,13 @@ enum BatteryMode: String, CaseIterable, Identifiable {
 final class AppSettings: ObservableObject {
     private let d = UserDefaults.standard
 
+    @Published var language: AppLanguage { didSet { d.set(language.rawValue, forKey: Loc.defaultsKey); applyLanguage() } }
     @Published var syncIntervalMinutes: Int { didSet { d.set(syncIntervalMinutes, forKey: "syncIntervalMinutes") } }
     @Published var batteryMode: BatteryMode { didSet { d.set(batteryMode.rawValue, forKey: "batteryMode") } }
     @Published var minBatteryPercent: Int { didSet { d.set(minBatteryPercent, forKey: "minBatteryPercent") } }
+    @Published var keepAwakeOnAC: Bool { didSet { d.set(keepAwakeOnAC, forKey: "keepAwakeOnAC") } }
+    @Published var notifications: Bool { didSet { d.set(notifications, forKey: "notifications") } }
+    @Published var spotlight: Bool { didSet { d.set(spotlight, forKey: "spotlight") } }
     @Published var notesEnabled: Bool { didSet { d.set(notesEnabled, forKey: "notesEnabled") } }
     @Published var notesAccount: String { didSet { d.set(notesAccount, forKey: "notesAccount") } }
     @Published var notesFolder: String { didSet { d.set(notesFolder, forKey: "notesFolder") } }
@@ -35,18 +39,33 @@ final class AppSettings: ObservableObject {
 
     init() {
         d.register(defaults: [
+            Loc.defaultsKey: AppLanguage.system.rawValue,
             "syncIntervalMinutes": 5, "batteryMode": BatteryMode.normal.rawValue, "minBatteryPercent": 25,
+            "keepAwakeOnAC": true, "notifications": true, "spotlight": true,
             "notesEnabled": true, "notesAccount": "iCloud", "notesFolder": "Kindle Scribe",
-            "attachPageImages": false, "modelID": ModelCatalog.defaultModel.id,
+            "attachPageImages": false, "modelID": ModelCatalog.defaultModelID,
         ])
-        syncIntervalMinutes = d.integer(forKey: "syncIntervalMinutes")
+        language = AppLanguage(rawValue: d.string(forKey: Loc.defaultsKey) ?? "") ?? .system
+        syncIntervalMinutes = max(1, d.integer(forKey: "syncIntervalMinutes"))
         batteryMode = BatteryMode(rawValue: d.string(forKey: "batteryMode") ?? "") ?? .normal
         minBatteryPercent = d.integer(forKey: "minBatteryPercent")
+        keepAwakeOnAC = d.bool(forKey: "keepAwakeOnAC")
+        notifications = d.bool(forKey: "notifications")
+        spotlight = d.bool(forKey: "spotlight")
         notesEnabled = d.bool(forKey: "notesEnabled")
         notesAccount = d.string(forKey: "notesAccount") ?? "iCloud"
         notesFolder = d.string(forKey: "notesFolder") ?? "Kindle Scribe"
         attachPageImages = d.bool(forKey: "attachPageImages")
-        modelID = d.string(forKey: "modelID") ?? ModelCatalog.defaultModel.id
+        modelID = d.string(forKey: "modelID") ?? ModelCatalog.defaultModelID
+    }
+
+    /// System menus (Edit, Window …) follow AppleLanguages – takes effect after a restart.
+    private func applyLanguage() {
+        switch language {
+        case .system: d.removeObject(forKey: "AppleLanguages")
+        case .de: d.set(["de"], forKey: "AppleLanguages")
+        case .en: d.set(["en"], forKey: "AppleLanguages")
+        }
     }
 
     var syncSettings: SyncSettings {
@@ -62,8 +81,10 @@ final class AppSettings: ObservableObject {
 
 enum AppPaths {
     static var support: URL {
-        let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Scribe Sync", isDirectory: true)
+        // SCRIBE_SYNC_HOME: separate data folder (CI screenshots/tests)
+        let url = ProcessInfo.processInfo.environment["SCRIBE_SYNC_HOME"].map { URL(fileURLWithPath: $0, isDirectory: true) }
+            ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("Scribe Sync", isDirectory: true)
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }
@@ -154,10 +175,10 @@ struct PowerState: Equatable {
     }
 
     var description: String {
-        if !onBattery { return "Netzteil" }
-        var s = "Akku"
+        if !onBattery { return L("Netzteil") }
+        var s = L("Akku")
         if let p = batteryPercent { s += " \(p) %" }
-        if lowPowerMode { s += ", Stromsparmodus" }
+        if lowPowerMode { s += ", " + L("Stromsparmodus") }
         return s
     }
 }

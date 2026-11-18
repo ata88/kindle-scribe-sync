@@ -18,7 +18,7 @@ public enum NotesRenderer {
         }
         for page in nb.pages {
             parts.append("<div><br></div>")
-            if nb.pages.count > 1 { parts.append("<div><h2>Seite \(page.index + 1)</h2></div>") }
+            if nb.pages.count > 1 { parts.append("<div><h2>\(escape(L("Seite %ld", page.index + 1)))</h2></div>") }
             switch page.status {
             case .recognized:
                 parts.append(markdownToHTML(page.text) { id in
@@ -28,9 +28,9 @@ public enum NotesRenderer {
                     return "<div><img src=\"data:image/png;base64,\(png.base64EncodedString())\"></div>"
                 })
             case .pending:
-                parts.append("<div><i>(wird erkannt …)</i></div>")
+                parts.append("<div><i>\(escape(L("(wird erkannt …)")))</i></div>")
             case .failed:
-                parts.append("<div><i>(Texterkennung fehlgeschlagen – wird erneut versucht)</i></div>")
+                parts.append("<div><i>\(escape(L("(Texterkennung fehlgeschlagen – wird erneut versucht)")))</i></div>")
             }
             if let pagePNG, let png = pagePNG(page) {
                 parts.append("<div><img src=\"data:image/png;base64,\(png.base64EncodedString())\"></div>")
@@ -38,9 +38,10 @@ public enum NotesRenderer {
         }
         let body = parts.joined(separator: "\n")
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "de_DE")
-        formatter.dateFormat = "dd.MM.yyyy HH:mm"
-        let footer = "<div><br></div><div><font color=\"#8a8a8a\"><small>Kindle Scribe · zuletzt synchronisiert \(formatter.string(from: stamp)). Korrekturen bitte in der App Scribe Sync vornehmen.</small></font></div>"
+        formatter.locale = Loc.locale
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        let footer = "<div><br></div><div><font color=\"#8a8a8a\"><small>\(escape(L("Kindle Scribe · zuletzt synchronisiert %@ · Korrekturen bitte in der App Scribe Sync vornehmen.", formatter.string(from: stamp))))</small></font></div>"
         return Output(html: "<html><body>\n\(body)\n\(footer)\n</body></html>", contentHash: fnv1a(body))
     }
 
@@ -80,7 +81,7 @@ public enum NotesRenderer {
 
             if let m = trimmed.firstMatch(of: /^\[\[Grafik (\d+)\]\]$/), let id = Int(m.1) {
                 closeLists()
-                out.append(figure(id) ?? "<div><i>[Grafik \(id)]</i></div>")
+                out.append(figure(id) ?? "<div><i>[\(escape(L("Grafik %ld", id)))]</i></div>")
                 continue
             }
             if let m = trimmed.firstMatch(of: /^(#{1,3})\s+(.*)$/) {
@@ -124,7 +125,7 @@ public enum NotesRenderer {
         var rest = Substring(s)
         while let m = rest.firstMatch(of: /\[\[Grafik (\d+)\]\]/) {
             result += inline(String(rest[..<m.range.lowerBound]))
-            result += figure(Int(m.1) ?? 0) ?? "<i>[Grafik \(m.1)]</i>"
+            result += figure(Int(m.1) ?? 0) ?? "<i>[\(escape(L("Grafik %ld", Int(m.1) ?? 0)))]</i>"
             rest = rest[m.range.upperBound...]
         }
         return result + inline(String(rest))

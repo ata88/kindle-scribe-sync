@@ -15,7 +15,7 @@ final class AmazonAuth: NSObject, ObservableObject {
         case needsLogin(String)
     }
 
-    @Published var state: State = AmazonSession.load() == nil ? .needsLogin("Noch nicht angemeldet") : .unknown
+    @Published var state: State = AmazonSession.load() == nil ? .needsLogin(L("Noch nicht angemeldet")) : .unknown
     @Published var showLogin = false
     private let log: EventLog
     private var refreshView: WKWebView?
@@ -43,22 +43,22 @@ final class AmazonAuth: NSObject, ObservableObject {
 
     func didLogIn() {
         showLogin = false
-        log.log(.amazon, "Bei Amazon angemeldet")
-        AppModel.shared.syncNow(reason: "nach Anmeldung")
+        log.log(.amazon, L("Bei Amazon angemeldet"))
+        AppModel.shared.syncNow(reason: L("nach Anmeldung"))
     }
 
     func signOut() {
         AmazonSession.clear()
         WKWebsiteDataStore.default().removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
                                                 modifiedSince: .distantPast) {}
-        state = .needsLogin("Abgemeldet")
-        log.log(.amazon, "Abgemeldet, Amazon-Daten der App gelöscht")
+        state = .needsLogin(L("Abgemeldet"))
+        log.log(.amazon, L("Abgemeldet, Amazon-Daten der App gelöscht"))
     }
 
     /// Renew the session in an invisible web view using WebKit's persistent
     /// "keep me signed in" cookies. Returns false if a manual login is needed.
     func silentRefresh() async -> Bool {
-        log.log(.amazon, "Sitzung abgelaufen – stille Erneuerung")
+        log.log(.amazon, L("Sitzung abgelaufen – stille Erneuerung"))
         let view = WKWebView(frame: .init(x: 0, y: 0, width: 800, height: 600))
         view.navigationDelegate = self
         refreshView = view
@@ -72,10 +72,10 @@ final class AmazonAuth: NSObject, ObservableObject {
         }
         refreshView = nil
         if ok {
-            log.log(.amazon, "Sitzung erneuert")
+            log.log(.amazon, L("Sitzung erneuert"))
         } else {
-            state = .needsLogin("Anmeldung abgelaufen")
-            log.log(.amazon, "Erneuerung nicht möglich – bitte neu anmelden", level: .warning)
+            state = .needsLogin(L("Anmeldung abgelaufen"))
+            log.log(.amazon, L("Erneuerung nicht möglich – bitte neu anmelden"), level: .warning)
         }
         return ok
     }
@@ -110,12 +110,12 @@ struct AmazonLoginView: View {
         VStack(spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Bei Amazon anmelden").font(.headline)
-                    Text("Normale Amazon-Zugangsdaten – auch für amazon.de-Konten. Bitte „Angemeldet bleiben“ ankreuzen.")
+                    Text(L("Bei Amazon anmelden")).font(.headline)
+                    Text(L("Normale Amazon-Zugangsdaten – auch für amazon.de-Konten. Bitte „Angemeldet bleiben“ ankreuzen."))
                         .font(.callout).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Abbrechen") { model.auth.showLogin = false }
+                Button(L("Abbrechen")) { model.auth.showLogin = false }
                     .keyboardShortcut(.cancelAction)
             }
             .padding(14)

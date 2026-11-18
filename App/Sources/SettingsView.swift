@@ -7,56 +7,108 @@ struct SettingsView: View {
 
     var body: some View {
         TabView {
-            GeneralSettings().tabItem { Label("Allgemein", systemImage: "gearshape") }
-            RecognitionSettings().tabItem { Label("Texterkennung", systemImage: "cpu") }
-            NotesSettings().tabItem { Label("Apple Notes", systemImage: "note.text") }
+            GeneralSettings().tabItem { Label(L("Allgemein"), systemImage: "gearshape") }
+            SyncSettingsView().tabItem { Label(L("Abgleich"), systemImage: "arrow.triangle.2.circlepath") }
+            RecognitionSettings().tabItem { Label(L("Texterkennung"), systemImage: "cpu") }
+            NotesSettings().tabItem { Label(L("Notizen"), systemImage: "note.text") }
             AccountSettings().tabItem { Label("Amazon", systemImage: "person.crop.circle") }
-            UpdateSettings().tabItem { Label("Updates", systemImage: "arrow.down.circle") }
+            UpdateSettings().tabItem { Label(L("Updates"), systemImage: "arrow.down.circle") }
         }
         .environmentObject(model)
-        .frame(width: 560)
-        .padding(20)
+        .frame(width: 600)
+        .frame(minHeight: 420)
     }
 }
 
 private struct GeneralSettings: View {
     @EnvironmentObject var model: AppModel
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var languageChanged = false
 
     var body: some View {
         Form {
             Section {
-                Stepper("Automatisch synchronisieren alle \(model.settings.syncIntervalMinutes) Min.",
-                        value: Binding(get: { model.settings.syncIntervalMinutes },
-                                       set: { model.settings.syncIntervalMinutes = $0; model.scheduleBackgroundSync() }),
-                        in: 1...120)
-                Text("Nur solange die App läuft. macOS wählt den energiegünstigsten Moment und weckt den Mac nie dafür auf.")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            Section("Akkubetrieb") {
-                Picker("Bei Akkubetrieb", selection: Binding(get: { model.settings.batteryMode },
-                                                             set: { model.settings.batteryMode = $0 })) {
-                    ForEach(BatteryMode.allCases) { Text($0.label).tag($0) }
+                Picker(L("Sprache"), selection: Binding(get: { model.settings.language },
+                                                       set: { model.settings.language = $0; languageChanged = true })) {
+                    Text(L("Wie macOS")).tag(AppLanguage.system)
+                    Text("Deutsch").tag(AppLanguage.de)
+                    Text("English").tag(AppLanguage.en)
                 }
-                if model.settings.batteryMode == .normal {
-                    Stepper("Texterkennung erst ab \(model.settings.minBatteryPercent) % Akku",
-                            value: Binding(get: { model.settings.minBatteryPercent },
-                                           set: { model.settings.minBatteryPercent = $0 }),
-                            in: 0...90, step: 5)
+                if languageChanged {
+                    HStack {
+                        Text(L("Menüs wechseln nach einem Neustart der App.")).font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Button(L("Jetzt neu starten")) { relaunch() }.controlSize(.small)
+                    }
                 }
-                Text("Im Stromsparmodus wartet die Texterkennung immer bis zum Netzteil.")
-                    .font(.caption).foregroundStyle(.secondary)
             }
             Section {
-                Toggle("Beim Anmelden am Mac öffnen", isOn: $launchAtLogin)
+                Toggle(L("Beim Anmelden am Mac öffnen"), isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, on in
                         do {
                             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
                         } catch {
-                            model.log.log(.app, "Anmeldeobjekt: \(error.localizedDescription)", level: .warning)
+                            model.log.log(.app, L("Anmeldeobjekt: %@", error.localizedDescription), level: .warning)
                         }
                     }
-                Text("Startet die App selbst (sichtbar in Dock und Menüleiste) – es gibt keinen versteckten Hintergrunddienst.")
+                Text(L("Startet die App selbst – sichtbar in Dock und Menüleiste. Es gibt keinen versteckten Hintergrunddienst."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section {
+                Toggle(L("Mitteilung bei neu erkannten Seiten"), isOn: Binding(get: { model.settings.notifications }, set: { on in
+                    model.settings.notifications = on
+                    if on { Task { _ = await model.notifier.requestAuthorization() } }
+                }))
+                Toggle(L("In Spotlight durchsuchbar"), isOn: Binding(get: { model.settings.spotlight }, set: { on in
+                    model.settings.spotlight = on
+                    if on { SpotlightIndex.index(model.notebooks) } else { SpotlightIndex.removeAll() }
+                }))
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    private func relaunch() {
+        let url = Bundle.main.bundleURL
+        let config = NSWorkspace.OpenConfiguration()
+        config.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: url, configuration: config) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
+    }
+}
+
+private struct SyncSettingsView: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        Form {
+            Section {
+                Picker(L("Abgleich alle"), selection: Binding(get: { model.settings.syncIntervalMinutes },
+                                                             set: { model.settings.syncIntervalMinutes = $0 })) {
+                    ForEach([2, 5, 10, 15, 30, 60], id: \.self) { m in Text(L("%ld Minuten", m)).tag(m) }
+                }
+                Text(L("Solange die App läuft – auch mit geschlossenem Fenster. Zusätzlich nach dem Aufwachen und beim Anschließen ans Netzteil."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section(L("Am Netzteil")) {
+                Toggle(L("Mac wach halten, damit im Hintergrund abgeglichen wird"),
+                       isOn: Binding(get: { model.settings.keepAwakeOnAC }, set: { model.settings.keepAwakeOnAC = $0 }))
+                Text(L("So kommen neue Notizen auch dann über iCloud aufs iPhone, wenn du nicht am Mac bist. Der Bildschirm darf ausgehen. Mit zugeklapptem Deckel schläft ein MacBook trotzdem – das kann keine App ändern."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section(L("Im Akkubetrieb")) {
+                Picker(L("Verhalten"), selection: Binding(get: { model.settings.batteryMode },
+                                                         set: { model.settings.batteryMode = $0 })) {
+                    ForEach(BatteryMode.allCases) { Text($0.label).tag($0) }
+                }
+                if model.settings.batteryMode == .normal {
+                    Picker(L("Texterkennung erst ab"), selection: Binding(get: { model.settings.minBatteryPercent },
+                                                                          set: { model.settings.minBatteryPercent = $0 })) {
+                        ForEach([0, 15, 25, 40, 60], id: \.self) { p in Text(p == 0 ? L("sofort") : "\(p) %").tag(p) }
+                    }
+                }
+                Text(L("Im Akkubetrieb wird der Mac nie geweckt oder wach gehalten. Im Stromsparmodus wartet die Texterkennung bis zum Netzteil."))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -71,19 +123,17 @@ private struct RecognitionSettings: View {
         Form {
             Section {
                 ForEach(ModelCatalog.all) { info in
-                    HStack(alignment: .top) {
-                        Image(systemName: model.settings.modelID == info.id ? "largecircle.fill.circle" : "circle")
-                            .foregroundStyle(Color.accentColor)
-                            .onTapGesture { model.settings.modelID = info.id }
+                    HStack(alignment: .center, spacing: 12) {
+                        Image(systemName: model.settings.modelID == info.id ? "checkmark.circle.fill" : "circle")
+                            .font(.title3)
+                            .foregroundStyle(model.settings.modelID == info.id ? Theme.accent : .secondary)
                         VStack(alignment: .leading, spacing: 2) {
-                            HStack {
+                            HStack(spacing: 6) {
                                 Text(info.title).font(.headline)
-                                if info.id == ModelCatalog.recommended.id {
-                                    Text("empfohlen").font(.caption).foregroundStyle(.green)
-                                }
+                                if info.id == ModelCatalog.recommended.id { Pill(text: L("empfohlen"), tint: Theme.accent) }
                             }
                             Text(info.note).font(.caption).foregroundStyle(.secondary)
-                            Text("ca. \(String(format: "%.1f", info.approxGB)) GB · ab \(info.minRAMGB) GB RAM")
+                            Text(L("ca. %@ GB · ab %ld GB RAM", String(format: "%.1f", info.approxGB), info.minRAMGB))
                                 .font(.caption2).foregroundStyle(.tertiary)
                         }
                         Spacer()
@@ -91,9 +141,11 @@ private struct RecognitionSettings: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture { model.settings.modelID = info.id }
+                    .padding(.vertical, 2)
                 }
             } footer: {
-                Text("Die Modelle laufen vollständig auf deinem Mac. Sie werden nur geladen, während neue Seiten erkannt werden, und danach sofort aus dem Arbeitsspeicher entfernt. Quelle: huggingface.co/mlx-community.")
+                Text(L("Die Modelle laufen vollständig auf deinem Mac. Geladen wird nur, während neue Seiten gelesen werden – danach ist der Arbeitsspeicher sofort wieder frei."))
+                    .font(.caption).foregroundStyle(.secondary)
             }
             if let err = model.models.lastError {
                 Text(err).foregroundStyle(.red).font(.caption)
@@ -104,17 +156,18 @@ private struct RecognitionSettings: View {
 
     @ViewBuilder private func modelButton(_ info: ModelInfo) -> some View {
         if model.models.downloading == info.id {
-            VStack(alignment: .trailing) {
+            VStack(alignment: .trailing, spacing: 3) {
                 ProgressView(value: model.models.progress).frame(width: 120)
-                Button("Abbrechen") { model.models.cancel() }.controlSize(.small)
+                Button(L("Abbrechen")) { model.models.cancel() }.controlSize(.small)
             }
         } else if ModelManager.isInstalled(info.id) {
-            Button("Löschen", role: .destructive) { model.models.delete(info.id) }
+            Button(L("Löschen"), role: .destructive) { model.models.delete(info.id) }.controlSize(.small)
         } else {
-            Button("Laden") {
+            Button(L("Laden")) {
                 model.settings.modelID = info.id
                 model.models.download(info)
             }
+            .controlSize(.small)
             .disabled(model.models.downloading != nil)
         }
     }
@@ -126,20 +179,23 @@ private struct NotesSettings: View {
 
     var body: some View {
         Form {
-            Toggle("Notizbücher in Apple Notes spiegeln", isOn: Binding(get: { model.settings.notesEnabled },
-                                                                       set: { model.settings.notesEnabled = $0 }))
-            Picker("Account", selection: Binding(get: { model.settings.notesAccount },
-                                                 set: { model.settings.notesAccount = $0 })) {
-                ForEach(Array(Set(accounts + [model.settings.notesAccount])).sorted(), id: \.self) { Text($0).tag($0) }
-            }
-            .onAppear { accounts = NotesScripting.accountNames() }
-            TextField("Ordner", text: Binding(get: { model.settings.notesFolder }, set: { model.settings.notesFolder = $0 }))
-            Toggle("Komplettes Seitenbild zusätzlich anhängen", isOn: Binding(get: { model.settings.attachPageImages },
-                                                                             set: { model.settings.attachPageImages = $0 }))
             Section {
-                Button("Alle Notizen jetzt neu schreiben") { model.republishAll() }
+                Toggle(L("Notizbücher in der App Notizen spiegeln"), isOn: Binding(get: { model.settings.notesEnabled },
+                                                                               set: { model.settings.notesEnabled = $0 }))
+                Picker(L("Account"), selection: Binding(get: { model.settings.notesAccount },
+                                                        set: { model.settings.notesAccount = $0 })) {
+                    ForEach(Array(Set(accounts + [model.settings.notesAccount])).sorted(), id: \.self) { Text($0).tag($0) }
+                }
+                .task { accounts = NotesScripting.accountNames() }
+                TextField(L("Ordner"), text: Binding(get: { model.settings.notesFolder }, set: { model.settings.notesFolder = $0 }))
+                Toggle(L("Komplettes Seitenbild zusätzlich anhängen"), isOn: Binding(get: { model.settings.attachPageImages },
+                                                                                     set: { model.settings.attachPageImages = $0 }))
             } footer: {
-                Text("Jedes Notizbuch ist genau eine Notiz, die bei Änderungen aktualisiert wird. Korrekturen bitte in Scribe Sync machen – Änderungen direkt in Apple Notes werden beim nächsten Abgleich überschrieben.")
+                Text(L("Jedes Notizbuch ist genau eine Notiz, die bei Änderungen aktualisiert wird – über iCloud auch auf iPhone und iPad. Korrekturen bitte in Scribe Sync machen: Änderungen direkt in Notizen werden beim nächsten Abgleich überschrieben."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section {
+                Button(L("Alle Notizen jetzt neu schreiben")) { model.republishAll() }
             }
         }
         .formStyle(.grouped)
@@ -151,19 +207,22 @@ private struct AccountSettings: View {
 
     var body: some View {
         Form {
-            switch model.auth.state {
-            case .needsLogin(let why):
-                LabeledContent("Status", value: why)
-                Button("Bei Amazon anmelden …") { model.auth.showLogin = true }
-            default:
-                LabeledContent("Status", value: "Angemeldet")
-                if let s = AmazonSession.load() {
-                    LabeledContent("Gesichert am", value: s.savedAt.formatted(date: .abbreviated, time: .shortened))
+            Section {
+                switch model.auth.state {
+                case .needsLogin(let why):
+                    LabeledContent(L("Status"), value: why)
+                    Button(L("Bei Amazon anmelden …")) { model.auth.showLogin = true }
+                default:
+                    LabeledContent(L("Status"), value: L("Angemeldet"))
+                    if let s = AmazonSession.load() {
+                        LabeledContent(L("Gesichert am"), value: s.savedAt.formatted(date: .abbreviated, time: .shortened))
+                    }
+                    Button(L("Abmelden"), role: .destructive) { model.auth.signOut() }
                 }
-                Button("Abmelden", role: .destructive) { model.auth.signOut() }
+            } footer: {
+                Text(L("Die Anmeldung liegt verschlüsselt im macOS-Schlüsselbund. Scribe-Notizbücher werden für alle Länder über read.amazon.com abgerufen."))
+                    .font(.caption).foregroundStyle(.secondary)
             }
-            Text("Die Anmeldung liegt verschlüsselt im macOS-Schlüsselbund. Scribe-Notizbücher werden für alle Länder über read.amazon.com abgerufen.")
-                .font(.caption).foregroundStyle(.secondary)
         }
         .formStyle(.grouped)
         .sheet(isPresented: Binding(get: { model.auth.showLogin }, set: { model.auth.showLogin = $0 })) {
@@ -177,19 +236,22 @@ private struct UpdateSettings: View {
 
     var body: some View {
         Form {
-            LabeledContent("Version", value: "\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"))")
-            if model.updater.isAvailable {
-                Toggle("Automatisch nach Updates suchen", isOn: Binding(get: { model.updater.automaticallyChecks },
-                                                                       set: { model.updater.automaticallyChecks = $0 }))
-                if let d = model.updater.lastCheck {
-                    LabeledContent("Zuletzt geprüft", value: d.formatted(date: .abbreviated, time: .shortened))
+            Section {
+                LabeledContent(L("Version"), value: "\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"))")
+                if model.updater.isAvailable {
+                    Toggle(L("Automatisch nach Updates suchen"), isOn: Binding(get: { model.updater.automaticallyChecks },
+                                                                              set: { model.updater.automaticallyChecks = $0 }))
+                    if let d = model.updater.lastCheck {
+                        LabeledContent(L("Zuletzt geprüft"), value: d.formatted(date: .abbreviated, time: .shortened))
+                    }
+                    Button(L("Jetzt nach Updates suchen")) { model.updater.checkForUpdates() }
+                        .disabled(!model.updater.canCheckForUpdates)
+                } else {
+                    Text(L("Entwicklungs-Build ohne Update-Funktion.")).foregroundStyle(.secondary)
                 }
-                Button("Jetzt nach Updates suchen") { model.updater.checkForUpdates() }
-                    .disabled(!model.updater.canCheckForUpdates)
-                Text("Updates kommen signiert aus den GitHub-Releases von ata88/kindle-scribe-sync. Vor der Installation siehst du, was neu ist.")
+            } footer: {
+                Text(L("Updates kommen signiert aus den GitHub-Releases von ata88/kindle-scribe-sync. Vor der Installation siehst du, was neu ist."))
                     .font(.caption).foregroundStyle(.secondary)
-            } else {
-                Text("Entwicklungs-Build ohne Update-Funktion.").foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

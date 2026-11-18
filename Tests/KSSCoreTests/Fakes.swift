@@ -47,7 +47,9 @@ final class FakeRecognizer: PageRecognizer, @unchecked Sendable {
     func prepare() async throws { lock.withLock { prepares += 1; loaded = true } }
     func release() async { lock.withLock { releases += 1; loaded = false } }
 
-    func recognize(png: Data, context: RecognitionContext) async throws -> RecognitionResult {
+    func recognize(png: Data, context: RecognitionContext,
+                   onPartial: @escaping @Sendable (String) -> Void) async throws -> RecognitionResult {
+        onPartial("…")
         let content = String(decoding: png, as: UTF8.self)
         let (fail, out) = lock.withLock { () -> (Bool, String?) in
             precondition(loaded, "recognize called without prepare")

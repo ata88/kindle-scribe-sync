@@ -18,25 +18,26 @@ struct ModelInfo: Identifiable, Hashable {
 }
 
 enum ModelCatalog {
-    static let qwen35_9B = ModelInfo(
+    static var qwen35_9B: ModelInfo { ModelInfo(
         id: "mlx-community/Qwen3.5-9B-4bit", title: "Qwen 3.5 · 9B",
-        note: "Empfohlen für 16 GB RAM – sehr gute Handschrifterkennung, auch Deutsch.",
-        approxGB: 6.0, minRAMGB: 16, stopTokens: ["<|im_end|>"])
-    static let qwen3VL_8B = ModelInfo(
+        note: L("Empfohlen für 16 GB RAM – sehr gute Handschrifterkennung, auch Deutsch."),
+        approxGB: 6.0, minRAMGB: 16, stopTokens: ["<|im_end|>"]) }
+    static var qwen3VL_8B: ModelInfo { ModelInfo(
         id: "mlx-community/Qwen3-VL-8B-Instruct-4bit", title: "Qwen3-VL · 8B",
-        note: "Alternative für 16 GB RAM, etwas schneller.",
-        approxGB: 5.8, minRAMGB: 16, stopTokens: ["<|im_end|>"])
-    static let gemma4_31B = ModelInfo(
+        note: L("Alternative für 16 GB RAM, etwas schneller."),
+        approxGB: 5.8, minRAMGB: 16, stopTokens: ["<|im_end|>"]) }
+    static var gemma4_31B: ModelInfo { ModelInfo(
         id: "mlx-community/gemma-4-31b-it-4bit", title: "Gemma 4 · 31B",
-        note: "Beste lokale Qualität, braucht ab 36 GB RAM.",
-        approxGB: 18.4, minRAMGB: 36, stopTokens: ["<turn|>"])
-    static let qwen3VL_4B = ModelInfo(
+        note: L("Beste lokale Qualität, braucht ab 36 GB RAM."),
+        approxGB: 18.4, minRAMGB: 36, stopTokens: ["<turn|>"]) }
+    static var qwen3VL_4B: ModelInfo { ModelInfo(
         id: "lmstudio-community/Qwen3-VL-4B-Instruct-MLX-4bit", title: "Qwen3-VL · 4B",
-        note: "Für Macs mit 8 GB RAM – schneller, aber spürbar ungenauer.",
-        approxGB: 3.0, minRAMGB: 8, stopTokens: ["<|im_end|>"])
+        note: L("Für Macs mit 8 GB RAM – schneller, aber spürbar ungenauer."),
+        approxGB: 3.0, minRAMGB: 8, stopTokens: ["<|im_end|>"]) }
 
-    static let all = [qwen35_9B, qwen3VL_8B, gemma4_31B, qwen3VL_4B]
-    static let defaultModel = qwen35_9B
+    static var all: [ModelInfo] { [qwen35_9B, qwen3VL_8B, gemma4_31B, qwen3VL_4B] }
+    static let defaultModelID = "mlx-community/Qwen3.5-9B-4bit"
+    static var defaultModel: ModelInfo { qwen35_9B }
 
     static func info(_ id: String) -> ModelInfo { all.first { $0.id == id } ?? defaultModel }
 
@@ -60,6 +61,8 @@ final class ModelManager: ObservableObject {
     @Published var lastError: String?
     private var task: Task<Void, Never>?
     private let log: EventLog
+    /// Called after a model finished downloading – the app starts recognizing right away.
+    var onInstalled: ((ModelInfo) -> Void)?
 
     init(log: EventLog) { self.log = log }
 
@@ -82,7 +85,7 @@ final class ModelManager: ObservableObject {
     func delete(_ id: String) {
         try? FileManager.default.removeItem(at: Self.directory(for: id))
         objectWillChange.send()
-        log.log(.model, "Modell \(id) gelöscht")
+        log.log(.model, L("Modell %@ gelöscht", id))
     }
 
     func cancel() { task?.cancel() }
@@ -92,17 +95,19 @@ final class ModelManager: ObservableObject {
         downloading = model.id
         progress = 0
         lastError = nil
-        progressText = "Dateiliste wird geladen …"
-        log.log(.model, "Download von \(model.title) gestartet")
+        progressText = L("Dateiliste wird geladen …")
+        log.log(.model, L("Download von %@ gestartet", model.title))
         task = Task {
             do {
                 try await performDownload(model)
-                log.log(.model, "\(model.title) ist installiert")
+                log.log(.model, L("%@ ist installiert", model.title))
+                downloading = nil
+                onInstalled?(model)
             } catch is CancellationError {
-                log.log(.model, "Download abgebrochen")
+                log.log(.model, L("Download abgebrochen"))
             } catch {
                 lastError = error.localizedDescription
-                log.log(.model, "Download fehlgeschlagen: \(error.localizedDescription)", level: .error)
+                log.log(.model, L("Download fehlgeschlagen: %@", error.localizedDescription), level: .error)
             }
             downloading = nil
             objectWillChange.send()
@@ -135,7 +140,7 @@ final class ModelManager: ObservableObject {
                 Task { @MainActor in
                     guard let self else { return }
                     self.progress = Double(base + written) / Double(total)
-                    self.progressText = "\(ProcessMemory.format(UInt64(base + written))) von \(ProcessMemory.format(UInt64(total)))"
+                    self.progressText = L("%@ von %@", ProcessMemory.format(UInt64(base + written)), ProcessMemory.format(UInt64(total)))
                 }
             }
             try? FileManager.default.removeItem(at: target)
@@ -231,7 +236,7 @@ private struct LocalOnlyDownloader: MLXLMCommon.Downloader {
     func download(id: String, revision: String?, matching patterns: [String], useLatest: Bool,
                   progressHandler: @Sendable @escaping (Progress) -> Void) async throws -> URL {
         throw NSError(domain: "ScribeSync", code: 1,
-                      userInfo: [NSLocalizedDescriptionKey: "Modell ist nicht installiert"])
+                      userInfo: [NSLocalizedDescriptionKey: L("Modell ist nicht installiert")])
     }
 }
 
@@ -241,9 +246,9 @@ enum RecognizerError: LocalizedError {
     case notInstalled(String), notLoaded, badImage
     var errorDescription: String? {
         switch self {
-        case .notInstalled(let t): return "Das KI-Modell \(t) ist noch nicht heruntergeladen (Einstellungen › Texterkennung)."
-        case .notLoaded: return "KI-Modell nicht geladen"
-        case .badImage: return "Seitenbild konnte nicht gelesen werden"
+        case .notInstalled(let t): return L("Das KI-Modell %@ ist noch nicht geladen (Einstellungen › Texterkennung).", t)
+        case .notLoaded: return L("KI-Modell nicht geladen")
+        case .badImage: return L("Seitenbild konnte nicht gelesen werden")
         }
     }
 }
@@ -277,7 +282,8 @@ actor MLXRecognizer: PageRecognizer {
         onStateChange(true)
     }
 
-    func recognize(png: Data, context: RecognitionContext) async throws -> RecognitionResult {
+    func recognize(png: Data, context: RecognitionContext,
+                   onPartial: @escaping @Sendable (String) -> Void) async throws -> RecognitionResult {
         guard let container else { throw RecognizerError.notLoaded }
         guard let flat = imageTools.flattenedForModel(png) else { throw RecognizerError.badImage }
         let session = ChatSession(
@@ -286,7 +292,17 @@ actor MLXRecognizer: PageRecognizer {
             generateParameters: GenerateParameters(maxTokens: 3000, temperature: 0, repetitionPenalty: 1.05),
             processing: UserInput.Processing(resize: nil),
             additionalContext: ["enable_thinking": false])
-        let raw = try await session.respond(to: RecognitionPrompt.user(context), image: .ciImage(CIImage(cgImage: flat)))
+        var raw = ""
+        var lastEmit = Date.distantPast
+        for try await chunk in session.streamResponse(to: RecognitionPrompt.user(context),
+                                                      images: [.ciImage(CIImage(cgImage: flat))]) {
+            try Task.checkCancellation()
+            raw += chunk
+            if Date().timeIntervalSince(lastEmit) > 0.2 {
+                lastEmit = Date()
+                onPartial(RecognitionPrompt.previewText(raw))
+            }
+        }
         return RecognitionPrompt.parse(raw, imageWidth: flat.width, imageHeight: flat.height)
     }
 

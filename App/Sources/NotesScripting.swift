@@ -9,7 +9,7 @@ enum NotesError: LocalizedError {
         switch self {
         case .script(let msg, let code):
             if code == -1743 {
-                return "Keine Berechtigung für die App Notizen. Bitte in Systemeinstellungen › Datenschutz & Sicherheit › Automation „Scribe Sync → Notizen“ erlauben."
+                return L("Keine Berechtigung für die App Notizen. Bitte in Systemeinstellungen › Datenschutz & Sicherheit › Automation „Scribe Sync → Notizen“ erlauben.")
             }
             return "\(msg) (\(code))"
         }
@@ -110,6 +110,13 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
         end tell
     end ensureFolder
 
+    on showNote(noteId)
+        tell application "Notes"
+            show note id noteId
+            activate
+        end tell
+    end showNote
+
     on accountNames()
         tell application "Notes" to return name of every account
     end accountNames
@@ -119,10 +126,10 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
 
     @MainActor private static func script() throws -> NSAppleScript {
         if let s = compiled { return s }
-        guard let s = NSAppleScript(source: source) else { throw NotesError.script("Skript ungültig", 0) }
+        guard let s = NSAppleScript(source: source) else { throw NotesError.script(L("Skript ungültig"), 0) }
         var err: NSDictionary?
         if !s.compileAndReturnError(&err) {
-            throw NotesError.script(err?[NSAppleScript.errorMessage] as? String ?? "Kompilierfehler", 0)
+            throw NotesError.script(err?[NSAppleScript.errorMessage] as? String ?? L("Kompilierfehler"), 0)
         }
         compiled = s
         return s
@@ -141,7 +148,7 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
         var err: NSDictionary?
         let result = try script().executeAppleEvent(event, error: &err)
         if let err {
-            throw NotesError.script(err[NSAppleScript.errorMessage] as? String ?? "AppleScript-Fehler",
+            throw NotesError.script(err[NSAppleScript.errorMessage] as? String ?? L("AppleScript-Fehler"),
                                    err[NSAppleScript.errorNumber] as? Int ?? 0)
         }
         return result
@@ -156,6 +163,10 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
     }
 
     @MainActor static func compileCheck() throws { _ = try script() }
+
+    @MainActor static func show(noteID: String) async {
+        _ = try? call("showNote", [noteID])
+    }
 
     @MainActor static func accountNames() -> [String] {
         guard let list = try? call("accountNames", []) else { return [] }

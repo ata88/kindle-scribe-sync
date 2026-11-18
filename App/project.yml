@@ -3,6 +3,7 @@
 name: ScribeSync
 options:
   bundleIdPrefix: io.github.ata88
+  developmentLanguage: de
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
@@ -38,6 +39,8 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleIconName: AppIcon
+        CFBundleLocalizations: [de, en]
+        CFBundleDevelopmentRegion: de
         LSApplicationCategoryType: public.app-category.productivity
         LSMinimumSystemVersion: "14.0"
         NSHumanReadableCopyright: "MIT License"

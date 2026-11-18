@@ -25,9 +25,17 @@ public struct SyncSettings: Sendable {
 public struct SyncProgress: Sendable, Equatable {
     public enum Phase: String, Sendable { case idle, listing, downloading, recognizing, publishing }
     public var phase: Phase
+    /// Notebook title the phase works on ("" while listing).
     public var detail: String
     public var done: Int
     public var total: Int
+    public var notebookID: String?
+    public var pageIndex: Int?
+
+    public init(phase: Phase, detail: String, done: Int, total: Int, notebookID: String? = nil, pageIndex: Int? = nil) {
+        self.phase = phase; self.detail = detail; self.done = done; self.total = total
+        self.notebookID = notebookID; self.pageIndex = pageIndex
+    }
 
     public static let idle = SyncProgress(phase: .idle, detail: "", done: 0, total: 0)
 }
@@ -53,16 +61,19 @@ public actor SyncEngine {
     private let recognitionAllowed: @Sendable () -> (Bool, String)
     private let onProgress: @Sendable (SyncProgress) -> Void
     private let onChange: @Sendable (NotebookRecord) -> Void
+    private let onPartialText: @Sendable (String, Int, String) -> Void
     private var running = false
 
     public init(store: LibraryStore, source: NotebookSource, recognizer: PageRecognizer, images: ImageTools,
                 notes: NotesPublisher?, log: EventLog, settings: SyncSettings = SyncSettings(),
                 recognitionAllowed: @escaping @Sendable () -> (Bool, String) = { (true, "") },
                 onProgress: @escaping @Sendable (SyncProgress) -> Void = { _ in },
-                onChange: @escaping @Sendable (NotebookRecord) -> Void = { _ in }) {
+                onChange: @escaping @Sendable (NotebookRecord) -> Void = { _ in },
+                onPartialText: @escaping @Sendable (String, Int, String) -> Void = { _, _, _ in }) {
         self.store = store; self.source = source; self.recognizer = recognizer; self.images = images
         self.notes = notes; self.log = log; self.settings = settings
         self.recognitionAllowed = recognitionAllowed; self.onProgress = onProgress; self.onChange = onChange
+        self.onPartialText = onPartialText
     }
 
     public func update(settings: SyncSettings) { self.settings = settings }
@@ -72,24 +83,24 @@ public actor SyncEngine {
 
     public func run(force: Bool = false) async throws -> SyncReport {
         guard !running else {
-            log.log(.sync, "Sync läuft bereits – übersprungen")
+            log.log(.sync, L("Abgleich läuft bereits – übersprungen"))
             return SyncReport()
         }
         running = true
         defer { running = false; onProgress(.idle) }
         var report = SyncReport()
-        log.log(.sync, force ? "Vollständiger Neu-Sync gestartet" : "Sync gestartet")
+        log.log(.sync, force ? L("Vollständiger Neuabgleich gestartet") : L("Abgleich gestartet"))
 
-        onProgress(SyncProgress(phase: .listing, detail: "Notizbücher abrufen", done: 0, total: 0))
+        onProgress(SyncProgress(phase: .listing, detail: "", done: 0, total: 0))
         let items = try await source.listItems()
-        log.log(.amazon, "\(items.count) Notizbücher in der Amazon-Cloud")
+        log.log(.amazon, L("%ld Notizbücher in der Amazon-Cloud", items.count))
         var touched = Set<String>()
 
         // phase 1: download changed notebooks
         for (n, item) in items.enumerated() {
             try Task.checkCancellation()
             report.checked += 1
-            onProgress(SyncProgress(phase: .downloading, detail: item.title, done: n, total: items.count))
+            onProgress(SyncProgress(phase: .downloading, detail: item.title, done: n, total: items.count, notebookID: item.id))
             do {
                 if try await fetch(item, force: force) {
                     touched.insert(item.id)
@@ -124,13 +135,13 @@ public actor SyncEngine {
             try store.save(nb)
             onChange(nb)
             report.deleted.append(nb.title)
-            log.log(.sync, "„\(nb.title)“ existiert nicht mehr auf dem Scribe (Kopie und Notiz bleiben erhalten)")
+            log.log(.sync, L("„%@“ existiert nicht mehr auf dem Scribe (Kopie und Notiz bleiben erhalten)", nb.title))
         }
 
-        log.log(.sync, "Sync fertig: \(report.checked) geprüft, \(report.downloadedNotebooks.count) geladen, "
-                + "\(report.recognizedPages) Seiten erkannt"
-                + (report.deferredPages > 0 ? ", \(report.deferredPages) zurückgestellt" : "")
-                + (report.errors.isEmpty ? "" : ", \(report.errors.count) Fehler"),
+        log.log(.sync, L("Abgleich fertig: %ld geprüft, %ld geladen, %ld Seiten erkannt", report.checked,
+                         report.downloadedNotebooks.count, report.recognizedPages)
+                + (report.deferredPages > 0 ? L(", %ld zurückgestellt", report.deferredPages) : "")
+                + (report.errors.isEmpty ? "" : L(", %ld Fehler", report.errors.count)),
                 level: report.errors.isEmpty ? .info : .warning)
         return report
     }
@@ -155,7 +166,7 @@ public actor SyncEngine {
             return renamed
         }
 
-        log.log(.amazon, "„\(item.title)“: \(meta.totalPages) Seite(n) werden geladen")
+        log.log(.amazon, L("„%@“: %ld Seite(n) werden geladen", item.title, meta.totalPages))
         nb.status = .downloading
         onChange(nb)
         let pngs = try await source.renderNotebook(item.id, meta: meta, size: settings.renderSize)
@@ -201,7 +212,7 @@ public actor SyncEngine {
         nb.syncedAt = Date()
         try store.save(nb)
         onChange(nb)
-        log.log(.amazon, "„\(item.title)“: \(newOrChanged) neue/geänderte Seite(n)")
+        log.log(.amazon, L("„%@“: %ld neue oder geänderte Seite(n)", item.title, newOrChanged))
         return true
     }
 
@@ -223,17 +234,17 @@ public actor SyncEngine {
         guard !queue.isEmpty else { return (0, 0, []) }
         let (allowed, reason) = recognitionAllowed()
         guard allowed else {
-            log.log(.power, "\(queue.count) Seite(n) warten auf Texterkennung: \(reason)")
+            log.log(.power, L("%ld Seite(n) warten auf Texterkennung: %@", queue.count, reason))
             return (0, queue.count, [])
         }
 
-        log.log(.model, "Lade KI-Modell \(recognizer.modelName) für \(queue.count) Seite(n)")
+        log.log(.model, L("Lade KI-Modell %@ für %ld Seite(n)", recognizer.modelName, queue.count))
         let started = Date()
         do {
             try await recognizer.prepare()
         } catch {
-            log.log(.model, "Modell konnte nicht geladen werden: \(error.localizedDescription)", level: .error)
-            report.errors.append("KI-Modell: \(error.localizedDescription)")
+            log.log(.model, L("Modell konnte nicht geladen werden: %@", error.localizedDescription), level: .error)
+            report.errors.append(L("KI-Modell: %@", error.localizedDescription))
             return (0, queue.count, [])
         }
         var done = 0
@@ -242,9 +253,9 @@ public actor SyncEngine {
             for (n, (nbID, idx)) in queue.enumerated() {
                 try Task.checkCancellation()
                 guard var nb = store.notebook(nbID), let pi = nb.pages.firstIndex(where: { $0.index == idx }) else { continue }
-                onProgress(SyncProgress(phase: .recognizing, detail: "„\(nb.title)“ Seite \(idx + 1)", done: n, total: queue.count))
+                onProgress(SyncProgress(phase: .recognizing, detail: nb.title, done: n, total: queue.count, notebookID: nbID, pageIndex: idx))
                 let ok = await recognize(&nb, pageIndex: pi)
-                if ok { done += 1 } else { report.errors.append("„\(nb.title)“ Seite \(idx + 1) nicht erkannt") }
+                if ok { done += 1 } else { report.errors.append(L("„%@“ Seite %ld nicht erkannt", nb.title, idx + 1)) }
                 if !nb.pages.contains(where: { $0.status == .pending }) {
                     nb.status = nb.pages.contains { $0.status == .failed } ? .partial : .done
                 }
@@ -254,19 +265,19 @@ public actor SyncEngine {
             }
         } catch {
             await recognizer.release()
-            log.log(.model, "Modell entladen (abgebrochen)")
+            log.log(.model, L("Modell entladen (abgebrochen)"))
             throw error
         }
         await recognizer.release()
         let secs = Int(Date().timeIntervalSince(started))
-        log.log(.model, "\(done) Seite(n) in \(secs) s erkannt – Modell aus dem Arbeitsspeicher entfernt")
+        log.log(.model, L("%ld Seite(n) in %ld s erkannt – Modell aus dem Arbeitsspeicher entfernt", done, secs))
         return (done, 0, notebooks)
     }
 
     private func recognize(_ nb: inout NotebookRecord, pageIndex pi: Int) async -> Bool {
         var page = nb.pages[pi]
         guard let png = store.readImage(page.imageFile) else {
-            page.status = .failed; page.error = "Seitenbild fehlt"; nb.pages[pi] = page
+            page.status = .failed; page.error = L("Seitenbild fehlt"); nb.pages[pi] = page
             return false
         }
         let previousTail = pi > 0 ? String(nb.pages[pi - 1].text.suffix(300)) : ""
@@ -274,12 +285,13 @@ public actor SyncEngine {
         let ctx = RecognitionContext(notebookTitle: nb.title, pageNumber: page.index + 1, pageCount: nb.pages.count,
                                      previousPageTail: previousTail, earlierText: earlier)
         do {
-            let result = try await recognizer.recognize(png: png, context: ctx)
+            let nbID = nb.id, pageIdx = page.index, partial = onPartialText
+            let result = try await recognizer.recognize(png: png, context: ctx) { text in partial(nbID, pageIdx, text) }
             // keep manual corrections: merge them onto the new reading
             if let user = page.userText, let base = page.ocrText {
                 let merged = Merge.threeWay(base: base, ours: user, theirs: result.markdown)
                 page.userText = merged == result.markdown ? nil : merged
-                log.log(.sync, "„\(nb.title)“ Seite \(page.index + 1): manuelle Korrekturen übernommen")
+                log.log(.sync, L("„%@“ Seite %ld: manuelle Korrekturen übernommen", nb.title, page.index + 1))
             }
             page.ocrText = result.markdown
             // old figure crops of this page are replaced
@@ -304,7 +316,7 @@ public actor SyncEngine {
             page.status = .failed
             page.error = error.localizedDescription
             nb.pages[pi] = page
-            log.log(.model, "„\(nb.title)“ Seite \(page.index + 1): \(error.localizedDescription)", level: .error)
+            log.log(.model, L("„%@“ Seite %ld: %@", nb.title, page.index + 1, error.localizedDescription), level: .error)
             return false
         }
     }
@@ -323,17 +335,17 @@ public actor SyncEngine {
         onProgress(SyncProgress(phase: .publishing, detail: nb.title, done: 0, total: 1))
         do {
             let noteID = try await notes.publish(html: out.html, existingNoteID: nb.noteID, folderPath: folder)
-            let verb = nb.noteID == nil ? "angelegt" : (noteID == nb.noteID ? "aktualisiert" : "neu angelegt (alte Notiz nicht mehr vorhanden)")
+            let verb = nb.noteID == nil ? L("angelegt") : (noteID == nb.noteID ? L("aktualisiert") : L("neu angelegt (alte Notiz nicht mehr vorhanden)"))
             nb.noteID = noteID
             nb.noteFolder = folderKey
             nb.publishedHash = out.contentHash
             try store.save(nb)
             onChange(nb)
-            log.log(.notes, "„\(nb.title)“ in Apple Notes \(verb)")
+            log.log(.notes, L("„%@“ in Notizen %@", nb.title, verb))
             return nb.title
         } catch {
-            report.errors.append("Apple Notes „\(nb.title)“: \(error.localizedDescription)")
-            log.log(.notes, "„\(nb.title)“: \(error.localizedDescription)", level: .error)
+            report.errors.append(L("Notizen „%@“: %@", nb.title, error.localizedDescription))
+            log.log(.notes, L("„%@“: %@", nb.title, error.localizedDescription), level: .error)
             return nil
         }
     }
@@ -346,7 +358,7 @@ public actor SyncEngine {
         nb.pages[pi].userText = (text == nb.pages[pi].ocrText) ? nil : text
         try store.save(nb)
         onChange(nb)
-        log.log(.sync, "„\(nb.title)“ Seite \(pageIndex + 1): Korrektur gespeichert")
+        log.log(.sync, L("„%@“ Seite %ld: Korrektur gespeichert", nb.title, pageIndex + 1))
         var report = SyncReport()
         _ = try await publishIfNeeded(notebookID, report: &report)
         if let e = report.errors.first { throw NSError(domain: "Notes", code: 1, userInfo: [NSLocalizedDescriptionKey: e]) }
