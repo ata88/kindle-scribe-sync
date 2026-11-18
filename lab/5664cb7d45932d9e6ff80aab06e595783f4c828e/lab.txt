@@ -1,0 +1,29 @@
+total 80
+-rw-r--r--  1 runner  staff   4191 Nov 18 15:14 gray.png
+-rw-r--r--  1 runner  staff      0 Nov 18 15:14 lab.txt
+-rw-r--r--  1 runner  staff   1171 Nov 18 15:14 mk.swift
+-rw-r--r--  1 runner  staff  16813 Nov 18 15:14 rgb.jpg
+-rw-r--r--  1 runner  staff   7996 Nov 18 15:14 rgb.png
+== process chain
+ 1101  1100 bash
+ 1100   961 /bin/bash
+  961   954 /Users/runner/actions-runner/cached/bin/Runner.Worker
+  954   940 /Users/runner/actions-runner/cached/bin/Runner.Listener
+  940   929 /opt/hca/hosted-compute-agent
+  929     1 /bin/bash
+== csrutil
+System Integrity Protection status: disabled.
+granted to: /usr/bin/osascript /bin/bash /bin/zsh /bin/sh /usr/bin/perl /usr/bin/perl5.34
+Notes
+== accounts
+lab/notes-lab.sh: line 7:  1431 Alarm clock: 14         perl -e 'alarm 90; exec @ARGV' osascript "$@"
+== V1 id=
+== V2 id=
+== V3 id=
+== V4 id=
+== V5 id=
+== V6 id=
+== V7 attachment command
+id=
+== V8 update existing V1 note body again (does the image survive / duplicate?)
+== done
