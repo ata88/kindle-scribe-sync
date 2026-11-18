@@ -1,0 +1,45 @@
+name: CI
+on:
+  push:
+    branches-ignore: [ci-logs]
+  pull_request:
+permissions:
+  contents: write
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test 2>&1 | tee build.log
+      - name: Publish log
+        if: failure()
+        run: |
+          apt-get update -qq && apt-get install -y -qq git >/dev/null
+          git config --global --add safe.directory '*'
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh build.log
+  app:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select newest Xcode
+        run: |
+          ls -d /Applications/Xcode*.app
+          XC=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
+          xcodebuild -downloadComponent MetalToolchain || echo "MetalToolchain not needed/available"
+      - run: brew install xcodegen
+      - name: Core tests on macOS
+        run: swift test 2>&1 | tail -5
+      - name: Build app
+        run: scripts/build-app.sh 0.0.0 ${{ github.run_number }}
+      - name: Publish log
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/publish-ci-log.sh build.log
