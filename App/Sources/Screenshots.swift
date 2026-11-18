@@ -34,6 +34,9 @@ enum Screenshots {
         main.makeKeyAndOrderFront(nil)
         await pause(2)
 
+        print("window minSize \(main.minSize) contentMinSize \(main.contentMinSize) maxSize \(main.maxSize)")
+        measureMinimumHeights()
+
         for appearance in [NSAppearance.Name.aqua, .darkAqua] {
             NSApp.appearance = NSAppearance(named: appearance)
             let suffix = appearance == .aqua ? "light" : "dark"
@@ -85,6 +88,29 @@ enum Screenshots {
         render(OnboardingView().environmentObject(model).tint(Theme.accent), size: NSSize(width: 900, height: 820), dir, "10-onboarding")
         print("screenshots written to \(dir.path)")
         exit(0)
+    }
+
+    /// Prints how tall each building block wants to be when offered very little height.
+    private static func measureMinimumHeights() {
+        let model = AppModel.shared
+        func measure<V: View>(_ name: String, width: CGFloat, _ view: V) {
+            let host = NSHostingController(rootView: view.environmentObject(model))
+            let small = host.sizeThatFits(in: CGSize(width: width, height: 50))
+            let tall = host.sizeThatFits(in: CGSize(width: width, height: 5000))
+            print("measure \(name): min≈\(small) max≈\(tall)")
+        }
+        measure("MainView", width: 1000, MainView())
+        measure("SidebarView", width: 240, SidebarView())
+        measure("SidebarStatus", width: 240, SidebarStatus())
+        measure("NotebookListView", width: 320, NotebookListView())
+        measure("TaskListView", width: 320, TaskListView())
+        measure("DetailRoot", width: 440, DetailRoot())
+        if let nb = model.notebook("demo-kickoff") {
+            measure("ReaderView", width: 440, ReaderView(notebook: nb))
+            measure("ScanInspector", width: 360, ScanInspector(notebook: nb, page: 0))
+            measure("ZoomableImage", width: 360, ZoomableImage(url: model.store.url(for: nb.pages[0].imageFile)))
+        }
+        measure("OnboardingView", width: 440, OnboardingView())
     }
 
     private static func scrollViews(in view: NSView) -> [NSScrollView] {
