@@ -37,9 +37,10 @@ jobs:
       - name: Core tests on macOS
         run: swift test 2>&1 | tail -5
       - name: Build app
+        timeout-minutes: 45
         run: scripts/build-app.sh 0.0.0 ${{ github.run_number }}
       - name: Publish build log
-        if: failure()
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: scripts/publish-ci-log.sh build.log
