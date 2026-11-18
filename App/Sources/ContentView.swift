@@ -203,7 +203,7 @@ struct OnboardingView: View {
     private func step<A: View>(_ n: Int, _ title: String, done: Bool, detail: String, @ViewBuilder action: () -> A) -> some View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: done ? "checkmark.circle.fill" : "\(n).circle")
-                .font(.title).foregroundStyle(done ? .green : .accentColor)
+                .font(.title).foregroundStyle(done ? Color.green : Color.accentColor)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.headline)
                 Text(detail).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)

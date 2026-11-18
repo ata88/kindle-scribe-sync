@@ -289,7 +289,7 @@ actor MLXRecognizer: PageRecognizer {
     func release() async {
         guard container != nil else { return }
         container = nil
-        Stream.gpu.synchronize()
+        MLX.Stream.gpu.synchronize()
         Memory.clearCache()
         onStateChange(false)
     }

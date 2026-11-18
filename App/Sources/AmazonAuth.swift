@@ -65,7 +65,10 @@ final class AmazonAuth: NSObject, ObservableObject {
         let ok = await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
             refreshContinuation = cont
             view.load(URLRequest(url: Self.apiURL))
-            DispatchQueue.main.asyncAfter(deadline: .now() + 45) { [weak self] in self?.finishRefresh(false) }
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(45))
+                self?.finishRefresh(false)
+            }
         }
         refreshView = nil
         if ok {

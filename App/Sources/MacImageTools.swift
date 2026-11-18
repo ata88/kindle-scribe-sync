@@ -92,7 +92,7 @@ struct MacImageTools: ImageTools {
                                     provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
         else { return nil }
         let out = NSMutableData()
-        guard let dest = CGImageDestinationCreateWithData(out, UTType.png.identifier as CFString, 1, nil) else { return nil }
+        guard let dest = CGImageDestinationCreateWithData(out as CFMutableData, UTType.png.identifier as CFString, 1, nil) else { return nil }
         CGImageDestinationAddImage(dest, cropped, nil)
         guard CGImageDestinationFinalize(dest) else { return nil }
         let refined = NormRect(x0: Double(x0) / W, y0: Double(y0) / H, x1: Double(x1) / W, y1: Double(y1) / H)

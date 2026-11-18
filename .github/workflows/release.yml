@@ -11,7 +11,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 60
     env:
-      SPARKLE_VERSION: "2.11.0"
+      SPARKLE_VERSION: "2.10.1"
     steps:
       - uses: actions/checkout@v4
         with:

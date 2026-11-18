@@ -5,7 +5,6 @@ import SwiftUI
 struct ScribeSyncApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var model = AppModel.shared
-    @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
         Window("Scribe Sync", id: "main") {
@@ -14,25 +13,7 @@ struct ScribeSyncApp: App {
                 .frame(minWidth: 860, minHeight: 560)
         }
         .defaultSize(width: 1180, height: 780)
-        .commands {
-            CommandGroup(after: .appInfo) {
-                Button("Nach Updates suchen …") { model.updater.checkForUpdates() }
-                    .disabled(!model.updater.canCheckForUpdates)
-            }
-            CommandGroup(replacing: .saveItem) {
-                Button("Korrekturen sichern") { model.saveAllDrafts() }
-                    .keyboardShortcut("s")
-                    .disabled(!model.hasUnsavedDrafts)
-            }
-            CommandMenu("Sync") {
-                Button("Jetzt synchronisieren") { model.syncNow(reason: "manuell") }
-                    .keyboardShortcut("r")
-                    .disabled(model.isSyncing)
-                Divider()
-                Button("Diagnose") { openWindow(id: "diagnostics") }
-                    .keyboardShortcut("d", modifiers: [.command, .option])
-            }
-        }
+        .commands { AppCommands(model: model) }
 
         Window("Diagnose", id: "diagnostics") {
             DiagnosticsView()
@@ -51,6 +32,31 @@ struct ScribeSyncApp: App {
                 .environmentObject(model)
         } label: {
             Image(systemName: model.menuBarSymbol)
+        }
+    }
+}
+
+struct AppCommands: Commands {
+    @ObservedObject var model: AppModel
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some Commands {
+        CommandGroup(after: .appInfo) {
+            Button("Nach Updates suchen …") { model.updater.checkForUpdates() }
+                .disabled(!model.updater.canCheckForUpdates)
+        }
+        CommandGroup(replacing: .saveItem) {
+            Button("Korrekturen sichern") { model.saveAllDrafts() }
+                .keyboardShortcut("s")
+                .disabled(!model.hasUnsavedDrafts)
+        }
+        CommandMenu("Sync") {
+            Button("Jetzt synchronisieren") { model.syncNow(reason: "manuell") }
+                .keyboardShortcut("r")
+                .disabled(model.isSyncing)
+            Divider()
+            Button("Diagnose") { openWindow(id: "diagnostics") }
+                .keyboardShortcut("d", modifiers: [.command, .option])
         }
     }
 }

@@ -101,7 +101,7 @@ final class AppModel: ObservableObject {
 
     func showMainWindow() {
         NSApp.activate(ignoringOtherApps: true)
-        if let w = NSApp.windows.first(where: { $0.identifier?.rawValue == "main" || $0.title == "Scribe Sync" }) {
+        if let w = NSApp.windows.first(where: { ($0.identifier?.rawValue ?? "").hasPrefix("main") || $0.title == "Scribe Sync" }) {
             w.makeKeyAndOrderFront(nil)
         }
     }

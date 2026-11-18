@@ -46,7 +46,7 @@ struct DiagnosticsView: View {
                     HStack(spacing: 6) {
                         if e.level != .info {
                             Image(systemName: e.level == .error ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
-                                .foregroundStyle(e.level == .error ? .red : .orange)
+                                .foregroundStyle(e.level == .error ? Color.red : Color.orange)
                         }
                         Text(e.message).textSelection(.enabled)
                     }
