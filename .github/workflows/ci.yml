@@ -58,6 +58,21 @@ jobs:
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
           perl -e 'alarm 1200; exec @ARGV' "$APP" --self-test-recognition 2>&1 | tee -a selftest.log
           test "${PIPESTATUS[0]}" -eq 0
+      - name: Release dry run (throwaway keys)
+        run: |
+          openssl req -x509 -newkey rsa:2048 -keyout "$RUNNER_TEMP/k.pem" -out "$RUNNER_TEMP/c.pem" -days 2 -nodes \
+            -subj "/CN=Scribe Sync Signing" -addext "keyUsage=critical,digitalSignature" \
+            -addext "extendedKeyUsage=critical,codeSigning" -addext "basicConstraints=critical,CA:false"
+          openssl pkcs12 -export -legacy -inkey "$RUNNER_TEMP/k.pem" -in "$RUNNER_TEMP/c.pem" -name "Scribe Sync Signing" \
+            -passout pass:scribesync -out "$RUNNER_TEMP/s.p12" 2>/dev/null || \
+          openssl pkcs12 -export -inkey "$RUNNER_TEMP/k.pem" -in "$RUNNER_TEMP/c.pem" -name "Scribe Sync Signing" \
+            -passout pass:scribesync -out "$RUNNER_TEMP/s.p12"
+          export SIGNING_CERT_P12="$(base64 < "$RUNNER_TEMP/s.p12" | tr -d '\n')"
+          export SPARKLE_PRIVATE_KEY="$(openssl rand -base64 32)"
+          echo "== release dry run ==" >> selftest.log
+          scripts/package-release.sh 0.0.0 ${{ github.run_number }} v0.0.0 2>&1 | tee -a selftest.log
+          test "${PIPESTATUS[0]}" -eq 0
+          cat appcast.xml >> selftest.log
       - name: Publish self-test log
         if: always()
         env:

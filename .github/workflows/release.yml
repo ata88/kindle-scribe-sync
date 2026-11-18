@@ -26,55 +26,17 @@ jobs:
       - name: Build
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
+          echo "SPARKLE_VERSION=$SPARKLE_VERSION" >> "$GITHUB_ENV"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "BUILD=${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
           scripts/build-app.sh "$VERSION" "${GITHUB_RUN_NUMBER}"
-      - name: Sign app
+      - name: Sign, package, appcast
         env:
           SIGNING_CERT_P12: ${{ secrets.SIGNING_CERT_P12 }}
-        run: |
-          APP="build/Build/Products/Release/Scribe Sync.app"
-          if [ -n "$SIGNING_CERT_P12" ]; then
-            KC="$RUNNER_TEMP/signing.keychain-db"
-            security create-keychain -p ci "$KC"
-            security set-keychain-settings -lut 3600 "$KC"
-            security unlock-keychain -p ci "$KC"
-            echo "$SIGNING_CERT_P12" | base64 --decode > "$RUNNER_TEMP/signing.p12"
-            security import "$RUNNER_TEMP/signing.p12" -k "$KC" -P scribesync -T /usr/bin/codesign
-            security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
-            security set-key-partition-list -S apple-tool:,apple: -s -k ci "$KC" >/dev/null
-            security find-certificate -c "Scribe Sync Signing" -p "$KC" > "$RUNNER_TEMP/cert.pem"
-            sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain "$RUNNER_TEMP/cert.pem"
-            codesign --force --deep --timestamp=none --sign "Scribe Sync Signing" --keychain "$KC" "$APP"
-          else
-            echo "::warning::SIGNING_CERT_P12 secret missing – ad-hoc signature (permissions are asked again after updates)"
-            codesign --force --deep --sign - "$APP"
-          fi
-          codesign --verify --deep --strict "$APP"
-          codesign -dvv "$APP" 2>&1 | grep -E "Authority|Identifier|Signature" || true
-      - name: Package and sign update
-        env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          test -n "$SPARKLE_PRIVATE_KEY" || { echo "::error::SPARKLE_PRIVATE_KEY secret missing"; exit 1; }
-          ZIP="ScribeSync-${VERSION}.zip"
-          cd build/Build/Products/Release
-          ditto -c -k --sequesterRsrc --keepParent "Scribe Sync.app" "$GITHUB_WORKSPACE/$ZIP"
-          cd "$GITHUB_WORKSPACE"
-          curl -sSL -o sparkle.tar.xz "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
-          mkdir sparkle && tar -xf sparkle.tar.xz -C sparkle
-          SIG_LINE=$(echo "$SPARKLE_PRIVATE_KEY" | sparkle/bin/sign_update --ed-key-file - "$ZIP")
-          echo "$SIG_LINE"
-          SIG=$(echo "$SIG_LINE" | sed -E 's/.*sparkle:edSignature="([^"]+)".*/\1/')
-          LEN=$(stat -f%z "$ZIP")
-          NOTES="docs/releases/${VERSION}.md"
-          if [ ! -f "$NOTES" ]; then git tag -l --format='%(contents)' "$GITHUB_REF_NAME" > notes.md; NOTES=notes.md; fi
-          python3 scripts/make_appcast.py "$VERSION" "$BUILD" \
-            "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${ZIP}" \
-            "$LEN" "$SIG" "$NOTES" appcast.xml
-          cat appcast.xml
-          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
-          echo "NOTES=$NOTES" >> "$GITHUB_ENV"
+          scripts/package-release.sh "$VERSION" "$BUILD" "$GITHUB_REF_NAME" 2>&1 | tee -a build.log
+          test "${PIPESTATUS[0]}" -eq 0
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
