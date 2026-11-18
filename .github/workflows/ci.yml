@@ -1,0 +1,80 @@
+name: CI
+on:
+  push:
+    branches-ignore: [ci-logs]
+  pull_request:
+permissions:
+  contents: write
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test 2>&1 | tee build.log
+      - name: Publish log
+        if: failure()
+        run: |
+          apt-get update -qq && apt-get install -y -qq git >/dev/null
+          git config --global --add safe.directory '*'
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh build.log
+  app:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select newest Xcode
+        run: |
+          ls -d /Applications/Xcode*.app
+          XC=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
+          xcodebuild -downloadComponent MetalToolchain || echo "MetalToolchain not needed/available"
+      - run: brew install xcodegen
+      - name: Core tests on macOS
+        run: swift test 2>&1 | tail -5
+      - name: Build app
+        run: scripts/build-app.sh 0.0.0 ${{ github.run_number }}
+      - name: Publish build log
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/publish-ci-log.sh build.log
+      - name: Self-test (app starts, Notes script compiles, image pipeline)
+        run: |
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          perl -e 'alarm 120; exec @ARGV' "$APP" --self-test 2>&1 | tee selftest.log
+          test "${PIPESTATUS[0]}" -eq 0
+      - name: Download small test model (same family as the default)
+        run: python3 scripts/download_model.py mlx-community/Qwen3.5-2B-4bit "$RUNNER_TEMP/model" | tail -2
+      - name: Self-test recognition (needs Metal in the runner VM)
+        continue-on-error: true
+        env:
+          SCRIBE_SELFTEST_MODEL_DIR: ${{ runner.temp }}/model
+        run: |
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          perl -e 'alarm 1200; exec @ARGV' "$APP" --self-test-recognition 2>&1 | tee -a selftest.log
+          test "${PIPESTATUS[0]}" -eq 0
+      - name: Release dry run (throwaway keys)
+        run: |
+          openssl req -x509 -newkey rsa:2048 -keyout "$RUNNER_TEMP/k.pem" -out "$RUNNER_TEMP/c.pem" -days 2 -nodes \
+            -subj "/CN=Scribe Sync Signing" -addext "keyUsage=critical,digitalSignature" \
+            -addext "extendedKeyUsage=critical,codeSigning" -addext "basicConstraints=critical,CA:false"
+          openssl pkcs12 -export -legacy -inkey "$RUNNER_TEMP/k.pem" -in "$RUNNER_TEMP/c.pem" -name "Scribe Sync Signing" \
+            -passout pass:scribesync -out "$RUNNER_TEMP/s.p12" 2>/dev/null || \
+          openssl pkcs12 -export -inkey "$RUNNER_TEMP/k.pem" -in "$RUNNER_TEMP/c.pem" -name "Scribe Sync Signing" \
+            -passout pass:scribesync -out "$RUNNER_TEMP/s.p12"
+          export SIGNING_CERT_P12="$(base64 < "$RUNNER_TEMP/s.p12" | tr -d '\n')"
+          export SPARKLE_PRIVATE_KEY="$(openssl rand -base64 32)"
+          echo "== release dry run ==" >> selftest.log
+          scripts/package-release.sh 0.0.0 ${{ github.run_number }} v0.0.0 2>&1 | tee -a selftest.log
+          test "${PIPESTATUS[0]}" -eq 0
+          cat appcast.xml >> selftest.log
+      - name: Publish self-test log
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: test -f selftest.log && scripts/publish-ci-log.sh selftest.log selftest || true

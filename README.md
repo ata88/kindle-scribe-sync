@@ -1,172 +1,83 @@
-# kindle-scribe-sync ✍️ → 🖥
+# Scribe Sync ✍️ → 🖥
 
-Deine **Kindle-Scribe-Notizbücher landen automatisch auf dem Mac**. Kein Export,
-kein Kabel, kein Antippen auf dem Scribe. Die Handschrift wird von **Claude**
-(KI) in sauberen, kopierbaren Drucktext umgewandelt. Das Ergebnis erscheint in:
+Eine native Mac-App, die deine **Kindle-Scribe-Notizbücher automatisch** auf den Mac holt. Die Handschrift wird **lokal mit KI** in Drucktext umgewandelt. Dazu ist weder Export noch Kabel noch ein Terminal nötig.
 
-- **Apple Notes**: ein Ordner „Kindle Scribe“, deine Scribe-Ordner werden gespiegelt, mit Text und Seitenbild
-- **einer lokalen Web-App** (http://127.0.0.1:8765): Seitenbild neben Text, Volltextsuche, „Kopieren“-Buttons, Dark Mode
-- **Markdown-Dateien** in `~/Documents/Kindle Scribe` (passt zu Obsidian, Spotlight-durchsuchbar)
+- **Eigene App:** Seitenbild neben dem erkannten Text, Ordner wie auf dem Scribe, Volltextsuche.
+- **Korrigieren wie in Word:** Rechtschreibfehler sind rot unterstrichelt, ein Rechtsklick zeigt Vorschläge. Korrekturen werden gesichert, nach Apple Notes übertragen und bleiben erhalten, wenn du die Seite später auf dem Scribe ergänzt.
+- **Apple Notes:** Jedes Notizbuch ist genau *eine* Notiz, die bei Änderungen aktualisiert wird.
+- **Grafiken:** Zeichnungen und Skizzen werden als echtes Bild des jeweiligen Seitenbereichs eingebettet, nicht nur als Beschreibung.
+- **KI direkt auf dem Mac:** Qwen 3.5 (9B) über Apple MLX. Kein Cloud-Dienst, keine Kosten. Das Modell ist nur im Arbeitsspeicher, während neue Seiten erkannt werden.
 
-## Wie das funktioniert
+## Installation
 
-```
-Kindle Scribe ──WLAN-Sync──▶ Amazon Cloud ──▶ kss (alle 5 Min. auf deinem Mac)
-                                                │  1. Notizbuch-Liste + Änderungszeit
-                                                │  2. nur geänderte Notizbücher rendern
-                                                │  3. nur geänderte Seiten → Claude (Vision)
-                                                ▼
-                                Apple Notes · Web-App · Markdown
-```
+1. Unter [Releases](https://github.com/ata88/kindle-scribe-sync/releases/latest) `ScribeSync-x.y.z.zip` laden und die App in den Ordner **Programme** ziehen.
+2. Die App öffnen. Beim allerersten Start meldet macOS, dass die App nicht überprüft werden kann. Dann:
+   **Systemeinstellungen › Datenschutz & Sicherheit › „Scribe Sync" wurde blockiert › Trotzdem öffnen**.
+   Das ist nur einmal nötig. Der Grund: Die App ist mit einem eigenen Zertifikat signiert, nicht mit einem kostenpflichtigen Apple-Entwicklerkonto.
+3. Die Einrichtung in der App folgt drei Schritten:
+   1. **Bei Amazon anmelden.** Normale Zugangsdaten, auch für amazon.de-Konten.
+   2. **KI-Modell laden.** Einmalig ca. 6 GB.
+   3. Beim ersten Schreiben nach Notizen fragt macOS: „Scribe Sync möchte Notizen steuern" → **OK**.
 
-Der Scribe synchronisiert Notizbücher von selbst in die Amazon-Cloud. Amazons
-**Kindle for Web** zeigt sie über eine interne API an. `kss` nutzt dieselbe API
-mit deiner normalen Amazon-Anmeldung:
+Updates kommen danach automatisch: Die App fragt nach, zeigt, was neu ist, und installiert mit einem Klick.
+
+**Voraussetzungen:**
+- Mac mit Apple-Chip (M1 oder neuer)
+- macOS 14 oder neuer
+- 16 GB RAM empfohlen (für 8 GB gibt es ein kleineres Modell)
+
+## So arbeitet die App
+
+| | |
+|---|---|
+| **Wann synchronisiert sie?** | Alle 5 Minuten (einstellbar), solange die App läuft, und nach dem Aufwachen des Macs. Den Zeitpunkt wählt macOS so, dass möglichst wenig Energie verbraucht wird. |
+| **Weckt sie den Mac?** | Nie. Im Ruhezustand passiert nichts. |
+| **Akkubetrieb** | Einstellbar: normal weiterarbeiten (Texterkennung erst ab x % Akku), nur abrufen und am Netzteil erkennen, oder pausieren. Im Stromsparmodus wartet die Erkennung immer. |
+| **Arbeitsspeicher** | Das KI-Modell (ca. 6 GB) wird nur geladen, wenn neue oder geänderte Seiten da sind, und danach sofort freigegeben. |
+| **Fenster schließen** | Die App läuft weiter, das Symbol in der Menüleiste zeigt den Status. |
+| **Beenden** | Über die Menüleiste oder das Dock. Danach läuft nichts mehr: keine Hintergrunddienste, keine Helfer-Prozesse. |
+| **Diagnose** | Menü *Sync › Diagnose* (⌥⌘D) zeigt Zeitplan, Modell-Speicher, Energie, Amazon-Sitzung, Apple Notes und das komplette Aktivitätsprotokoll. |
+
+### Korrekturen
+
+Du tippst im Text einer Seite, und **⌘S** sichert. Die Notiz in Apple Notes wird sofort aktualisiert.
+
+Schreibst du auf dem Scribe später weiter auf derselben Seite, liest die KI die Seite neu. Deine Korrekturen werden dabei per Drei-Wege-Abgleich auf Wortebene übernommen. Nur Wörter, die du korrigiert hast und die sich gleichzeitig im neuen Text geändert haben, behalten deine Fassung.
+
+Bitte nicht direkt in Apple Notes korrigieren: Die Notiz wird bei der nächsten Änderung neu geschrieben.
+
+### Wie kommen die Notizen vom Scribe?
+
+Der Scribe synchronisiert seine Notizbücher selbst in die Amazon-Cloud. Für alle Länder liegen sie auf `read.amazon.com`. Die App nutzt die interne Schnittstelle von Kindle for Web:
 
 | Endpunkt | Zweck |
 |---|---|
-| `GET /kindle-notebook/api/notes` | Ordner- und Notizbuchbaum |
-| `GET /openNotebook?notebookId=…` | Seitenzahl, `modificationTime`, Rendering-Token |
-| `GET /renderPage?startPage=…` | Seiten als PNG (tar) |
+| `GET /kindle-notebook/api/notes` | Ordner und Notizbücher |
+| `GET /openNotebook?notebookId=…&marketplaceId=…` | Seitenzahl, Änderungszeit, Render-Token |
+| `GET /renderPage?startPage=…` | Seiten als PNG |
 
-Damit es wenig kostet:
+Das ist eine **inoffizielle Schnittstelle**. Wenn Amazon sie ändert, zeigt die Diagnose den Fehler, und die App muss angepasst werden.
 
-- Unveränderte Notizbücher werden übersprungen (`modificationTime`).
-- Pro Seite wird ein Pixel-Hash gespeichert. Nur neue oder geänderte Seiten gehen an die KI.
-- Fügst du mittendrin eine Seite ein, werden die vorhandenen Transkripte anhand des Hashs wiederverwendet.
-
-## Installation (macOS)
-
-Voraussetzung ist [uv](https://docs.astral.sh/uv/): `brew install uv`.
-
-```bash
-uv tool install git+https://github.com/<DEIN-USER>/kindle-scribe-sync
-```
-
-```bash
-kss setup
-```
-
-`kss setup` erledigt alles in einem Durchgang:
-
-1. **Amazon-Login** in einem Browserfenster. Den Haken bei „Angemeldet bleiben“ setzen. Region ist `us` (read.amazon.com), **auch für amazon.de-Konten** – nur dort gibt es die Notizbuch-API; einfach mit den normalen Zugangsdaten anmelden.
-2. **KI wählen:** lokal mit Ollama (kostenlos) oder Claude per API-Key. Der Key wird im macOS-Schlüsselbund gespeichert.
-3. **Ersten Sync** ausführen.
-4. **Hintergrunddienste** (launchd) installieren: Sync alle 5 Minuten, Web-App dauerhaft.
-
-Beim ersten Hintergrund-Sync fragt macOS, ob Python „Notizen“ steuern darf. Bitte **Erlauben**.
-
-### Auf dem Scribe
-
-Unter *Einstellungen → Geräteoptionen → Erweitert → Synchronisierung* die
-Synchronisierung einschalten und WLAN aktiv lassen. Mehr ist nicht nötig.
-
-## Befehle
-
-| Befehl | |
-|---|---|
-| `kss setup` | geführte Einrichtung |
-| `kss doctor` | prüft Login, API, Rendering und Key. Zuerst ausführen, wenn etwas hakt |
-| `kss sync` | sofort synchronisieren (`--force` = alles neu, `--only "Titel"`) |
-| `kss status` | Übersicht aller Notizbücher |
-| `kss open` | Web-App öffnen |
-| `kss login` | neu anmelden (falls die Amazon-Session abläuft, kommt eine Mitteilung) |
-| `kss install` / `kss uninstall` | Hintergrunddienste an/aus |
-
-## Konfiguration
-
-Die Datei liegt unter `~/Library/Application Support/kindle-scribe-sync/config.toml`:
-
-```toml
-poll_interval = 300            # Sekunden
-ocr_backend = "ollama"         # "ollama" (lokal) oder "claude"
-ollama_model = "qwen3.5:9b"
-model = "claude-opus-5-5"      # Modell für ocr_backend = "claude"
-effort = "medium"              # "high" = noch gründlicher, teurer
-language_hint = "Deutsch und Englisch"
-apple_notes = true
-apple_notes_account = "iCloud" # "" = Standardaccount
-apple_notes_folder = "Kindle Scribe"
-apple_notes_images = true      # Seitenbild unter dem Text
-markdown_dir = "~/Documents/Kindle Scribe"   # "" = aus
-render_width = 1240            # Render-Auflösung für die KI
-render_height = 1754
-```
-
-Nach einer Änderung `kss install` erneut ausführen, damit launchd das neue Intervall übernimmt.
-
-## KI: lokal (kostenlos) oder Claude (beste Qualität)
-
-`kss setup` fragt, welche KI die Handschrift lesen soll. Umstellen kannst du jederzeit mit `kss local-setup` oder `kss use-claude`.
-
-### Lokal mit Ollama (kostenlos, privat)
-
-```bash
-brew install ollama
-```
-
-```bash
-kss local-setup
-```
-
-`kss local-setup` erkennt deinen Arbeitsspeicher, wählt ein passendes Modell und lädt es einmalig herunter:
-
-| RAM | Modell | Download | Fehlerquote deutsche Handschrift* |
-|---|---|---|---|
-| ab 36 GB | `gemma4:31b` | ~20 GB | ~0,8 % |
-| 16–32 GB | `qwen3.5:9b` | ~7 GB | ~1,6 % |
-| 8 GB | `qwen3-vl:4b` | ~3 GB | deutlich schlechter |
-
-\* Zeichenfehlerrate auf deutschen Handschrift-Scans laut [diesem Test](https://taggedsync.com/blog/best-local-model-for-handwriting) (Apple M5 Max, 4–9 s/Seite). Deine Handschrift kann abweichen.
-
-**RAM-Verhalten:**
-
-- Gibt es keine neuen Seiten, wird nichts geladen, Ollama wird gar nicht kontaktiert.
-- Gibt es neue Seiten, wird das Modell für diesen einen Sync-Durchlauf geladen und danach **sofort entladen** (`keep_alive=0`).
-- Läuft Ollama nicht, startet `kss` den Server selbst und beendet ihn danach wieder.
-- Stürzt `kss` ab, wirft Ollama das Modell nach spätestens 2 Minuten selbst raus.
-
-Ein anderes Modell wählst du mit `kss local-setup --model qwen3-vl:8b`.
-
-### Claude über die API
-
-Pro neu transkribierter Seite fallen grob **5 Cent** an (Claude Opus 5.5,
-`effort = "medium"`). Unveränderte Seiten kosten nichts.
-
-- Der API-Key ist **nicht** im Claude-Pro-Abo enthalten. Du brauchst ein Konto mit aufgeladenem Guthaben in der Claude Console.
-- Max-, Ultra- und Team-Abos enthalten ein monatliches API-Guthaben.
-- Etwa halb so teuer: `model = "claude-sonnet-5-5"`.
-
-Ein Notizbuch später mit der anderen KI neu einlesen:
-
-```bash
-kss sync --force --only "Titel"
-```
-
-## Wichtig zu wissen
-
-- **Inoffizielle API.** Amazon kann sie jederzeit ändern. Dann liefert `kss doctor` einen Fehler, und der Code muss angepasst werden. Anfragen laufen bewusst langsam und nacheinander.
-- **Notizen in Apple Notes nicht bearbeiten.** Beim nächsten Sync des Notizbuchs wird die Notiz überschrieben. Zum Weiterarbeiten Text herauskopieren.
-- **Gelöschte Notizbücher** werden nur als gelöscht markiert. Note und Markdown-Datei bleiben erhalten.
-- **Sitzung.** Amazon-Cookies liegen nur lokal (`cookies.json`, Rechte 600). Läuft die Session ab, versucht `kss` sie still über das gespeicherte Browserprofil zu erneuern. Erst wenn das scheitert, kommt eine Mitteilung „kss login“.
-- **Datenschutz.** Mit Ollama bleibt alles auf deinem Mac. Mit Claude gehen die Seitenbilder zur Transkription an die Anthropic API, sonst nirgendwohin.
-
-## Optional: auf einem Server
-
-Für einen Server (Linux) gilt:
-
-- `kss sync` und `kss serve --host 0.0.0.0` laufen auch dort, am besten per systemd-Timer und hinter einem Reverse-Proxy mit Auth.
-- Apple Notes funktioniert nur auf dem Mac. Auf dem Server gibt es Web-App und Markdown.
-- `cookies.json` vom Mac kopieren oder `kss login` dort mit X-Forwarding ausführen.
+Daten verlassen deinen Mac nur zu Amazon (Notizbücher abrufen) und zu Hugging Face (einmaliger Modell-Download). Die Amazon-Anmeldung liegt im macOS-Schlüsselbund.
 
 ## Entwicklung
 
+Der Code ist zweigeteilt:
+- **`Sources/KSSCore`**: plattformunabhängige Logik (Amazon, Sync-Engine, Korrektur-Abgleich, Notes-HTML), getestet auf Linux und macOS mit `swift test`.
+- **`App/`**: die SwiftUI-App (XcodeGen-Projekt), mit MLX für das Modell, Sparkle für Updates und AppleScript für Notizen.
+
+Die App bauen (Xcode 26+, Apple-Chip):
+
 ```bash
-uv venv && uv pip install -e '.[dev]'
+brew install xcodegen
 ```
 
 ```bash
-.venv/bin/pytest
+scripts/build-app.sh
 ```
 
-Die Tests laufen gegen einen nachgebauten Amazon-Server (`tests/fake_amazon.py`).
+Ein Release erstellen: Release-Notes in `docs/releases/<version>.md` ablegen, dann den Tag `vX.Y.Z` pushen. Der Workflow `.github/workflows/release.yml` baut, signiert und veröffentlicht App und Update-Feed. Er braucht die Repository-Secrets `SPARKLE_PRIVATE_KEY` und `SIGNING_CERT_P12`.
+
+Den Umstieg vom früheren Kommandozeilen-Tool `kss` beschreibt [docs/MIGRATION.md](docs/MIGRATION.md).
+
+Lizenz: MIT

@@ -1,10 +1,12 @@
-.venv/
-__pycache__/
-*.pyc
-.pytest_cache/
-*.egg-info/
-dist/
+.build/
 build/
-# never commit session data
-cookies.json
-*.sqlite3
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+.swiftpm/
+.DS_Store
+# secrets never belong in git
+*.p12
+*.pem
+*.key
+sparkle_private_key*

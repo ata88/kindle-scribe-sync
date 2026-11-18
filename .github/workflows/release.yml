@@ -1,0 +1,50 @@
+name: Release
+# Push a tag like v1.2.0 -> builds, signs and publishes the app + Sparkle appcast.
+# Release notes: docs/releases/<version>.md (falls back to the tag message).
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      SPARKLE_VERSION: "2.10.1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Select newest Xcode
+        run: |
+          XC=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
+          xcodebuild -downloadComponent MetalToolchain || echo "MetalToolchain not needed/available"
+      - run: brew install xcodegen
+      - name: Build
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "SPARKLE_VERSION=$SPARKLE_VERSION" >> "$GITHUB_ENV"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "BUILD=${GITHUB_RUN_NUMBER}" >> "$GITHUB_ENV"
+          scripts/build-app.sh "$VERSION" "${GITHUB_RUN_NUMBER}"
+      - name: Sign, package, appcast
+        env:
+          SIGNING_CERT_P12: ${{ secrets.SIGNING_CERT_P12 }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          scripts/package-release.sh "$VERSION" "$BUILD" "$GITHUB_REF_NAME" 2>&1 | tee -a build.log
+          test "${PIPESTATUS[0]}" -eq 0
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$ZIP" appcast.xml \
+            --title "Scribe Sync ${VERSION}" --notes-file "$NOTES" --latest
+      - name: Publish log
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/publish-ci-log.sh build.log

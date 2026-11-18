@@ -1,0 +1,80 @@
+# XcodeGen project for the Scribe Sync macOS app.
+# CI runs `xcodegen generate` in this directory; the .xcodeproj is not committed.
+name: ScribeSync
+options:
+  bundleIdPrefix: io.github.ata88
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+packages:
+  KSSCore:
+    path: ..
+  mlx-swift-lm:
+    url: https://github.com/ml-explore/mlx-swift-lm
+    exactVersion: 3.33.0
+  swift-transformers:
+    url: https://github.com/huggingface/swift-transformers
+    from: 1.3.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.10.1
+targets:
+  ScribeSync:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources
+      - path: Resources
+        excludes: ["Info.plist"]
+    info:
+      path: Resources/Info.plist
+      properties:
+        CFBundleName: Scribe Sync
+        CFBundleDisplayName: Scribe Sync
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleIconName: AppIcon
+        LSApplicationCategoryType: public.app-category.productivity
+        LSMinimumSystemVersion: "14.0"
+        NSHumanReadableCopyright: "MIT License"
+        NSAppleEventsUsageDescription: "Scribe Sync schreibt deine erkannten Kindle-Scribe-Notizen in die App Notizen und aktualisiert sie dort."
+        SUFeedURL: https://github.com/ata88/kindle-scribe-sync/releases/latest/download/appcast.xml
+        SUPublicEDKey: $(SPARKLE_PUBLIC_KEY)
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
+    settings:
+      base:
+        PRODUCT_NAME: Scribe Sync
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.ata88.scribesync
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        ENABLE_HARDENED_RUNTIME: NO
+        ENABLE_APP_SANDBOX: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        COMBINE_HIDPI_IMAGES: YES
+        # public half of the update signing key (the private half is a GitHub secret)
+        SPARKLE_PUBLIC_KEY: "alQFZjJAAmgF4ozUmmhwYNrupY+Sr4ujFHziwKCGFnU="
+    dependencies:
+      - package: KSSCore
+      - package: mlx-swift-lm
+        product: MLXVLM
+      - package: mlx-swift-lm
+        product: MLXLMCommon
+      - package: swift-transformers
+        product: Tokenizers
+      - package: Sparkle
+schemes:
+  ScribeSync:
+    build:
+      targets:
+        ScribeSync: all
+    run:
+      config: Debug
+    archive:
+      config: Release
