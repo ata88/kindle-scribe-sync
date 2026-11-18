@@ -1,0 +1,45 @@
+commit 4ca6f24b00ec4b63f9306d25e44a6375dafa5198 job app run 44290969829
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+xcodebuild: error: Could not resolve package dependencies:
+
+== tail ==
+Command line invocation:
+    /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild -project ScribeSync.xcodeproj -scheme ScribeSync -configuration Release -derivedDataPath /Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/build -destination platform=macOS,arch=arm64 -skipMacroValidation -skipPackagePluginValidation MARKETING_VERSION=0.0.0 CURRENT_PROJECT_VERSION=1 ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build
+
+Build settings from command line:
+    ARCHS = arm64
+    CODE_SIGNING_ALLOWED = NO
+    CURRENT_PROJECT_VERSION = 1
+    MARKETING_VERSION = 0.0.0
+    ONLY_ACTIVE_ARCH = YES
+
+Resolve Package Graph
+
+Fetching from https://github.com/sparkle-project/Sparkle
+
+Fetching from https://github.com/huggingface/swift-transformers
+
+Fetching from https://github.com/ml-explore/mlx-swift-lm
+
+Resolve Package Graph
+
+Updating from https://github.com/ml-explore/mlx-swift-lm
+
+Updating from https://github.com/sparkle-project/Sparkle
+
+Updating from https://github.com/huggingface/swift-transformers
+
+
+Resolved source packages:
+  kindle-scribe-sync: (null)
+
+2026-11-18 11:03:31.894 xcodebuild[2304:10554] Writing error result bundle to /var/folders/h5/t85nd63d71x27_8gl5gw3l_w0000gn/T/ResultBundle_2026-18-11_11-03-0031.xcresult
+xcodebuild: error: Could not resolve package dependencies:
+  Failed to resolve dependencies Dependencies could not be resolved because no versions of 'sparkle' match the requirement 2.11.0..<3.0.0 and root depends on 'sparkle' 2.11.0..<3.0.0.
+
