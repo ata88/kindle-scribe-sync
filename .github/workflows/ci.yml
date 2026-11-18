@@ -43,18 +43,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: scripts/publish-ci-log.sh build.log
+      - name: Inspect app bundle
+        run: |
+          B="build/Build/Products/Release/Scribe Sync.app"
+          {
+            echo "== bundle"; du -sh "$B"; du -sh "$B"/Contents/* 2>/dev/null
+            echo "== MacOS"; ls -la "$B/Contents/MacOS"
+            echo "== Frameworks"; ls "$B/Contents/Frameworks" 2>/dev/null
+            echo "== Resources (bundles/metallib)"; find "$B/Contents/Resources" -maxdepth 2 \( -name "*.bundle" -o -name "*.metallib" -o -name "*.lproj" \) | head -30
+            echo "== metallib anywhere"; find "$B" -name "*.metallib" -exec ls -la {} \;
+          } 2>&1 | tee selftest.log
       - name: Self-test (app starts, Notes script compiles, image pipeline)
         run: |
+          set -o pipefail
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
-          perl -e 'alarm 120; exec @ARGV' "$APP" --self-test 2>&1 | tee selftest.log
-          test "${PIPESTATUS[0]}" -eq 0
+          echo "== self-test" | tee -a selftest.log
+          perl -e 'alarm 120; exec @ARGV' "$APP" --self-test 2>&1 | tee -a selftest.log
+          echo "exit=$?" | tee -a selftest.log
       - name: Screenshots of the UI (demo library)
         continue-on-error: true
         run: |
+          set -o pipefail
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
           export SCRIBE_SYNC_HOME="$RUNNER_TEMP/shots-home"
-          perl -e 'alarm 240; exec @ARGV' "$APP" --screenshots "$RUNNER_TEMP/shots" 2>&1 | tail -20
-          ls -l "$RUNNER_TEMP/shots" || true
+          echo "== screenshots" | tee -a selftest.log
+          perl -e 'alarm 240; exec @ARGV' "$APP" --screenshots "$RUNNER_TEMP/shots" 2>&1 | tail -40 | tee -a selftest.log
+          echo "exit=${PIPESTATUS[0]}" | tee -a selftest.log
+          ls -l "$RUNNER_TEMP/shots" 2>&1 | tee -a selftest.log
       - name: Publish screenshots
         if: always()
         env:
@@ -67,9 +82,11 @@ jobs:
         env:
           SCRIBE_SELFTEST_MODEL_DIR: ${{ runner.temp }}/model
         run: |
+          set -o pipefail
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          echo "== recognition" | tee -a selftest.log
           perl -e 'alarm 1200; exec @ARGV' "$APP" --self-test-recognition 2>&1 | tee -a selftest.log
-          test "${PIPESTATUS[0]}" -eq 0
+          echo "exit=$?" | tee -a selftest.log
       - name: Release dry run (throwaway keys)
         run: |
           openssl req -x509 -newkey rsa:2048 -keyout "$RUNNER_TEMP/k.pem" -out "$RUNNER_TEMP/c.pem" -days 2 -nodes \
