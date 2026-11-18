@@ -41,6 +41,13 @@ enum Screenshots {
             model.selectedNotebookID = "demo-kickoff"
             await pause(1.5)
             capture(main, dir, "1-reader-\(suffix)")
+            if suffix == "light" {
+                dumpScrollViews(main)
+                scrollAllToTop(main)
+                await pause(0.8)
+                capture(main, dir, "1b-reader-top-\(suffix)")
+                dumpScrollViews(main)
+            }
             model.showInspector = true
             await pause(1.5)
             capture(main, dir, "2-reader-inspector-\(suffix)")
@@ -78,6 +85,34 @@ enum Screenshots {
         render(OnboardingView().environmentObject(model).tint(Theme.accent), size: NSSize(width: 900, height: 820), dir, "10-onboarding")
         print("screenshots written to \(dir.path)")
         exit(0)
+    }
+
+    private static func scrollViews(in view: NSView) -> [NSScrollView] {
+        var out: [NSScrollView] = []
+        if let s = view as? NSScrollView { out.append(s) }
+        for v in view.subviews { out += scrollViews(in: v) }
+        return out
+    }
+
+    private static func dumpScrollViews(_ window: NSWindow) {
+        guard let root = window.contentView?.superview ?? window.contentView else { return }
+        print("window frame \(window.frame) content \(window.contentLayoutRect)")
+        for s in scrollViews(in: root) {
+            let doc = s.documentView
+            print("scroll \(type(of: s)) frame=\(s.convert(s.bounds, to: nil)) insets=\(s.contentInsets) auto=\(s.automaticallyAdjustsContentInsets)",
+                  "doc=\(doc.map { String(describing: type(of: $0)) } ?? "nil") docFrame=\(doc?.frame ?? .zero) flipped=\(doc?.isFlipped ?? false)",
+                  "visible=\(s.documentVisibleRect)")
+        }
+    }
+
+    private static func scrollAllToTop(_ window: NSWindow) {
+        guard let root = window.contentView?.superview ?? window.contentView else { return }
+        for s in scrollViews(in: root) {
+            guard let doc = s.documentView else { continue }
+            let y = doc.isFlipped ? -s.contentInsets.top : max(0, doc.frame.height - s.contentView.bounds.height)
+            s.contentView.scroll(to: NSPoint(x: 0, y: y))
+            s.reflectScrolledClipView(s.contentView)
+        }
     }
 
     private static func pause(_ seconds: Double) async {

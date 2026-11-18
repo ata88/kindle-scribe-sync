@@ -70,6 +70,12 @@ struct DiagnosticsView: View {
                     .listRowSeparator(.hidden)
                 }
                 .listStyle(.plain)
+                .overlay {
+                    if events.isEmpty {
+                        ContentUnavailableView(L("Keine Einträge"), systemImage: "list.bullet.rectangle",
+                                               description: Text(L("Hier erscheint, was die App im Hintergrund tut.")))
+                    }
+                }
             }
             .frame(maxWidth: .infinity, minHeight: 200, maxHeight: .infinity)
         }
