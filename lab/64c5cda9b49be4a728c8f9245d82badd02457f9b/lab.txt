@@ -1,0 +1,73 @@
+total 80
+-rw-r--r--  1 runner  staff   4191 Nov 18 15:29 gray.png
+-rw-r--r--  1 runner  staff      0 Nov 18 15:29 lab.txt
+-rw-r--r--  1 runner  staff   1171 Nov 18 15:29 mk.swift
+-rw-r--r--  1 runner  staff  16813 Nov 18 15:29 rgb.jpg
+-rw-r--r--  1 runner  staff   7996 Nov 18 15:29 rgb.png
+== process chain
+ 1075  1074 bash
+ 1074   940 /bin/bash
+  940   927 /Users/runner/actions-runner/cached/bin/Runner.Worker
+  927   916 /Users/runner/actions-runner/cached/bin/Runner.Listener
+  916   905 /opt/hca/hosted-compute-agent
+  905     1 /bin/bash
+== csrutil
+System Integrity Protection status: disabled.
+granted to: /usr/bin/osascript /bin/bash /bin/zsh /bin/sh /usr/bin/perl /usr/bin/perl5.34 /opt/hca/hosted-compute-agent /Users/runner/actions-runner/cached/bin/Runner.Listener /Users/runner/actions-runner/cached/bin/Runner.Worker
+could not create image from display
+== Notes windows/buttons
+65:69: execution error: System Events got an error: osascript is not allowed assistive access. (-1728)
+could not create image from display
+65:69: execution error: System Events got an error: osascript is not allowed assistive access. (-1728)
+== accounts
+On My Mac
+== V1 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7
+name=V1 png data self-closed attachments=1
+   att name=missing value cid=cid:8199ED7C-DBB0-4632-9588-EC255D295FE9@localhost
+   body length=144
+could not create image from display
+screencapture failed
+== V2 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p10
+name=V2 jpeg data attachments=1
+   att name=missing value cid=cid:7C089B30-F367-499B-A4D5-F87027F3F41C@localhost
+   body length=133
+could not create image from display
+screencapture failed
+== V3 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p11
+name=V3 gray png data (old app) attachments=1
+   att name=missing value cid=cid:4267FA09-1B81-4015-9632-11CE4A3D7A43@localhost
+   body length=147
+could not create image from display
+screencapture failed
+== V4 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p14
+name=V4 file url attachments=1
+   att name=rgb.png cid=cid:0890E9F6-0742-4B09-82DA-95F535F4C829@localhost
+   body length=212 has-img-tag has-data-uri
+could not create image from display
+screencapture failed
+== V5 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p15
+name=V5 p-wrapped png with size attachments=1
+   att name=missing value cid=cid:16DF5067-55BA-460F-A026-7AE094DC7E55@localhost
+   body length=147
+could not create image from display
+screencapture failed
+== V6 id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p19
+name=V6 two images attachments=2
+   att name=missing value cid=cid:E53D3A95-8F83-45FF-A8CD-5B13A233655C@localhost
+   att name=missing value cid=cid:CF325B4B-3F09-480D-8338-079CECD798E2@localhost
+   body length=148
+could not create image from display
+screencapture failed
+== V7 attachment command
+id=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p20
+name=V7 attachment attachments=2
+   att name=rgb.png cid=cid:8073DFD5-2527-4880-87CC-7A7A163173A2@localhost
+   att name=rgb.png cid=cid:8073DFD5-2527-4880-87CC-7A7A163173A2@localhost
+   body length=21610 has-img-tag has-data-uri
+could not create image from display
+screencapture failed
+== V8 update existing V1 note body again (does the image survive / duplicate?)
+name=V1 png data self-closed attachments=1
+   att name=missing value cid=cid:905F068B-B579-4654-9CFB-EBE4BF11B86C@localhost
+   body length=144
+== done
