@@ -2,7 +2,8 @@
 # On CI failure: commit the build log to the `ci-logs` branch so it can be read with plain git.
 set +e
 LOG="${1:-build.log}"
-OUT="$(mktemp -d)/${GITHUB_SHA:-local}-${GITHUB_JOB:-job}.txt"
+NAME="${2:-${GITHUB_JOB:-job}}"
+OUT="$(mktemp -d)/${GITHUB_SHA:-local}-${NAME}.txt"
 {
   echo "commit ${GITHUB_SHA} job ${GITHUB_JOB} run ${GITHUB_RUN_ID}"
   sw_vers 2>/dev/null; xcodebuild -version 2>/dev/null

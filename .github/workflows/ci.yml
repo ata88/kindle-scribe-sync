@@ -38,8 +38,28 @@ jobs:
         run: swift test 2>&1 | tail -5
       - name: Build app
         run: scripts/build-app.sh 0.0.0 ${{ github.run_number }}
-      - name: Publish log
+      - name: Publish build log
         if: failure()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: scripts/publish-ci-log.sh build.log
+      - name: Self-test (app starts, Notes script compiles, image pipeline)
+        run: |
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          perl -e 'alarm 120; exec @ARGV' "$APP" --self-test 2>&1 | tee selftest.log
+          test "${PIPESTATUS[0]}" -eq 0
+      - name: Download small test model (same family as the default)
+        run: python3 scripts/download_model.py mlx-community/Qwen3.5-2B-4bit "$RUNNER_TEMP/model" | tail -2
+      - name: Self-test recognition (needs Metal in the runner VM)
+        continue-on-error: true
+        env:
+          SCRIBE_SELFTEST_MODEL_DIR: ${{ runner.temp }}/model
+        run: |
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          perl -e 'alarm 1200; exec @ARGV' "$APP" --self-test-recognition 2>&1 | tee -a selftest.log
+          test "${PIPESTATUS[0]}" -eq 0
+      - name: Publish self-test log
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: test -f selftest.log && scripts/publish-ci-log.sh selftest.log selftest || true

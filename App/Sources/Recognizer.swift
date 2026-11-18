@@ -253,21 +253,25 @@ enum RecognizerError: LocalizedError {
 actor MLXRecognizer: PageRecognizer {
     nonisolated let modelName: String
     private let info: ModelInfo
+    private let directory: URL
     private let imageTools = MacImageTools()
     private var container: ModelContainer?
     private let onStateChange: @Sendable (Bool) -> Void
 
-    init(model: ModelInfo, onStateChange: @escaping @Sendable (Bool) -> Void) {
+    init(model: ModelInfo, directoryOverride: URL? = nil, onStateChange: @escaping @Sendable (Bool) -> Void) {
         self.info = model
+        self.directory = directoryOverride ?? ModelManager.directory(for: model.id)
         self.modelName = model.title
         self.onStateChange = onStateChange
     }
 
     func prepare() async throws {
         guard container == nil else { return }
-        guard ModelManager.isInstalled(info.id) else { throw RecognizerError.notInstalled(info.title) }
+        guard FileManager.default.fileExists(atPath: directory.appendingPathComponent(".complete").path) else {
+            throw RecognizerError.notInstalled(info.title)
+        }
         Memory.cacheLimit = 256 * 1024 * 1024
-        let config = ModelConfiguration(directory: ModelManager.directory(for: info.id), extraEOSTokens: info.stopTokens)
+        let config = ModelConfiguration(directory: directory, extraEOSTokens: info.stopTokens)
         container = try await VLMModelFactory.shared.loadContainer(
             from: LocalOnlyDownloader(), using: TransformersTokenizerLoader(), configuration: config)
         onStateChange(true)

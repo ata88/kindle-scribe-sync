@@ -155,6 +155,8 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
         }
     }
 
+    @MainActor static func compileCheck() throws { _ = try script() }
+
     @MainActor static func accountNames() -> [String] {
         guard let list = try? call("accountNames", []) else { return [] }
         return (0..<list.numberOfItems).compactMap { list.atIndex($0 + 1)?.stringValue }
