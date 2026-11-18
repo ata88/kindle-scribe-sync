@@ -142,8 +142,10 @@ struct AttentionCard: View {
             } icon: {
                 Image(systemName: icon).foregroundStyle(Theme.warm)
             }
+            // No fixedSize here: the split view measures the sidebar at a tiny width, and a
+            // vertically fixed text then reports a huge minimum height for the whole window.
             Text(message).font(.caption).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+                .lineLimit(4)
             Button(action: act) { Text(actionTitle).frame(maxWidth: .infinity) }
                 .controlSize(.small)
                 .buttonStyle(.borderedProminent)
