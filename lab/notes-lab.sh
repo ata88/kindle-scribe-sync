@@ -38,13 +38,23 @@ grant() { # db, service, client, client_type, indirect
 UDB="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
 SDB="/Library/Application Support/com.apple.TCC/TCC.db"
 CLIENTS="/usr/bin/osascript /bin/bash /bin/zsh /bin/sh /usr/bin/perl /usr/bin/perl5.34"
-for c in $(ls -d /Users/runner/runners/*/bin/Runner.Worker /Users/runner/runners/*/bin/Runner.Listener /opt/runner/*/bin/Runner.* 2>/dev/null); do CLIENTS="$CLIENTS $c"; done
+for c in $(ls -d /Users/runner/actions-runner/*/bin/Runner.Worker /Users/runner/actions-runner/*/bin/Runner.Listener /opt/hca/hosted-compute-agent 2>/dev/null); do CLIENTS="$CLIENTS $c"; done
 for db in "$UDB" "$SDB"; do
   for c in $CLIENTS; do grant "$db" kTCCServiceAppleEvents "$c" 1 com.apple.Notes; grant "$db" kTCCServiceAppleEvents "$c" 1 com.apple.systemevents; grant "$db" kTCCServiceScreenCapture "$c" 1 UNUSED; done
 done
 echo "granted to: $CLIENTS"
-open -a Notes; sleep 8
-osascript -e 'tell application "System Events" to get name of every window of process "Notes"' 2>&1 | head -2
+open -a Notes; sleep 10
+screencapture -x "$OUT/notes-start.png" 2>&1
+echo "== Notes windows/buttons"
+osascript -e 'tell application "System Events" to tell process "Notes" to get {name of every window, name of every button of every window}' 2>&1 | head -3
+# dismiss a first-run welcome sheet if present (Continue / Weiter / Fortfahren)
+for b in Continue Weiter Fortfahren "Get Started" OK; do
+  osascript -e "tell application \"System Events\" to tell process \"Notes\" to click (first button of every window whose name is \"$b\")" >/dev/null 2>&1
+  osascript -e "tell application \"System Events\" to tell process \"Notes\" to click button \"$b\" of window 1" >/dev/null 2>&1
+done
+sleep 3
+screencapture -x "$OUT/notes-after-welcome.png" 2>&1
+osascript -e 'tell application "System Events" to tell process "Notes" to get {name of every window, name of every button of every window}' 2>&1 | head -3
 echo "== accounts"; osa -e 'tell application "Notes" to get name of every account'
 osa -e 'tell application "Notes" to make new folder with properties {name:"Lab"}' >/dev/null 2>&1
 
