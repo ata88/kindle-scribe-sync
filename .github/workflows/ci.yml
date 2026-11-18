@@ -22,12 +22,10 @@ jobs:
           git config --global --add safe.directory '*'
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh build.log core-linux
   app:
-    # two runner images: arm64 macOS capacity on GitHub is sometimes short,
-    # whichever image gets a machine first delivers the logs/screenshots
+    # macos-26 only: mlx-swift needs Swift 6.3 tools (Xcode 26.4+); macos-15 images stop at 26.3
     strategy:
-      fail-fast: false
       matrix:
-        os: [macos-26, macos-15]
+        os: [macos-26]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 80
     steps:
