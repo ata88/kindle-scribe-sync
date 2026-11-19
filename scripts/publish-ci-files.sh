@@ -3,6 +3,7 @@
 set +e
 SRC="$1"; PREFIX="${2:-shots}"
 [ -d "$SRC" ] || exit 0
+SRC="$(cd "$SRC" && pwd)"
 cd "$(mktemp -d)"
 git init -q
 git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
