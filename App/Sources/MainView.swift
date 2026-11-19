@@ -12,7 +12,11 @@ struct MainView: View {
                 .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 320)
         } content: {
             Group {
-                if model.sidebar == .tasks { TaskListView() } else { NotebookListView() }
+                switch model.sidebar {
+                case .tasks: TaskListView()
+                case .sendToKindle: SendHistoryView(stk: model.sendToKindle)
+                default: NotebookListView()
+                }
             }
             .navigationSplitViewColumnWidth(min: 270, ideal: 320, max: 440)
         } detail: {
@@ -66,6 +70,11 @@ struct SidebarView: View {
                 row(.recent, count: nil)
                 row(.tasks, count: model.openTaskCount)
                 row(.review, count: model.reviewCount)
+            }
+            Section("Kindle") {
+                row(.sendToKindle, count: model.sendToKindle.jobs.filter { $0.state != .sent }.count)
+                    .dropDestination(for: URL.self) { urls, _ in model.sendToKindle(urls); return true }
+                    .help(L("Dateien hierher ziehen, um sie an den Kindle zu senden"))
             }
             if !model.folders.isEmpty {
                 Section(L("Ordner")) {
@@ -432,7 +441,9 @@ struct DetailRoot: View {
     }
 
     var body: some View {
-        if needsSetup || model.notebooks.isEmpty {
+        if model.sidebar == .sendToKindle {
+            SendToKindleView(stk: model.sendToKindle)
+        } else if needsSetup || model.notebooks.isEmpty {
             OnboardingView()
         } else if let nb = model.notebook(model.selectedNotebookID) {
             ReaderView(notebook: nb).id(nb.id)

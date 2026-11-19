@@ -68,6 +68,15 @@ jobs:
           echo "exit=$RC" | tee -a selftest.log
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-1-${{ matrix.os }} || true
           exit $RC
+      - name: Self-test Send to Kindle signature (Mac crypto vs. Python reference)
+        run: |
+          set -o pipefail
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          python3 -m venv "$RUNNER_TEMP/venv" && "$RUNNER_TEMP/venv/bin/pip" install -q cryptography
+          "$RUNNER_TEMP/venv/bin/python" scripts/stk-vector.py "$RUNNER_TEMP/stk-vector.json"
+          echo "== send to kindle self-test" | tee -a selftest.log
+          perl -e 'alarm 60; exec @ARGV' "$APP" --self-test-stk "$RUNNER_TEMP/stk-vector.json" 2>&1 | grep -E "PASS|FAIL" | tee -a selftest.log
+          exit ${PIPESTATUS[0]}
       - name: Self-test Apple Notes (real Notes app, images must arrive)
         run: |
           set -o pipefail
