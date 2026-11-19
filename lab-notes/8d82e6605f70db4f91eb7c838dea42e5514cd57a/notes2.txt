@@ -1,0 +1,53 @@
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+total 24
+-rw-r--r--  1 runner  staff  4079 Nov 19 08:09 fig-0001-1.png
+-rw-r--r--  1 runner  staff  4835 Nov 19 08:09 fig-0001-2.png
+== A: file URLs only (what 1.1.0 does)
+grep: maximum repetition exceeds 255
+RESULT A: real-images=0 null-images=2 attachments=2
+<div><b><span style="font-size: 24px">A file urls</span></b></div> <div>ERSTER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div> <div>ZWEITER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div> <div>DRITTER TEXT</div> 
+== B: attach the files first (grants Notes read access), then set the body with file URLs
+ok
+ok
+grep: maximum repetition exceeds 255
+RESULT B-after-attach: real-images=0 null-images=0 attachments=4
+<div><b><span style="font-size: 24px">B attach then file urls</span></b></div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/></div> 
+grep: maximum repetition exceeds 255
+RESULT B: real-images=0 null-images=0 attachments=2
+<div><b><span style="font-size: 24px">B attach then file urls</span></b></div> <div>ERSTER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>ZWEITER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>DRITTER TEXT</div> 
+-- B again: set body a second time (no new attach)
+grep: maximum repetition exceeds 255
+RESULT B-second-set: real-images=0 null-images=0 attachments=2
+<div><b><span style="font-size: 24px">B attach then file urls (2)</span></b></div> <div>ERSTER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>ZWEITER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>DRITTER TEXT</div> 
+== B2: new note, files were already attached to another note earlier in this Notes session
+grep: maximum repetition exceeds 255
+RESULT B2: real-images=0 null-images=0 attachments=2
+<div><b><span style="font-size: 24px">B2 no attach, earlier access</span></b></div> <div>ERSTER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>ZWEITER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>DRITTER TEXT</div> 
+== C: images served over http://127.0.0.1
+grep: maximum repetition exceeds 255
+RESULT C: real-images=0 null-images=2 attachments=2
+<div><b><span style="font-size: 24px">C localhost http</span></b></div> <div>ERSTER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div> <div>ZWEITER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div> <div>DRITTER TEXT</div> 
+== D: restart Notes, then file URLs again without attaching (does access survive?)
+grep: maximum repetition exceeds 255
+RESULT D: real-images=0 null-images=2 attachments=2
+<div><b><span style="font-size: 24px">D after restart</span></b></div> <div>ERSTER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div> <div>ZWEITER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,(null)"/><br></div> <div>DRITTER TEXT</div> 
+== E: after restart: attach to the same note, then set body (the planned app flow)
+ok
+ok
+grep: maximum repetition exceeds 255
+RESULT E: real-images=0 null-images=0 attachments=2
+<div><b><span style="font-size: 24px">E planned flow</span></b></div> <div>ERSTER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>ZWEITER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>DRITTER TEXT</div> 
+-- E update with changed images (rewrite file, attach again, set body)
+ok
+ok
+grep: maximum repetition exceeds 255
+RESULT E-update: real-images=0 null-images=0 attachments=2
+<div><b><span style="font-size: 24px">E planned flow, updated</span></b></div> <div>ERSTER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>ZWEITER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>DRITTER TEXT</div> 
+== F: copy into Notes' own container tmp (may need extra permission)
+copied
+grep: maximum repetition exceeds 255
+RESULT F: real-images=0 null-images=0 attachments=2
+<div><b><span style="font-size: 24px">F notes container</span></b></div> <div>ERSTER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>ZWEITER TEXT</div> <div><img style="max-width: 100%; max-height: 100%;" src="data:image/png;base64,<DATA>"/><br></div> <div>DRITTER TEXT</div> 
+== done
