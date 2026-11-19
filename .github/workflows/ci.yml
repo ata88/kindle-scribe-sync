@@ -115,6 +115,13 @@ jobs:
             kill -9 $PID
           fi
           wait $PID; echo "exit=$?" >> shots.log
+          # a crash leaves a report: keep the crashing thread
+          sleep 5
+          IPS=$(ls -t ~/Library/Logs/DiagnosticReports/*Scribe*.ips 2>/dev/null | head -1)
+          if [ -n "$IPS" ]; then
+            echo "== crash report $IPS" >> shots.log
+            python3 scripts/crash-summary.py "$IPS" >> shots.log 2>&1
+          fi
           grep -v "^20[0-9][0-9]-" shots.log | tail -60 | tee -a selftest.log
           ls -l "$RUNNER_TEMP/shots" 2>&1 | tee -a selftest.log
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-2-${{ matrix.os }} || true
