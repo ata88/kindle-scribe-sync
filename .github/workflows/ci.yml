@@ -68,6 +68,22 @@ jobs:
           echo "exit=$RC" | tee -a selftest.log
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-1-${{ matrix.os }} || true
           exit $RC
+      - name: Self-test Apple Notes (real Notes app, images must arrive)
+        run: |
+          set -o pipefail
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          ABS="$GITHUB_WORKSPACE/$APP"
+          for db in "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "/Library/Application Support/com.apple.TCC/TCC.db"; do
+            for c in "$ABS|1" "io.github.ata88.scribesync|0"; do
+              sudo sqlite3 "$db" "INSERT OR REPLACE INTO access (service,client,client_type,auth_value,auth_reason,auth_version,csreq,policy_id,indirect_object_identifier_type,indirect_object_identifier,indirect_object_code_identity,flags,last_modified) VALUES ('kTCCServiceAppleEvents','${c%|*}',${c#*|},2,3,1,NULL,NULL,0,'com.apple.Notes',NULL,0,$(date +%s));" || true
+            done
+          done
+          open -a Notes; sleep 10
+          echo "== notes self-test" | tee -a selftest.log
+          perl -e 'alarm 180; exec @ARGV' "$APP" --self-test-notes 2>&1 | grep -E "PASS|FAIL|SELFTEST" | tee -a selftest.log
+          RC=${PIPESTATUS[0]}
+          echo "exit=$RC" | tee -a selftest.log
+          exit $RC
       - name: Screenshots of the UI (demo library)
         continue-on-error: true
         run: |

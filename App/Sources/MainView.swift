@@ -300,7 +300,7 @@ struct NotebookRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             CachedImage(url: notebook.pages.first.map { AppModel.shared.store.url(for: $0.imageFile) },
-                        maxPixel: 96, contentMode: .fill)
+                        maxPixel: 96, contentMode: .fill, revision: notebook.pages.first?.imageHash ?? "")
                 .frame(width: 42, height: 58)
                 .background(Theme.scanBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))

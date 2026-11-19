@@ -11,7 +11,8 @@ public protocol ImageTools: Sendable {
 
 /// Writes a notebook into Apple Notes and returns the note's id.
 public protocol NotesPublisher: Sendable {
-    func publish(html: String, existingNoteID: String?, folderPath: [String]) async throws -> String
+    /// `images`: the files the HTML references; the publisher makes them readable for Notes.
+    func publish(html: String, images: [URL], existingNoteID: String?, folderPath: [String]) async throws -> String
 }
 
 public struct SyncSettings: Sendable {
@@ -336,7 +337,7 @@ public actor SyncEngine {
         if nb.noteID != nil, nb.publishedHash == out.contentHash, nb.noteFolder == folderKey { return nil }
         onProgress(SyncProgress(phase: .publishing, detail: nb.title, done: 0, total: 1))
         do {
-            let noteID = try await notes.publish(html: out.html, existingNoteID: nb.noteID, folderPath: folder)
+            let noteID = try await notes.publish(html: out.html, images: out.images, existingNoteID: nb.noteID, folderPath: folder)
             let verb = nb.noteID == nil ? L("angelegt") : (noteID == nb.noteID ? L("aktualisiert") : L("neu angelegt (alte Notiz nicht mehr vorhanden)"))
             nb.noteID = noteID
             nb.noteFolder = folderKey
@@ -367,6 +368,32 @@ public actor SyncEngine {
     }
 
     /// Discard the recognition of one page and read it again on the next pass.
+    /// Crop every stored figure again with the current crop logic (after an update
+    /// that improved it). Uses the stored box as the hint; no recognition needed.
+    /// Returns the number of figures that changed.
+    @discardableResult
+    public func recropAllFigures() throws -> Int {
+        var changedFigures = 0
+        for var nb in store.all() {
+            var changed = false
+            for i in nb.pages.indices where !nb.pages[i].figures.isEmpty {
+                guard let png = store.readImage(nb.pages[i].imageFile) else { continue }
+                for j in nb.pages[i].figures.indices {
+                    let f = nb.pages[i].figures[j]
+                    guard let crop = images.cropFigure(png, box: f.box), crop.box != f.box || f.imageFile == nil else { continue }
+                    nb.pages[i].figures[j].imageFile = try store.writeImage(
+                        crop.png, notebookID: nb.id, name: String(format: "fig-%04d-%d.png", nb.pages[i].index + 1, f.id))
+                    nb.pages[i].figures[j].box = crop.box
+                    changed = true
+                    changedFigures += 1
+                }
+            }
+            if changed { try store.save(nb); onChange(nb) }
+        }
+        if changedFigures > 0 { log.log(.sync, L("%ld Grafik(en) neu ausgeschnitten", changedFigures)) }
+        return changedFigures
+    }
+
     public func requeue(notebookID: String, pageIndex: Int) throws {
         guard var nb = store.notebook(notebookID), let pi = nb.pages.firstIndex(where: { $0.index == pageIndex }) else { return }
         nb.pages[pi].status = .pending

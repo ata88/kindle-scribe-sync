@@ -74,10 +74,12 @@ final class FakeNotes: NotesPublisher, @unchecked Sendable {
     var notes: [String: (html: String, folder: [String])] = [:]
     var writes = 0
     var created = 0
+    var lastImages: [URL] = []
 
-    func publish(html: String, existingNoteID: String?, folderPath: [String]) async throws -> String {
+    func publish(html: String, images: [URL], existingNoteID: String?, folderPath: [String]) async throws -> String {
         lock.withLock {
             writes += 1
+            lastImages = images
             if let id = existingNoteID, notes[id] != nil {
                 notes[id] = (html, folderPath)
                 return id

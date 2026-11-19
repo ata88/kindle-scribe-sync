@@ -54,29 +54,19 @@ struct MacImageTools: ImageTools {
         return ctx.makeImage()
     }
 
-    /// Crop a figure. The model's box is widened a little, then tightened to the
-    /// ink actually inside it, so slightly-off coordinates still give a clean crop.
+    /// Crop a figure. The model's box is only a hint: the crop snaps to the connected
+    /// ink of the drawing (see FigureLocator), so slightly-off coordinates still give
+    /// the whole drawing and no neighbouring text.
     func cropFigure(_ png: Data, box: NormRect) -> (png: Data, box: NormRect)? {
         guard let img = decode(png), let g = grayscale(img) else { return nil }
         let W = Double(g.width), H = Double(g.height)
-        let pad = 0.03
-        var x0 = Int(max(0, box.x0 - pad) * W), y0 = Int(max(0, box.y0 - pad) * H)
-        var x1 = Int(min(1, box.x1 + pad) * W), y1 = Int(min(1, box.y1 + pad) * H)
-        guard x1 - x0 > 8, y1 - y0 > 8 else { return nil }
-
-        // tighten to dark pixels
-        var minX = x1, minY = y1, maxX = x0, maxY = y0
-        for y in y0..<y1 {
-            let row = y * g.width
-            for x in x0..<x1 where g.pixels[row + x] < 170 {
-                if x < minX { minX = x }; if x > maxX { maxX = x }
-                if y < minY { minY = y }; if y > maxY { maxY = y }
-            }
-        }
-        if maxX > minX + 4 && maxY > minY + 4 {
-            let margin = Int(0.012 * max(W, H))
-            x0 = max(0, minX - margin); y0 = max(0, minY - margin)
-            x1 = min(g.width, maxX + margin); y1 = min(g.height, maxY + margin)
+        var x0: Int, y0: Int, x1: Int, y1: Int
+        if let r = FigureLocator.locate(gray: g.pixels, width: g.width, height: g.height, hint: box) {
+            (x0, y0, x1, y1) = (r.x0, r.y0, r.x1, r.y1)
+        } else {
+            // no ink found near the hint: take the hint as it is
+            x0 = Int(box.x0 * W); y0 = Int(box.y0 * H); x1 = Int(box.x1 * W); y1 = Int(box.y1 * H)
+            guard x1 - x0 > 8, y1 - y0 > 8 else { return nil }
         }
 
         // re-render the region from the white-flattened grayscale bitmap

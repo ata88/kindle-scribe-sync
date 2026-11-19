@@ -126,6 +126,23 @@ struct Harness {
         #expect(p.figures.count == 1 && p.figures[0].imageFile != nil)
         #expect(h.notes.notes.values.first!.html.contains("<img src=\"file://"))
         #expect(!h.notes.notes.values.first!.html.contains("Skizze"))
+        #expect(h.notes.lastImages.count == 1, "the crop must be handed to Notes")
+    }
+
+    @Test func recropAfterUpdateRewritesOnlyWhatChanged() async throws {
+        let h = try Harness()
+        h.recognizer.outputs["sketch"] = """
+        <text>[[Grafik 1]]</text>
+        <grafiken>[{"id": 1, "box": [100, 200, 600, 700]}]</grafiken>
+        """
+        h.source.set("a", .init(title: "T", folder: [], mtime: 1, pages: [page("sketch")]))
+        _ = try await h.engine().run()
+        #expect(try await h.engine().recropAllFigures() == 0)   // same logic, same result
+        var nb = h.store.notebook("a")!
+        nb.pages[0].figures[0].imageFile = nil                  // e.g. crop missing
+        try h.store.save(nb)
+        #expect(try await h.engine().recropAllFigures() == 1)
+        #expect(h.store.notebook("a")!.pages[0].figures[0].imageFile != nil)
     }
 
     @Test func authErrorPropagates() async throws {

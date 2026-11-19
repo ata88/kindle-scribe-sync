@@ -46,7 +46,10 @@ import Testing
         let nb = NotebookRecord(id: "a", title: "T", pages: [PageRecord(
             index: 0, imageHash: "h", imageFile: "f", ocrText: "vor\n[[Grafik 1]]\nnach",
             figures: [Figure(id: 1, box: NormRect(x0: 0, y0: 0, x1: 0.5, y1: 0.5), imageFile: "x")], status: .recognized)])
-        let html = NotesRenderer.render(nb, figureURL: { _, _ in URL(fileURLWithPath: "/Users/a/Library/Application Support/Scribe Sync/fig 1.png") }).html
+        let url = URL(fileURLWithPath: "/Users/a/Library/Application Support/Scribe Sync/fig 1.png")
+        let out = NotesRenderer.render(nb, figureURL: { _, _ in url })
+        let html = out.html
+        #expect(out.images == [url], "the publisher must hand this file to Notes")
         #expect(html.contains("<div>vor</div>\n<div><img src=\"file:///Users/a/Library/Application%20Support/Scribe%20Sync/fig%201.png\" /></div>\n<div>nach</div>"))
         #expect(!html.contains("base64"))
     }

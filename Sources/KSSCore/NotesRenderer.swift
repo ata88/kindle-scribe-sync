@@ -6,15 +6,19 @@ public enum NotesRenderer {
         public var html: String
         /// Stable hash of the content (without timestamp) to skip identical writes.
         public var contentHash: String
+        /// Every image file referenced by `html`, in order. Notes is sandboxed: the
+        /// publisher has to hand these files over before the HTML can show them.
+        public var images: [URL] = []
     }
 
-    /// Images are referenced by file URL (`figureURL`/`pageURL`). Apple Notes turns
-    /// `<img src="file://…">` into real inline image attachments; base64 data URIs
-    /// end up as anonymous "file" blocks (verified on macOS 26 in CI).
+    /// Images are referenced by file URL (`figureURL`/`pageURL`) at their place in the
+    /// text. Base64 data URIs never load in Notes (empty "file" blocks), and file URLs
+    /// only load once Notes has been given access to the file – see `images`.
     public static func render(_ nb: NotebookRecord,
                               figureURL: (PageRecord, Figure) -> URL?,
                               pageURL: ((PageRecord) -> URL?)? = nil,
                               stamp: Date = Date()) -> Output {
+        var images: [URL] = []
         var parts: [String] = ["<div><h1>\(escape(nb.title))</h1></div>"]
         if !nb.folderPath.isEmpty {
             parts.append("<div><i>\(escape(nb.folderPath.joined(separator: " / ")))</i></div>")
@@ -28,6 +32,7 @@ public enum NotesRenderer {
                     guard let fig = page.figures.first(where: { $0.id == id }), let url = figureURL(page, fig) else {
                         return nil
                     }
+                    images.append(url)
                     return "<div><img src=\"\(escape(url.absoluteString))\" /></div>"
                 })
             case .pending:
@@ -36,6 +41,7 @@ public enum NotesRenderer {
                 parts.append("<div><i>\(escape(L("(Texterkennung fehlgeschlagen – wird erneut versucht)")))</i></div>")
             }
             if let pageURL, let url = pageURL(page) {
+                images.append(url)
                 parts.append("<div><img src=\"\(escape(url.absoluteString))\" /></div>")
             }
         }
@@ -49,7 +55,9 @@ public enum NotesRenderer {
         let imageKey = nb.pages.map { p in
             p.imageHash + p.figures.map { "\($0.id):\($0.box.x0),\($0.box.y0),\($0.box.x1),\($0.box.y1)" }.joined(separator: ";")
         }.joined(separator: "|")
-        return Output(html: "<html><body>\n\(body)\n\(footer)\n</body></html>", contentHash: fnv1a(body + imageKey))
+        // "v2": notes written by 1.1.0 showed empty image placeholders and must be rewritten once
+        return Output(html: "<html><body>\n\(body)\n\(footer)\n</body></html>",
+                      contentHash: fnv1a("v2" + body + imageKey), images: images)
     }
 
     // MARK: Markdown → HTML (the subset the recognizer produces)

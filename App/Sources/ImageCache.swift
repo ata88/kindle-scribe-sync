@@ -36,6 +36,8 @@ struct CachedImage: View {
     var maxPixel: Int = 800
     var contentMode: ContentMode = .fit
     var placeholderAspect: CGFloat = 0.707
+    /// Changes when the file behind `url` was rewritten (same name, new content).
+    var revision: String = ""
 
     @State private var image: CGImage?
     @Environment(\.displayScale) private var scale
@@ -52,7 +54,7 @@ struct CachedImage: View {
                     .aspectRatio(placeholderAspect, contentMode: contentMode)
             }
         }
-        .task(id: url) {
+        .task(id: "\(url?.path ?? "")|\(revision)") {
             guard let url else { return }
             let px = Int(Double(maxPixel) * Double(scale))
             image = await ImageCache.shared.image(at: url, maxPixel: px)
