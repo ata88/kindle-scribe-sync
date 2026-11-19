@@ -83,6 +83,14 @@ private func covers(_ r: FigureLocator.PixelRect?, _ x0: Int, _ y0: Int, _ x1: I
         #expect(covers(r, 597, 697, 1003, 1103), "\(String(describing: r))")
     }
 
+    /// What the 4B model really did in the lab: a coarse box shifted down over the text below.
+    @Test func coarseBoxCoveringTextBelowKeepsOnlyTheDrawing() {
+        let p = housePage()
+        // drawing 600–1000 × 700–1100, text line at y 1216–1250; the box swallows that line completely
+        let r = p.locate(p.norm(560, 760, 1240, 1300))
+        #expect(covers(r, 597, 697, 1003, 1103), "\(String(describing: r))")
+    }
+
     @Test func ruledTemplateLinesAreIgnored() {
         var p = housePage()
         for y in stride(from: 150, to: 1700, by: 90) { p.fill(0, y, 1240, y + 2, 150) }

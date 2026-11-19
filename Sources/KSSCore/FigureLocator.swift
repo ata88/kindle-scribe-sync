@@ -88,23 +88,29 @@ public enum FigureLocator {
         // 4. pick the regions that belong to the hinted drawing
         let hx0 = hint.x0 * Double(gw), hx1 = hint.x1 * Double(gw)
         let hy0 = hint.y0 * Double(gh), hy1 = hint.y1 * Double(gh)
-        var sel: Region?
-        for reg in regions where reg.cells > 2 {   // single specks (dot grid, dust) are no drawing
+        func insideHint(_ reg: Region) -> (fraction: Double, center: Bool) {
             let rx0 = Double(reg.x0), rx1 = Double(reg.x1 + 1), ry0 = Double(reg.y0), ry1 = Double(reg.y1 + 1)
             let ix = max(0, min(rx1, hx1) - max(rx0, hx0)), iy = max(0, min(ry1, hy1) - max(ry0, hy0))
-            let inside = (ix * iy) / max(1, (rx1 - rx0) * (ry1 - ry0))
             let cx = (rx0 + rx1) / 2, cy = (ry0 + ry1) / 2
-            let centerInside = cx >= hx0 && cx <= hx1 && cy >= hy0 && cy <= hy1
-            guard inside >= 0.5 || centerInside else { continue }
-            if var s = sel {
-                s.x0 = min(s.x0, reg.x0); s.y0 = min(s.y0, reg.y0)
-                s.x1 = max(s.x1, reg.x1); s.y1 = max(s.y1, reg.y1); s.cells += reg.cells
-                sel = s
-            } else {
-                sel = reg
-            }
+            return ((ix * iy) / max(1, (rx1 - rx0) * (ry1 - ry0)), cx >= hx0 && cx <= hx1 && cy >= hy0 && cy <= hy1)
         }
-        guard let s = sel else { return nil }
+        func area(_ r: Region) -> Int { (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1) }
+        let real = regions.filter { $0.cells > 2 }   // single specks (dot grid, dust) are no drawing
+        let candidates = real.filter { let h = insideHint($0); return h.fraction >= 0.5 || h.center }
+        // the drawing itself: the largest connected structure the hint points at. Model boxes are
+        // coarse and often cover neighbouring text lines – those are many small word-sized regions.
+        guard let core = candidates.max(by: { area($0) < area($1) }) else { return nil }
+        let near = max(2, Int(0.025 * Double(gh)))        // labels sit right next to the drawing
+        let drawingSized = max(3, Int(0.05 * Double(gh)))  // taller than a line of handwriting
+        var s = core
+        for reg in real {
+            let touchesCore = reg.x1 >= core.x0 - near && reg.x0 <= core.x1 + near
+                && reg.y1 >= core.y0 - near && reg.y0 <= core.y1 + near
+            let separatePart = reg.y1 - reg.y0 + 1 >= drawingSized && insideHint(reg).fraction >= 0.5
+            guard touchesCore || separatePart else { continue }
+            s.x0 = min(s.x0, reg.x0); s.y0 = min(s.y0, reg.y0)
+            s.x1 = max(s.x1, reg.x1); s.y1 = max(s.y1, reg.y1)
+        }
 
         // 5. back to pixels, tightened to the actual ink, plus a small margin
         let px0 = s.x0 * cell, py0 = s.y0 * cell
