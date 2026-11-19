@@ -165,8 +165,24 @@ final class AppModel: ObservableObject {
         })
         if settings.spotlight { SpotlightIndex.index(notebooks) }
         Task {
+            await self.recropFiguresAfterUpdate()
             try? await Task.sleep(for: .seconds(1.5))
             self.syncNow(reason: L("Programmstart"))
+        }
+    }
+
+    /// Crop logic of this version; stored figures from older versions are cropped again once.
+    private static let figureCropVersion = 2
+
+    private func recropFiguresAfterUpdate() async {
+        let key = "figureCropVersion"
+        guard UserDefaults.standard.integer(forKey: key) < Self.figureCropVersion else { return }
+        do {
+            try await makeEngine(offline: true).recropAllFigures()
+            UserDefaults.standard.set(Self.figureCropVersion, forKey: key)
+            reloadNotebooks()
+        } catch {
+            log.log(.sync, error.localizedDescription, level: .warning)
         }
     }
 

@@ -368,6 +368,32 @@ public actor SyncEngine {
     }
 
     /// Discard the recognition of one page and read it again on the next pass.
+    /// Crop every stored figure again with the current crop logic (after an update
+    /// that improved it). Uses the stored box as the hint; no recognition needed.
+    /// Returns the number of figures that changed.
+    @discardableResult
+    public func recropAllFigures() throws -> Int {
+        var changedFigures = 0
+        for var nb in store.all() {
+            var changed = false
+            for i in nb.pages.indices where !nb.pages[i].figures.isEmpty {
+                guard let png = store.readImage(nb.pages[i].imageFile) else { continue }
+                for j in nb.pages[i].figures.indices {
+                    let f = nb.pages[i].figures[j]
+                    guard let crop = images.cropFigure(png, box: f.box), crop.box != f.box || f.imageFile == nil else { continue }
+                    nb.pages[i].figures[j].imageFile = try store.writeImage(
+                        crop.png, notebookID: nb.id, name: String(format: "fig-%04d-%d.png", nb.pages[i].index + 1, f.id))
+                    nb.pages[i].figures[j].box = crop.box
+                    changed = true
+                    changedFigures += 1
+                }
+            }
+            if changed { try store.save(nb); onChange(nb) }
+        }
+        if changedFigures > 0 { log.log(.sync, L("%ld Grafik(en) neu ausgeschnitten", changedFigures)) }
+        return changedFigures
+    }
+
     public func requeue(notebookID: String, pageIndex: Int) throws {
         guard var nb = store.notebook(notebookID), let pi = nb.pages.firstIndex(where: { $0.index == pageIndex }) else { return }
         nb.pages[pi].status = .pending

@@ -136,6 +136,7 @@ enum Translations {
         "%ld Notizbücher": "%ld notebooks",
         "Keine Notizbücher": "No Notebooks",
         "Keine Treffer": "No Results",
+        "%ld Grafik(en) neu ausgeschnitten": "%ld drawing(s) cropped again",
         "Keine Einträge": "No Entries",
         "Hier erscheint, was die App im Hintergrund tut.": "What the app does in the background appears here.",
         "Sobald der Scribe synchronisiert hat, erscheinen sie hier.": "They appear here as soon as your Scribe has synced.",
