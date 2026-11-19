@@ -471,6 +471,7 @@ final class AppModel: ObservableObject {
         let base = url.deletingPathExtension().lastPathComponent
         let imageDir = url.deletingLastPathComponent().appendingPathComponent(L("%@ – Skizzen", base), isDirectory: true)
         var copied = 0
+        let store = self.store
         let md = Self.markdown(nb) { page, fig in
             guard let file = fig.imageFile else { return nil }
             let name = "\(L("Seite %ld", page.index + 1)) – \(L("Grafik %ld", fig.id)).png"
