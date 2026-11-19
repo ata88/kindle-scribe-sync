@@ -1,0 +1,45 @@
+hw.memsize: 7516192768
+===== Qwen3.5-2B-4bit
+done /Users/runner/work/_temp/model
+FIGLAB p1-left (113 s)
+  truth: ["[0.110 0.272 0.454 0.469]"]
+  model: []
+  text: Gartenplanung ⏎  ⏎ Beet an der Südseite anlegen, ⏎ Tomaten und Kräuter. ⏎  ⏎ Kompost hinten links ⏎ - Erde bestellen
+FIGLAB p2-right (13 s)
+  truth: ["[0.578 0.135 0.914 0.355]"]
+  model: []
+  text: Wohnzimmer ⏎  ⏎ Sofa 2,20 m ⏎  ⏎ Regal an die Wand ⏎  ⏎ Lampe neu ⏎  ⏎ Danach: Farbe aussuchen
+FIGLAB p3-two (89 s)
+  truth: ["[0.094 0.215 0.922 0.298]", "[0.360 0.625 0.648 0.828]"]
+  model: []
+  text: **Ablauf Bestellung** ⏎  ⏎ [ ] [ ] [ ] ⏎  ⏎ Danach wird geliefert. ⏎  ⏎ [ ] ⏎  ⏎ Ende
+FIGLAB p4-mindmap (90 s)
+  truth: ["[0.101 0.459 0.915 0.738]"]
+  model: []
+  text: **Ideen Urlaub** ⏎  ⏎ Wann? Juli oder August ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ <br> ⏎  ⏎ 
+FIGLAB done
+===== Qwen3.5-4B-4bit
+done /Users/runner/work/_temp/model
+FIGLAB p1-left (38 s)
+  truth: ["[0.110 0.272 0.454 0.469]"]
+  model: ["[0.200 0.300 0.500 0.600]"]
+  fig 1: model IoU 0.37 → crop [0.152 0.260 0.498 0.617] IoU 0.45
+  text: # Gartenplanung ⏎  ⏎ Beet an der Südseite anlegen,   ⏎ Tomaten und Kräuter. ⏎  ⏎ [[Grafik 1]] ⏎  ⏎ Kompost hinten links   ⏎ - Erde bestellen
+FIGLAB p2-right (26 s)
+  truth: ["[0.578 0.135 0.914 0.355]"]
+  model: ["[0.650 0.150 0.980 0.450]"]
+  fig 1: model IoU 0.46 → crop [0.602 0.123 0.930 0.367] IoU 0.81
+  text: # Wohnzimmer ⏎  ⏎ - Sofa 2,20 m ⏎ - Regal an die Wand ⏎ - Lampe neu ⏎  ⏎ Danach: Farbe aussuchen ⏎  ⏎ [[Grafik 1]]
+FIGLAB p3-two (28 s)
+  truth: ["[0.094 0.215 0.922 0.298]", "[0.360 0.625 0.648 0.828]"]
+  model: ["[0.350 0.620 0.650 0.850]"]
+  fig 1: model IoU 0.84 → crop [0.344 0.613 0.664 0.840] IoU 0.80
+  text: # Ablauf Bestellung ⏎  ⏎ [Box 1] → [Box 2] → [Box 3] ⏎  ⏎ Danach wird geliefert. ⏎  ⏎ [[Grafik 1]] ⏎  ⏎ Ende
+FIGLAB p4-mindmap (32 s)
+  truth: ["[0.101 0.459 0.915 0.738]"]
+  model: ["[0.200 0.450 0.800 0.650]"]
+  fig 1: model IoU 0.49 → crop [0.153 0.451 0.846 0.691] IoU 0.69
+  text: # Ideen Urlaub ⏎  ⏎ Wann? Juli oder August ⏎  ⏎ - Meer → Urlaub ← Berge ⏎ - Budget → Urlaub ⏎  ⏎ [[Grafik 1]]
+FIGLAB done
+===== Qwen3.5-9B-4bit
+done /Users/runner/work/_temp/model
