@@ -106,7 +106,7 @@ jobs:
           export SCRIBE_SYNC_HOME="$RUNNER_TEMP/shots-home"
           echo "== screenshots" | tee -a selftest.log
           set +e
-          "$APP" --screenshots "$RUNNER_TEMP/shots" --stress > shots.log 2>&1 &
+          SWIFT_BACKTRACE=enable=yes,interactive=no "$APP" --screenshots "$RUNNER_TEMP/shots" --stress > shots.log 2>&1 &
           PID=$!
           for i in $(seq 1 300); do kill -0 $PID 2>/dev/null || break; sleep 1; done
           if kill -0 $PID 2>/dev/null; then
@@ -115,14 +115,18 @@ jobs:
             kill -9 $PID
           fi
           wait $PID; echo "exit=$?" >> shots.log
-          # a crash leaves a report: keep the crashing thread
-          sleep 5
-          IPS=$(ls -t ~/Library/Logs/DiagnosticReports/*Scribe*.ips 2>/dev/null | head -1)
-          if [ -n "$IPS" ]; then
-            echo "== crash report $IPS" >> shots.log
-            python3 scripts/crash-summary.py "$IPS" >> shots.log 2>&1
+          # a crash leaves a report (written a little later): keep the crashing thread
+          if ! grep -q "^exit=0" shots.log; then
+            for i in $(seq 1 30); do
+              IPS=$(ls -t ~/Library/Logs/DiagnosticReports/*.ips /Library/Logs/DiagnosticReports/*.ips 2>/dev/null | grep -i scribe | head -1)
+              [ -n "$IPS" ] && break; sleep 2
+            done
+            echo "== crash reports: $(ls ~/Library/Logs/DiagnosticReports /Library/Logs/DiagnosticReports 2>/dev/null | tr '\n' ' ')" >> shots.log
+            [ -n "$IPS" ] && python3 scripts/crash-summary.py "$IPS" >> shots.log 2>&1
+            echo "== system log" >> shots.log
+            log show --last 10m --style compact --predicate 'process == "Scribe Sync" AND (messageType == fault OR messageType == error)' 2>/dev/null | tail -40 >> shots.log
           fi
-          grep -v "^20[0-9][0-9]-" shots.log | tail -60 | tee -a selftest.log
+          tail -150 shots.log | tee -a selftest.log
           ls -l "$RUNNER_TEMP/shots" 2>&1 | tee -a selftest.log
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-2-${{ matrix.os }} || true
       - name: Publish screenshots
