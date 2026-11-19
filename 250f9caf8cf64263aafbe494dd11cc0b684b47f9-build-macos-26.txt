@@ -1,0 +1,10 @@
+commit 250f9caf8cf64263aafbe494dd11cc0b684b47f9 job app run 44521715529
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
