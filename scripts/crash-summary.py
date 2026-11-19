@@ -19,7 +19,14 @@ def find_strings(obj, path=""):
     elif isinstance(obj, str) and any(w in obj.lower() for w in ("exception", "reason", "layout pass")):
         yield path, obj
 for path, val in list(find_strings(report))[:10]:
+    if path.startswith("/asiBacktraces"):
+        continue
     print("text", path, ":", val[:1500])
+# the backtrace of the exception itself: where it was raised, with all frames
+for i, bt in enumerate(report.get("asiBacktraces", [])[:1]):
+    print(f"exception backtrace {i}:")
+    for line in bt.splitlines()[:80]:
+        print("  " + line.strip())
 images = report.get("usedImages", [])
 for t in report.get("threads", []):
     if not t.get("triggered"):
