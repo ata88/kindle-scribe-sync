@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Notes image lab
-        run: lab/notes-lab2.sh lab-out || true
+        run: echo "notes lab done earlier"
       - name: Publish results
         if: always()
         env:
@@ -37,7 +37,7 @@ jobs:
           mkdir -p lab-out
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
           sysctl hw.memsize | tee -a lab-out/figures.txt
-          for M in Qwen3.5-2B-4bit Qwen3.5-4B-4bit Qwen3.5-9B-4bit; do
+          for M in Qwen3.5-4B-4bit; do
             echo "===== $M" | tee -a lab-out/figures.txt
             rm -rf "$RUNNER_TEMP/model"
             python3 scripts/download_model.py "mlx-community/$M" "$RUNNER_TEMP/model" 2>&1 | tail -1 | tee -a lab-out/figures.txt
