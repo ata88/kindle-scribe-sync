@@ -1,0 +1,42 @@
+commit 3505d6d636b70f1993dfa3946c66720ebe863232 job app run 44516464201
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 56M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 49M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 99672
+drwxr-xr-x  3 runner  staff        96 Nov 19 11:51 .
+drwxr-xr-x  7 runner  staff       224 Nov 19 11:50 ..
+-rwxr-xr-x  1 runner  staff  51029704 Nov 19 11:51 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 19 11:50 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 368x421 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8741935483870967, y1: 0.7748004561003421)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
