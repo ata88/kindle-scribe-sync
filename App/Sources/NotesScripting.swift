@@ -31,7 +31,7 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
     init(accountName: @escaping @Sendable () -> String) { self.accountName = accountName }
 
     private static let source = #"""
-    on upsertNote(noteId, accountName, folderPathText, htmlBody)
+    on upsertNote(noteId, accountName, folderPathText, htmlBody, imagePathsText)
         tell application "Notes"
             set targetAccount to my resolveAccount(accountName)
             set targetFolder to my ensureFolder(targetAccount, folderPathText)
@@ -40,19 +40,49 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
                 set theNote to my findNote(noteId)
                 if theNote is not missing value then
                     if my containerId(theNote) is targetFolderId then
-                        set body of theNote to htmlBody
+                        my writeBody(theNote, htmlBody, imagePathsText)
                         return id of theNote
                     end if
                     -- the notebook moved to another folder on the Scribe
                     set newNote to make new note at targetFolder with properties {body:htmlBody}
+                    my writeBody(newNote, htmlBody, imagePathsText)
                     delete theNote
                     return id of newNote
                 end if
             end if
             set newNote to make new note at targetFolder with properties {body:htmlBody}
+            my writeBody(newNote, htmlBody, imagePathsText)
             return id of newNote
         end tell
     end upsertNote
+
+    -- Notes is sandboxed and cannot read <img src="file://…"> on its own (it shows an
+    -- empty placeholder). Attaching a file hands it over together with read access;
+    -- setting the body afterwards puts every image at its place in the text and
+    -- replaces these temporary attachments.
+    on writeBody(theNote, htmlBody, imagePathsText)
+        if imagePathsText is not "" then
+            set AppleScript's text item delimiters to linefeed
+            set imagePaths to text items of imagePathsText
+            set AppleScript's text item delimiters to ""
+            tell application "Notes"
+                repeat with p in imagePaths
+                    try
+                        make new attachment at end of attachments of theNote with data (POSIX file (p as text))
+                    end try
+                end repeat
+            end tell
+        end if
+        tell application "Notes" to set body of theNote to htmlBody
+    end writeBody
+
+    on noteBody(noteId)
+        tell application "Notes" to return body of note id noteId
+    end noteBody
+
+    on deleteNote(noteId)
+        tell application "Notes" to delete note id noteId
+    end deleteNote
 
     on findNote(noteId)
         tell application "Notes"
@@ -158,11 +188,19 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
         let path = folderPath.map { $0.replacingOccurrences(of: "/", with: "∕") }.joined(separator: "/")
         let account = accountName()
         return try await MainActor.run {
-            try Self.call("upsertNote", [existingNoteID ?? "", account, path, html]).stringValue ?? ""
+            try Self.call("upsertNote", [existingNoteID ?? "", account, path, html,
+                                         images.map(\.path).joined(separator: "\n")]).stringValue ?? ""
         }
     }
 
     @MainActor static func compileCheck() throws { _ = try script() }
+
+    /// For the self-test: the note's body as Notes stores it (images as data URIs).
+    @MainActor static func body(noteID: String) throws -> String {
+        try call("noteBody", [noteID]).stringValue ?? ""
+    }
+
+    @MainActor static func delete(noteID: String) throws { _ = try call("deleteNote", [noteID]) }
 
     @MainActor static func show(noteID: String) async {
         _ = try? call("showNote", [noteID])
