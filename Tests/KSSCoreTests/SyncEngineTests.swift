@@ -124,7 +124,7 @@ struct Harness {
         _ = try await h.engine().run()
         let p = h.store.notebook("a")!.pages[0]
         #expect(p.figures.count == 1 && p.figures[0].imageFile != nil)
-        #expect(h.notes.notes.values.first!.html.contains("<img src=\"data:image/png;base64,"))
+        #expect(h.notes.notes.values.first!.html.contains("<img src=\"file://"))
         #expect(!h.notes.notes.values.first!.html.contains("Skizze"))
     }
 

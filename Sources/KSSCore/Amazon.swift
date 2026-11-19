@@ -19,10 +19,10 @@ public enum AmazonError: Error, LocalizedError, Equatable {
 
     public var errorDescription: String? {
         switch self {
-        case .authExpired(let m): return "Amazon-Anmeldung abgelaufen (\(m))"
-        case .http(let code, let m): return "Amazon HTTP \(code): \(m)"
-        case .network(let m): return "Netzwerkfehler: \(m)"
-        case .format(let m): return "Unerwartete Antwort von Amazon: \(m)"
+        case .authExpired(let m): return L("Amazon-Anmeldung abgelaufen (%@)", m)
+        case .http(let code, let m): return L("Amazon HTTP %ld: %@", code, m)
+        case .network(let m): return L("Netzwerkfehler: %@", m)
+        case .format(let m): return L("Unerwartete Antwort von Amazon: %@", m)
         }
     }
 }

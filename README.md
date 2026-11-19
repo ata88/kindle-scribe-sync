@@ -2,11 +2,13 @@
 
 Eine native Mac-App, die deine **Kindle-Scribe-Notizbücher automatisch** auf den Mac holt. Die Handschrift wird **lokal mit KI** in Drucktext umgewandelt. Dazu ist weder Export noch Kabel noch ein Terminal nötig.
 
-- **Eigene App:** Seitenbild neben dem erkannten Text, Ordner wie auf dem Scribe, Volltextsuche.
-- **Korrigieren wie in Word:** Rechtschreibfehler sind rot unterstrichelt, ein Rechtsklick zeigt Vorschläge. Korrekturen werden gesichert, nach Apple Notes übertragen und bleiben erhalten, wenn du die Seite später auf dem Scribe ergänzt.
-- **Apple Notes:** Jedes Notizbuch ist genau *eine* Notiz, die bei Änderungen aktualisiert wird.
-- **Grafiken:** Zeichnungen und Skizzen werden als echtes Bild des jeweiligen Seitenbereichs eingebettet, nicht nur als Beschreibung.
-- **KI direkt auf dem Mac:** Qwen 3.5 (9B) über Apple MLX. Kein Cloud-Dienst, keine Kosten. Das Modell ist nur im Arbeitsspeicher, während neue Seiten erkannt werden.
+- **Eigene App mit drei Spalten wie Mail und Notizen:** intelligente Listen (Alle, Zuletzt geändert, Aufgaben, Zu prüfen), deine Scribe-Ordner und eine ruhige Leseansicht mit dem Originalscan als Inspektor.
+- **Korrigieren wie in Word:** Rechtschreibfehler sind rot unterstrichelt, unsichere Stellen gelb markiert. Ein Doppelklick bearbeitet die Seite. Korrekturen gehen nach Apple Notes und bleiben erhalten, wenn du die Seite später auf dem Scribe ergänzt.
+- **Apple Notes:** Jedes Notizbuch ist genau *eine* Notiz, die bei Änderungen aktualisiert wird – über iCloud auch auf dem iPhone.
+- **Skizzen** werden als echtes Bild des jeweiligen Seitenbereichs eingebettet, an ihrer ursprünglichen Position.
+- **Aufgaben:** Checkboxen aus allen Notizbüchern an einem Ort, direkt abhakbar.
+- **KI direkt auf dem Mac:** Qwen 3.5 (9B) über Apple MLX. Kein Cloud-Dienst, keine Kosten. Das Modell ist nur im Arbeitsspeicher, während neue Seiten erkannt werden. Mit Live-Vorschau des gerade gelesenen Texts.
+- **Spotlight, Mitteilungen, Export als Markdown**, Deutsch und Englisch umschaltbar.
 
 ## Installation
 
@@ -30,8 +32,9 @@ Updates kommen danach automatisch: Die App fragt nach, zeigt, was neu ist, und i
 
 | | |
 |---|---|
-| **Wann synchronisiert sie?** | Alle 5 Minuten (einstellbar), solange die App läuft, und nach dem Aufwachen des Macs. Den Zeitpunkt wählt macOS so, dass möglichst wenig Energie verbraucht wird. |
-| **Weckt sie den Mac?** | Nie. Im Ruhezustand passiert nichts. |
+| **Wann gleicht sie ab?** | Alle 5 Minuten (einstellbar), solange die App läuft – auch mit geschlossenem Fenster. Außerdem nach dem Aufwachen und beim Anschließen ans Netzteil. |
+| **Am Netzteil** | Die App gleicht zuverlässig im Hintergrund ab und hält den Mac auf Wunsch wach (Bildschirm darf ausgehen), damit neue Notizen über iCloud auch unterwegs aufs iPhone kommen. Mit zugeklapptem Deckel schläft ein MacBook trotzdem. |
+| **Weckt sie den Mac?** | Nie. Im Akkubetrieb wird der Mac weder geweckt noch wach gehalten. |
 | **Akkubetrieb** | Einstellbar: normal weiterarbeiten (Texterkennung erst ab x % Akku), nur abrufen und am Netzteil erkennen, oder pausieren. Im Stromsparmodus wartet die Erkennung immer. |
 | **Arbeitsspeicher** | Das KI-Modell (ca. 6 GB) wird nur geladen, wenn neue oder geänderte Seiten da sind, und danach sofort freigegeben. |
 | **Fenster schließen** | Die App läuft weiter, das Symbol in der Menüleiste zeigt den Status. |

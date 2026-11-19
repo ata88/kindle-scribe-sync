@@ -116,6 +116,15 @@ Die alte Berechtigung „Terminal → Notizen" kannst du entfernen: Systemeinste
 
 Fertig. Ab jetzt läuft alles in der App, und Updates kommen über *Scribe Sync › Nach Updates suchen*.
 
+## Von 1.0 auf 1.1
+
+Nichts zu tun, das Update kommt über *Scribe Sync › Nach Updates suchen*. Beim ersten Abgleich schreibt 1.1 alle Notizen einmal neu:
+
+- Skizzen erscheinen dann als echte Bilder statt als „Datei“-Block.
+- Es bleibt weiterhin genau eine Notiz pro Notizbuch.
+
+Die Sprache stellst du in *Einstellungen › Allgemein* ein. Die Menüs wechseln nach einem Neustart der App.
+
 ## Später: die App vollständig entfernen
 
 1. Die App über die Menüleiste beenden und in den Papierkorb ziehen.

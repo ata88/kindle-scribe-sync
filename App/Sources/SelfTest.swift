@@ -60,8 +60,8 @@ enum SelfTest {
                        figures: [Figure(id: 1, box: NormRect(x0: 0, y0: 0, x1: 0.5, y1: 0.5), imageFile: "x")],
                        status: .recognized)])
         nb.folderPath = ["A"]
-        let html = NotesRenderer.render(nb, figurePNG: { _, _ in page }).html
-        check("notes-html-figure", html.contains("data:image/png;base64,"))
+        let html = NotesRenderer.render(nb, figureURL: { _, _ in URL(fileURLWithPath: "/tmp/fig 1.png") }).html
+        check("notes-html-figure", html.contains("<img src=\"file:///tmp/fig%201.png\" />"))
 
         // 4. optional: real recognition with a small model of the same family
         if CommandLine.arguments.contains("--self-test-recognition") {
@@ -88,7 +88,7 @@ enum SelfTest {
             print("INFO model loaded in \(Int(Date().timeIntervalSince(t0))) s, footprint \(ProcessMemory.format(before)) → \(ProcessMemory.format(loaded)), MLX active \(ProcessMemory.format(UInt64(Memory.activeMemory)))")
             let t1 = Date()
             let ctx = RecognitionContext(notebookTitle: "Selbsttest", pageNumber: 1, pageCount: 1)
-            let result = try await rec.recognize(png: page, context: ctx)
+            let result = try await rec.recognize(png: page, context: ctx) { _ in }
             print("INFO recognized in \(Int(Date().timeIntervalSince(t1))) s")
             print("----- markdown -----\n\(result.markdown)\n----- figures: \(result.figures.map { "\($0.id): \($0.box)" }) -----")
             await rec.release()
@@ -112,11 +112,14 @@ enum SelfTest {
 
     /// A 1240x1754 page, transparent background, handwriting-style text and a small sketch.
     static func syntheticPage() -> Data {
+        syntheticPage(lines: ["Einkaufsliste", "- Milch", "- Brot", "- Äpfel", "Termin mit Anna am Montag"], sketch: true)
+    }
+
+    static func syntheticPage(lines: [String], sketch: Bool) -> Data {
         let w = 1240, h = 1754
         let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
                             space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
         ctx.clear(CGRect(x: 0, y: 0, width: w, height: h))
-        let lines = ["Einkaufsliste", "- Milch", "- Brot", "- Äpfel", "Termin mit Anna am Montag"]
         let fontName = NSFont(name: "Noteworthy-Bold", size: 64) != nil ? "Noteworthy-Bold" : "Helvetica"
         for (i, line) in lines.enumerated() {
             let font = CTFontCreateWithName(fontName as CFString, i == 0 ? 80 : 60, nil)
@@ -129,11 +132,13 @@ enum SelfTest {
             CTLineDraw(ctLine, ctx)
         }
         // sketch: a house in the lower right
+        if sketch {
         ctx.setStrokeColor(CGColor(gray: 0, alpha: 1))
         ctx.setLineWidth(8)
         ctx.stroke(CGRect(x: 760, y: 420, width: 280, height: 220))
         ctx.move(to: CGPoint(x: 740, y: 640)); ctx.addLine(to: CGPoint(x: 900, y: 790)); ctx.addLine(to: CGPoint(x: 1060, y: 640))
         ctx.strokePath()
+        }
         let img = ctx.makeImage()!
         let out = NSMutableData()
         let dest = CGImageDestinationCreateWithData(out as CFMutableData, UTType.png.identifier as CFString, 1, nil)!

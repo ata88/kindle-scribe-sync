@@ -20,10 +20,14 @@ jobs:
         run: |
           apt-get update -qq && apt-get install -y -qq git >/dev/null
           git config --global --add safe.directory '*'
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh build.log
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh build.log core-linux
   app:
-    runs-on: macos-latest
-    timeout-minutes: 60
+    # macos-26 only: mlx-swift needs Swift 6.3 tools (Xcode 26.4+); macos-15 images stop at 26.3
+    strategy:
+      matrix:
+        os: [macos-26]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
       - name: Select newest Xcode
@@ -37,17 +41,56 @@ jobs:
       - name: Core tests on macOS
         run: swift test 2>&1 | tail -5
       - name: Build app
+        timeout-minutes: 45
         run: scripts/build-app.sh 0.0.0 ${{ github.run_number }}
       - name: Publish build log
-        if: failure()
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: scripts/publish-ci-log.sh build.log
+        run: scripts/publish-ci-log.sh build.log build-${{ matrix.os }}
+      - name: Inspect app bundle
+        run: |
+          B="build/Build/Products/Release/Scribe Sync.app"
+          {
+            echo "== bundle"; du -sh "$B"; du -sh "$B"/Contents/* 2>/dev/null
+            echo "== MacOS"; ls -la "$B/Contents/MacOS"
+            echo "== Frameworks"; ls "$B/Contents/Frameworks" 2>/dev/null
+            echo "== Resources (bundles/metallib)"; find "$B/Contents/Resources" -maxdepth 2 \( -name "*.bundle" -o -name "*.metallib" -o -name "*.lproj" \) | head -30
+            echo "== metallib anywhere"; find "$B" -name "*.metallib" -exec ls -la {} \;
+          } 2>&1 | tee selftest.log
       - name: Self-test (app starts, Notes script compiles, image pipeline)
         run: |
+          set -o pipefail
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
-          perl -e 'alarm 120; exec @ARGV' "$APP" --self-test 2>&1 | tee selftest.log
-          test "${PIPESTATUS[0]}" -eq 0
+          echo "== self-test" | tee -a selftest.log
+          perl -e 'alarm 120; exec @ARGV' "$APP" --self-test 2>&1 | tee -a selftest.log
+          RC=$?
+          echo "exit=$RC" | tee -a selftest.log
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-1-${{ matrix.os }} || true
+          exit $RC
+      - name: Screenshots of the UI (demo library)
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          # let the app record its own windows (SIP is off on hosted runners)
+          ABS="$GITHUB_WORKSPACE/$APP"
+          for db in "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "/Library/Application Support/com.apple.TCC/TCC.db"; do
+            for c in "$ABS|1" "io.github.ata88.scribesync|0" "/usr/sbin/screencapture|1"; do
+              sudo sqlite3 "$db" "INSERT OR REPLACE INTO access (service,client,client_type,auth_value,auth_reason,auth_version,csreq,policy_id,indirect_object_identifier_type,indirect_object_identifier,indirect_object_code_identity,flags,last_modified) VALUES ('kTCCServiceScreenCapture','${c%|*}',${c#*|},2,3,1,NULL,NULL,0,'UNUSED',NULL,0,$(date +%s));" || true
+            done
+          done
+          export SCRIBE_SYNC_HOME="$RUNNER_TEMP/shots-home"
+          echo "== screenshots" | tee -a selftest.log
+          perl -e 'alarm 240; exec @ARGV' "$APP" --screenshots "$RUNNER_TEMP/shots" 2>&1 | tail -40 | tee -a selftest.log
+          echo "exit=${PIPESTATUS[0]}" | tee -a selftest.log
+          ls -l "$RUNNER_TEMP/shots" 2>&1 | tee -a selftest.log
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-2-${{ matrix.os }} || true
+      - name: Publish screenshots
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/publish-ci-files.sh "$RUNNER_TEMP/shots" shots-${{ matrix.os }} || true
       - name: Download small test model (same family as the default)
         run: python3 scripts/download_model.py mlx-community/Qwen3.5-2B-4bit "$RUNNER_TEMP/model" | tail -2
       - name: Self-test recognition (needs Metal in the runner VM)
@@ -55,9 +98,11 @@ jobs:
         env:
           SCRIBE_SELFTEST_MODEL_DIR: ${{ runner.temp }}/model
         run: |
+          set -o pipefail
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
-          perl -e 'alarm 1200; exec @ARGV' "$APP" --self-test-recognition 2>&1 | tee -a selftest.log
-          test "${PIPESTATUS[0]}" -eq 0
+          echo "== recognition" | tee -a selftest.log
+          perl -e 'alarm 900; exec @ARGV' "$APP" --self-test-recognition 2>&1 | tee -a selftest.log
+          echo "exit=$?" | tee -a selftest.log
       - name: Release dry run (throwaway keys)
         run: |
           openssl req -x509 -newkey rsa:2048 -keyout "$RUNNER_TEMP/k.pem" -out "$RUNNER_TEMP/c.pem" -days 2 -nodes \
@@ -77,4 +122,4 @@ jobs:
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: test -f selftest.log && scripts/publish-ci-log.sh selftest.log selftest || true
+        run: test -f selftest.log && scripts/publish-ci-log.sh selftest.log selftest-${{ matrix.os }} || true

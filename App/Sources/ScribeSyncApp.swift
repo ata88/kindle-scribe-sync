@@ -1,4 +1,5 @@
 import AppKit
+import KSSCore
 import SwiftUI
 
 @main
@@ -8,31 +9,34 @@ struct ScribeSyncApp: App {
 
     var body: some Scene {
         Window("Scribe Sync", id: "main") {
-            ContentView()
+            MainView()
                 .environmentObject(model)
-                .frame(minWidth: 860, minHeight: 560)
+                .frame(minWidth: 980, minHeight: 600)
+                .tint(Theme.accent)
         }
-        .defaultSize(width: 1180, height: 780)
+        .defaultSize(WindowSizing.main)
         .commands { AppCommands(model: model) }
 
-        Window("Diagnose", id: "diagnostics") {
+        Window(L("Diagnose"), id: "diagnostics") {
             DiagnosticsView()
                 .environmentObject(model)
-                .frame(minWidth: 760, minHeight: 520)
+                .frame(minWidth: 820, minHeight: 560)
+                .tint(Theme.accent)
         }
-        .defaultSize(width: 920, height: 640)
+        .defaultSize(WindowSizing.diagnostics)
 
         Settings {
             SettingsView()
                 .environmentObject(model)
+                .tint(Theme.accent)
         }
 
         MenuBarExtra {
-            MenuBarContent()
-                .environmentObject(model)
+            MenuBarPanel().environmentObject(model).tint(Theme.accent)
         } label: {
             Image(systemName: model.menuBarSymbol)
         }
+        .menuBarExtraStyle(.window)
     }
 }
 
@@ -42,21 +46,23 @@ struct AppCommands: Commands {
 
     var body: some Commands {
         CommandGroup(after: .appInfo) {
-            Button("Nach Updates suchen …") { model.updater.checkForUpdates() }
+            Button(L("Nach Updates suchen …")) { model.updater.checkForUpdates() }
                 .disabled(!model.updater.canCheckForUpdates)
         }
-        CommandGroup(replacing: .saveItem) {
-            Button("Korrekturen sichern") { model.saveAllDrafts() }
-                .keyboardShortcut("s")
-                .disabled(!model.hasUnsavedDrafts)
-        }
-        CommandMenu("Sync") {
-            Button("Jetzt synchronisieren") { model.syncNow(reason: "manuell") }
+        CommandGroup(replacing: .newItem) {}
+        CommandMenu(L("Abgleich")) {
+            Button(L("Jetzt synchronisieren")) { model.syncNow(reason: L("manuell")) }
                 .keyboardShortcut("r")
                 .disabled(model.isSyncing)
+            Button(L("Abgleich abbrechen")) { model.cancelSync() }
+                .disabled(!model.isSyncing)
             Divider()
-            Button("Diagnose") { openWindow(id: "diagnostics") }
+            Button(L("Diagnose")) { openWindow(id: "diagnostics") }
                 .keyboardShortcut("d", modifiers: [.command, .option])
+        }
+        CommandGroup(after: .sidebar) {
+            Button(L("Original ein-/ausblenden")) { model.showInspector.toggle() }
+                .keyboardShortcut("i", modifiers: [.command, .option])
         }
     }
 }
@@ -74,25 +80,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             return
         }
+        if let dir = Screenshots.requestedDirectory {
+            Task { @MainActor in await Screenshots.run(into: dir) }
+            return
+        }
         Task { @MainActor in AppModel.shared.start() }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag { AppModel.shared.showMainWindow() }
+        if !flag { Task { @MainActor in AppModel.shared.showMainWindow() } }
         return true
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let model = AppModel.shared
-        if model.hasUnsavedDrafts {
+        if let edit = model.activeEdit {
             let alert = NSAlert()
-            alert.messageText = "Ungesicherte Korrekturen"
-            alert.informativeText = "Sollen deine Korrekturen vor dem Beenden gesichert werden?"
-            alert.addButton(withTitle: "Sichern und beenden")
-            alert.addButton(withTitle: "Verwerfen")
-            alert.addButton(withTitle: "Abbrechen")
+            alert.messageText = L("Ungesicherte Korrektur")
+            alert.informativeText = L("Soll deine Korrektur vor dem Beenden gesichert werden?")
+            alert.addButton(withTitle: L("Sichern und beenden"))
+            alert.addButton(withTitle: L("Verwerfen"))
+            alert.addButton(withTitle: L("Abbrechen"))
             switch alert.runModal() {
-            case .alertFirstButtonReturn: model.saveAllDrafts()
+            case .alertFirstButtonReturn:
+                Task { @MainActor in
+                    await model.saveCorrection(notebookID: edit.notebookID, page: edit.page, text: edit.text)
+                    model.activeEdit = nil
+                    model.shutdown()
+                    NSApp.reply(toApplicationShouldTerminate: true)
+                }
+                return .terminateLater
             case .alertSecondButtonReturn: break
             default: return .terminateCancel
             }
@@ -102,28 +119,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-struct MenuBarContent: View {
-    @EnvironmentObject var model: AppModel
-    @Environment(\.openWindow) private var openWindow
-
-    var body: some View {
-        Text(model.statusLine)
-        if let detail = model.progressLine { Text(detail) }
-        Divider()
-        Button("Jetzt synchronisieren") { model.syncNow(reason: "Menüleiste") }
-            .disabled(model.isSyncing)
-        Button("Scribe Sync öffnen") {
-            NSApp.activate(ignoringOtherApps: true)
-            openWindow(id: "main")
+/// Default window sizes that always fit the screen – a window taller than the
+/// display would otherwise be laid out with its top and bottom cut off.
+enum WindowSizing {
+    static func fitted(_ width: CGFloat, _ height: CGFloat) -> CGSize {
+        guard let screen = (NSScreen.main ?? NSScreen.screens.first)?.visibleFrame else {
+            return CGSize(width: width, height: height)
         }
-        Button("Diagnose …") {
-            NSApp.activate(ignoringOtherApps: true)
-            openWindow(id: "diagnostics")
-        }
-        Divider()
-        Button("Nach Updates suchen …") { model.updater.checkForUpdates() }
-        Divider()
-        Button("Scribe Sync beenden") { NSApp.terminate(nil) }
-            .keyboardShortcut("q")
+        return CGSize(width: min(width, (screen.width * 0.92).rounded()),
+                      height: min(height, (screen.height * 0.92).rounded()))
     }
+    static var main: CGSize { fitted(1320, 840) }
+    static var diagnostics: CGSize { fitted(980, 720) }
 }
