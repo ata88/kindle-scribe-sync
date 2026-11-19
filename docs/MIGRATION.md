@@ -125,6 +125,15 @@ Nichts zu tun, das Update kommt über *Scribe Sync › Nach Updates suchen*. Bei
 
 Die Sprache stellst du in *Einstellungen › Allgemein* ein. Die Menüs wechseln nach einem Neustart der App.
 
+## Von 1.1 auf 1.1.1
+
+Auch hier ist nichts zu tun, das Update kommt über *Scribe Sync › Nach Updates suchen*. Nach dem Update passiert automatisch:
+
+- Alle Notizen werden einmal neu geschrieben. Danach zeigen sie die Skizzen als echte Bilder.
+- Bereits erkannte Skizzen werden einmal neu ausgeschnitten. Die Texterkennung läuft dafür nicht noch einmal.
+
+Bis 1.1.0 hat die App bei jeder Änderung die Notiz neu angelegt. Die alten Fassungen liegen in Notizen im Ordner **Zuletzt gelöscht**. Du kannst sie dort gefahrlos löschen: Ordner auswählen, Rechtsklick › **Alle löschen**.
+
 ## Später: die App vollständig entfernen
 
 1. Die App über die Menüleiste beenden und in den Papierkorb ziehen.

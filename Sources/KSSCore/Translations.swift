@@ -136,6 +136,8 @@ enum Translations {
         "%ld Notizbücher": "%ld notebooks",
         "Keine Notizbücher": "No Notebooks",
         "Keine Treffer": "No Results",
+        "Sichern (⌘S oder ⌘↩)": "Save (⌘S or ⌘↩)",
+        "Ordner in Notizen: „%@“ – Notizen werden beim nächsten Abgleich verschoben": "Notes folder: “%@” – notes move there on the next sync",
         "Klicken, um die Aufgabe im Notizbuch zu zeigen": "Click to show the task in its notebook",
         "%@ – Skizzen": "%@ – Sketches",
         "„%@“ als Markdown exportiert (%ld Skizzen)": "Exported “%@” as Markdown (%ld sketches)",

@@ -150,8 +150,12 @@ struct PageSection: View {
                 Button(L("Abbrechen")) { cancel() }
                     .keyboardShortcut(.cancelAction)
                 Button(L("Fertig")) { save() }
-                    .keyboardShortcut(.return, modifiers: .command)
+                    .keyboardShortcut("s", modifiers: .command)
                     .buttonStyle(.borderedProminent).tint(Theme.accent)
+                    .help(L("Sichern (⌘S oder ⌘↩)"))
+                    .background {   // ⌘↩ saves as well
+                        Button("") { save() }.keyboardShortcut(.return, modifiers: .command).hidden()
+                    }
             } else if page.status == .recognized {
                 HStack(spacing: 2) {
                     iconButton("pencil", L("Bearbeiten (Doppelklick)")) { startEditing() }

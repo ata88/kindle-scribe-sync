@@ -426,7 +426,7 @@ final class AppModel: ObservableObject {
             lastError = error.localizedDescription
         }
         reloadNotebooks()
-        if settings.spotlight { SpotlightIndex.index(notebooks.filter { $0.id == notebookID }) }
+        if settings.spotlight { SpotlightIndex.index(notebooks) }
     }
 
     func revertCorrection(notebookID: String, page: Int) async {

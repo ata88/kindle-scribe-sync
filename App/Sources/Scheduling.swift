@@ -171,10 +171,14 @@ enum SpotlightIndex {
             attrs.contentModificationDate = nb.syncedAt
             return CSSearchableItem(uniqueIdentifier: nb.id, domainIdentifier: domain, attributeSet: attrs)
         }
-        CSSearchableIndex.default().indexSearchableItems(items) { _ in }
+        // replace the whole set, so notebooks deleted on the Scribe disappear from Spotlight too
+        let index = CSSearchableIndex.default()
+        index.deleteSearchableItems(withDomainIdentifiers: [domain]) { @Sendable _ in
+            index.indexSearchableItems(items) { @Sendable _ in }
+        }
     }
 
     static func removeAll() {
-        CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [domain]) { _ in }
+        CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [domain]) { @Sendable _ in }
     }
 }

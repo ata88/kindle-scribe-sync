@@ -8,7 +8,7 @@ Eine native Mac-App, die deine **Kindle-Scribe-Notizbücher automatisch** auf de
 - **Skizzen** werden als echtes Bild des jeweiligen Seitenbereichs eingebettet, an ihrer ursprünglichen Position.
 - **Aufgaben:** Checkboxen aus allen Notizbüchern an einem Ort, direkt abhakbar.
 - **KI direkt auf dem Mac:** Qwen 3.5 (9B) über Apple MLX. Kein Cloud-Dienst, keine Kosten. Das Modell ist nur im Arbeitsspeicher, während neue Seiten erkannt werden. Mit Live-Vorschau des gerade gelesenen Texts.
-- **Spotlight, Mitteilungen, Export als Markdown**, Deutsch und Englisch umschaltbar.
+- **Spotlight, Mitteilungen, Export als Markdown** (mit den Skizzen als Bilddateien), Deutsch und Englisch umschaltbar.
 
 ## Installation
 
@@ -36,14 +36,15 @@ Updates kommen danach automatisch: Die App fragt nach, zeigt, was neu ist, und i
 | **Am Netzteil** | Die App gleicht zuverlässig im Hintergrund ab und hält den Mac auf Wunsch wach (Bildschirm darf ausgehen), damit neue Notizen über iCloud auch unterwegs aufs iPhone kommen. Mit zugeklapptem Deckel schläft ein MacBook trotzdem. |
 | **Weckt sie den Mac?** | Nie. Im Akkubetrieb wird der Mac weder geweckt noch wach gehalten. |
 | **Akkubetrieb** | Einstellbar: normal weiterarbeiten (Texterkennung erst ab x % Akku), nur abrufen und am Netzteil erkennen, oder pausieren. Im Stromsparmodus wartet die Erkennung immer. |
+| **Nicht lesbare Seiten** | Eine Seite, die die KI nicht lesen kann, wird dreimal automatisch erneut versucht, danach nur noch auf Wunsch (*Erneut versuchen*). So wird das Modell nicht ständig umsonst geladen. |
 | **Arbeitsspeicher** | Das KI-Modell (ca. 6 GB) wird nur geladen, wenn neue oder geänderte Seiten da sind, und danach sofort freigegeben. |
 | **Fenster schließen** | Die App läuft weiter, das Symbol in der Menüleiste zeigt den Status. |
 | **Beenden** | Über die Menüleiste oder das Dock. Danach läuft nichts mehr: keine Hintergrunddienste, keine Helfer-Prozesse. |
-| **Diagnose** | Menü *Sync › Diagnose* (⌥⌘D) zeigt Zeitplan, Modell-Speicher, Energie, Amazon-Sitzung, Apple Notes und das komplette Aktivitätsprotokoll. |
+| **Diagnose** | Menü *Abgleich › Diagnose* (⌥⌘D) zeigt Zeitplan, Modell-Speicher, Energie, Amazon-Sitzung, Apple Notes und das komplette Aktivitätsprotokoll. |
 
 ### Korrekturen
 
-Du tippst im Text einer Seite, und **⌘S** sichert. Die Notiz in Apple Notes wird sofort aktualisiert.
+Ein Doppelklick auf eine Seite öffnet sie zum Bearbeiten, **⌘S** (oder ⌘↩) sichert. Die Notiz in Apple Notes wird sofort aktualisiert. Unter dem Menü *…* einer Seite lassen sich Korrekturen auch wieder zurücksetzen.
 
 Schreibst du auf dem Scribe später weiter auf derselben Seite, liest die KI die Seite neu. Deine Korrekturen werden dabei per Drei-Wege-Abgleich auf Wortebene übernommen. Nur Wörter, die du korrigiert hast und die sich gleichzeitig im neuen Text geändert haben, behalten deine Fassung.
 
