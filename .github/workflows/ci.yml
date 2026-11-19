@@ -91,8 +91,7 @@ jobs:
           echo "exit=$RC" | tee -a selftest.log
           osascript -e 'tell application "Notes" to quit' || true
           exit $RC
-      - name: Screenshots of the UI (demo library)
-        continue-on-error: true
+      - name: Screenshots of the UI and stress test (demo library) – a crash fails CI
         run: |
           set -o pipefail
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
@@ -125,11 +124,12 @@ jobs:
             [ -n "$IPS" ] && python3 scripts/crash-summary.py "$IPS" >> shots.log 2>&1
             echo "== system log" >> shots.log
             log show --last 10m --style compact --predicate 'process == "Scribe Sync"' 2>/dev/null \
-              | grep -iE -A6 "uncaught exception|reason:|NSGenericException|Layout Window passes|NSInternalInconsistency" | head -60 >> shots.log
+              | grep -iE -A6 "uncaught exception|reason:|NSGenericException|Layout Window passes|Update Constraints|NSInternalInconsistency" | head -60 >> shots.log
           fi
           tail -150 shots.log | tee -a selftest.log
           ls -l "$RUNNER_TEMP/shots" 2>&1 | tee -a selftest.log
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-2-${{ matrix.os }} || true
+          grep -q "^exit=0" shots.log
       - name: Publish screenshots
         if: always()
         env:
