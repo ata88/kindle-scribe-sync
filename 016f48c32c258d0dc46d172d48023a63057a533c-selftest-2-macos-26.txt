@@ -1,0 +1,164 @@
+commit 016f48c32c258d0dc46d172d48023a63057a533c job app run 44513978282
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 56M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 49M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 99672
+drwxr-xr-x  3 runner  staff        96 Nov 19 11:33 .
+drwxr-xr-x  7 runner  staff       224 Nov 19 11:32 ..
+-rwxr-xr-x  1 runner  staff  51029704 Nov 19 11:33 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 19 11:32 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 368x421 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8741935483870967, y1: 0.7748004561003421)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
+== notes self-test
+PASS notes-created – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7
+PASS notes-images-new – images 2, empty 0, in order true
+INFO before update: name=Scribe Sync Selbsttestlookup error -1700 Can’t make length of «class body» of «class note» id "x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7" of application "Notes" into type Unicode text. target=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICFolder/p4 targetName=Scribe Sync Selbsttest findNote=ok inFolder=true
+PASS notes-updated-in-place – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7
+PASS notes-images-updated – images 2, empty 0, in order true
+NOTES SELFTEST OK
+exit=0
+== screenshots
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+screen (0.0, 60.0, 1024.0, 677.0) default window (22.0, 74.0, 980.0, 652.0)
+capturing 1-reader-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 1-reader-light (screencapture)
+capturing 2-reader-inspector-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 2-reader-inspector-light (screencapture)
+capturing 3-figures-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 3-figures-light (screencapture)
+capturing 4-pending-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 4-pending-light (screencapture)
+capturing 5-tasks-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 5-tasks-light (screencapture)
+capturing 1-reader-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 1-reader-dark (screencapture)
+exit=133
+== crash reports: /Library/Logs/DiagnosticReports: bsdtar_2026-11-12-161720_Ankas-Virtual-Machine.diag com.apple.MobileSoftwareUpdate.UpdateBrainService_2026-11-08-201054_Ankas-Virtual-Machine.diag com.apple.StreamingUnzipService.privileged_2026-11-08-200820_Ankas-Virtual-Machine.diag cp_2026-11-12-151324_Ankas-Virtual-Machine.diag curl_2026-11-12-161927_Ankas-Virtual-Machine.diag DiagnosticLogs dsymutil_2026-11-19-113328_sat12-bq160-67374186-a824-4185-a997-38df31846e54-0E2C8FBADD49.diag JetsamEvent-2026-11-08-200355.ips mds_stores_2026-11-12-162754_Ankas-Virtual-Machine.diag Retired shutdown_stall_2026-11-08-200507_Ankas-Virtual-Machine.shutdownStall shutdown_stall_2026-11-08-200715_Ankas-Virtual-Machine.shutdownStall shutdown_stall_2026-11-08-201604_Ankas-Virtual-Machine.shutdownStall shutdown_stall_2026-11-08-202014_Ankas-Virtual-Machine.shutdownStall shutdown_stall_2026-11-12-150934_Ankas-Virtual-Machine.shutdownStall shutdown_stall_2026-11-12-161640_Ankas-Virtual-Machine.shutdownStall shutdown_stall_2026-11-12-163233_Ankas-Virtual-Machine.shutdownStall STExtractionService.privileged_2026-11-12-153142_Ankas-Virtual-Machine.diag STExtractionService.privileged_2026-11-12-160007_Ankas-Virtual-Machine.diag system_installd_2026-11-12-070659_Ankas-Virtual-Machine.diag unxip_2026-11-12-152503_Ankas-Virtual-Machine.diag  /Users/runner/Library/Logs/DiagnosticReports: Retired Scribe Sync-2026-11-19-113505.ips 
+exception: EXC_BREAKPOINT SIGTRAP 
+termination: {"flags": 0, "code": 5, "namespace": "SIGNAL", "indicator": "Trace/BPT trap: 5", "byProc": "exc handler", "byPid": 25996}
+crashing thread:  com.apple.main-thread
+  AppKit                       +[NSApplication _crashOnException:]
+  AppKit                       ?
+  AppKit                       ?
+  AppKit                       ___NSViewLayout_block_invoke
+  AppKit                       NSPerformVisuallyAtomicChange
+  AppKit                       _NSViewLayout
+  AppKit                       __36-[NSView _layoutSubtreeWithOldSize:]_block_invoke
+  AppKit                       NSPerformVisuallyAtomicChange
+  AppKit                       -[NSView _layoutSubtreeWithOldSize:]
+  AppKit                       __36-[NSView _layoutSubtreeWithOldSize:]_block_invoke
+  AppKit                       NSPerformVisuallyAtomicChange
+  AppKit                       -[NSView _layoutSubtreeWithOldSize:]
+  AppKit                       __56-[NSView _layoutSubtreeIfNeededAndAllowTemporaryEngine:]_block_invoke
+  AppKit                       NSPerformVisuallyAtomicChange
+  AppKit                       -[NSView _layoutSubtreeIfNeededAndAllowTemporaryEngine:]
+  AppKit                       NSPerformVisuallyAtomicChange
+  AppKit                       -[NSView layoutSubtreeIfNeeded]
+  AppKit                       -[NSWindow(NSConstraintBasedLayoutInternal) _layoutViewTree]
+  AppKit                       -[NSWindow(NSConstraintBasedLayoutInternal) layoutIfNeeded]
+  AppKit                       __NSWindowGetDisplayCycleObserverForLayout_block_invoke
+  AppKit                       NSDisplayCycleObserverInvoke
+  AppKit                       NSDisplayCycleFlush
+  QuartzCore                   CA::Transaction::run_commit_handlers(CATransactionPhase)
+  QuartzCore                   CA::Transaction::commit()
+  QuartzCore                   CA::Transaction::flush_as_runloop_observer(bool)
+  AppKit                       stepTransactionFlush
+  UpdateCycle                  UC::DriverCore::continueProcessing()
+  CoreFoundation               __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__
+  CoreFoundation               __CFRunLoopDoSource0
+  CoreFoundation               __CFRunLoopDoSources0
+  CoreFoundation               __CFRunLoopRun
+  CoreFoundation               _CFRunLoopRunSpecificWithOptions
+  HIToolbox                    RunCurrentEventLoopInMode
+  HIToolbox                    ReceiveNextEventCommon
+  HIToolbox                    _BlockUntilNextEventMatchingListInMode
+  AppKit                       _DPSBlockUntilNextEventMatchingListInMode
+  AppKit                       _DPSNextEvent
+  AppKit                       -[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:]
+  AppKit                       -[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:]
+  AppKit                       -[NSApplication run]
+== system log
+	37  AppKit                              0x00000001937e42d8 NSPerformVisuallyAtomicChange + 128
+	38  AppKit                              0x00000001937e8ba4 -[NSView _layoutSubtreeWithOldSize:] + 100
+	39  AppKit                              0x00000001944ccea4 __36-[NSView _layoutSubtreeWithOldSize:]_block_invoke + 684
+	40  AppKit                              0x00000001937e42d8 NSPerformVisuallyAtomicChange + 128
+	41  AppKit                              0x00000001937e8ba4 -[NSView _layoutSubtreeWithOldSize:] + 100
+	42  AppKit                              0x00000001944cd93c __56-[NSView _layoutSubtreeIfNeededAndAllowTemporaryEngine:]_block_invoke + 908
+	43  AppKit                              0x00000001937e42d8 NSPerformVisuallyAtomicChange + 128
+	44  AppKit                              0x00000001937e8780 -[NSView _layoutSubtreeIfNeededAndAllowTemporaryEngine:] + 100
+	45  AppKit                              0x00000001937e42d8 NSPerformVisuallyAtomicChange + 128
+	46  AppKit                              0x00000001937e8710 -[NSView layoutSubtreeIfNeeded] + 96
+	47  AppKit                              0x00000001947ab958 -[NSWindow(NSConstraintBasedLayoutInternal) _layoutViewTree] + 120
+	48  AppKit                              0x00000001947abb70 -[NSWindow(NSConstraintBasedLayoutInternal) layoutIfNeeded] + 240
+	49  AppKit                              0x0000000193846e60 __NSWindowGetDisplayCycleObserverForLayout_block_invoke + 364
+	50  AppKit                              0x0000000193846364 NSDisplayCycleObserverInvoke + 168
+	51  AppKit                              0x0000000193845fe0 NSDisplayCycleFlush + 656
+	52  QuartzCore                          0x00000001993abd9c _ZN2CA11Transaction19run_commit_handlersE18CATransactionPhase + 120
+	53  QuartzCore                          0x00000001993aa3d8 _ZN2CA11Transaction6commitEv + 324
+	54  QuartzCore                          0x00000001995a82bc _ZN2CA11Transaction25flush_as_runloop_observerEb + 140
+	55  AppKit                              0x00000001940dd0c8 stepTransactionFlush + 220
+	56  UpdateCycle                         0x00000002870722f4 _ZN2UC10DriverCore18continueProcessingEv + 84
+	57  CoreFoundation                      0x000000018f365fb0 __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__ + 28
+	58  CoreFoundation                      0x000000018f365f44 __CFRunLoopDoSource0 + 172
+	59  CoreFoundation                      0x000000018f365cb0 __CFRunLoopDoSources0 + 232
+	60  CoreFoundation                      0x000000018f3648d4 __CFRunLoopRun + 820
+	61  CoreFoundation                      0x000000018f437508 _CFRunLoopRunSpecificWithOptions + 532
+	62  HIToolbox                           0x000000019c161560 RunCurrentEventLoopInMode + 320
+	63  HIToolbox                           0x000000019c1648bc ReceiveNextEventCommon + 488
+	64  HIToolbox                           0x000000019c2ee14c _BlockUntilNextEventMatchingListInMode + 48
+	65  AppKit                              0x0000000193e4f3d0 _DPSBlockUntilNextEventMatchingListInMode + 228
+	66  AppKit                              0x00000001937a3084 _DPSNextEvent + 576
+	67  AppKit                              0x000000019433896c -[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] + 688
+	68  AppKit                              0x0000000194338678 -[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:] + 72
+	69  AppKit                              0x000000019379613c -[NSApplication run] + 368
+	70  AppKit                              0x000000019376e7b0 NSApplicationMain + 880
+	71  SwiftUI                             0x00000001c481faf8 $s7SwiftUI6runAppys5NeverOSo21NSApplicationDelegate_So11NSResponderCXcFTf4e_nAA07TestingdG0C_Tg5Tm + 140
+	72  SwiftUI                             0x00000001c4bda8d8 $s7SwiftUI6runAppys5NeverOxAA0D0RzlF + 104
+	73  SwiftUI                             0x00000001c4ea6778 $s7SwiftUI3AppPAAE4mainyyFZ + 224
+	74  Scribe Sync                         0x0000000100b49e50 main + 64
+	75  dyld                                0x000000018eedd4e4 start + 6992
+)
+total 1320
+-rw-r--r--@ 1 runner  staff  125861 Nov 19 11:34 1-reader-dark.png
+-rw-r--r--@ 1 runner  staff  130454 Nov 19 11:34 1-reader-light.png
+-rw-r--r--@ 1 runner  staff   99803 Nov 19 11:34 2-reader-inspector-light.png
+-rw-r--r--@ 1 runner  staff  119812 Nov 19 11:34 3-figures-light.png
+-rw-r--r--@ 1 runner  staff  101489 Nov 19 11:34 4-pending-light.png
+-rw-r--r--@ 1 runner  staff   86723 Nov 19 11:34 5-tasks-light.png
