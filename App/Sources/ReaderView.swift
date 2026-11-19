@@ -367,7 +367,7 @@ struct BlockStack: View {
     }
 }
 
-/// A cropped sketch, shown with its original width and horizontal position on the page.
+/// A cropped sketch, centred, at the width it has on the page.
 struct FigureView: View {
     @EnvironmentObject var model: AppModel
     let page: PageRecord
@@ -377,15 +377,14 @@ struct FigureView: View {
     var body: some View {
         if let fig = page.figures.first(where: { $0.id == figureID }), let file = fig.imageFile {
             let fraction = min(1, max(0.32, fig.box.width * 1.05))
-            let center = (fig.box.x0 + fig.box.x1) / 2
-            let alignment: Alignment = center < 0.4 ? .leading : (center > 0.6 ? .trailing : .center)
             CachedImage(url: model.store.url(for: file), maxPixel: 900,
-                        placeholderAspect: max(0.2, fig.box.width / max(0.01, fig.box.height) * 0.707))
+                        placeholderAspect: max(0.2, fig.box.width / max(0.01, fig.box.height) * 0.707),
+                        revision: "\(page.imageHash)|\(fig.box.x0),\(fig.box.y0),\(fig.box.x1),\(fig.box.y1)")
                 .padding(10)
                 .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.scanBackground))
                 .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
                 .frame(maxWidth: Theme.readingWidth * fraction)
-                .frame(maxWidth: .infinity, alignment: alignment)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 6)
                 .onTapGesture { zoom = true }
                 .help(L("Klicken zum Vergrößern"))
@@ -418,13 +417,13 @@ struct ScanInspector: View {
             Divider()
             if let p = notebook.pages.first(where: { $0.index == page }) ?? notebook.pages.first {
                 ZoomableImage(url: model.store.url(for: p.imageFile))
-                    .id(p.imageFile)
+                    .id(p.imageFile + p.imageHash)
             }
             Divider()
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 8) {
                     ForEach(notebook.pages) { p in
-                        CachedImage(url: model.store.url(for: p.imageFile), maxPixel: 80, contentMode: .fill)
+                        CachedImage(url: model.store.url(for: p.imageFile), maxPixel: 80, contentMode: .fill, revision: p.imageHash)
                             .frame(width: 44, height: 62)
                             .background(Theme.scanBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 4))

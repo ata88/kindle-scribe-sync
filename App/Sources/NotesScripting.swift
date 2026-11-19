@@ -154,7 +154,7 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
         return result
     }
 
-    func publish(html: String, existingNoteID: String?, folderPath: [String]) async throws -> String {
+    func publish(html: String, images: [URL], existingNoteID: String?, folderPath: [String]) async throws -> String {
         let path = folderPath.map { $0.replacingOccurrences(of: "/", with: "∕") }.joined(separator: "/")
         let account = accountName()
         return try await MainActor.run {

@@ -11,7 +11,8 @@ public protocol ImageTools: Sendable {
 
 /// Writes a notebook into Apple Notes and returns the note's id.
 public protocol NotesPublisher: Sendable {
-    func publish(html: String, existingNoteID: String?, folderPath: [String]) async throws -> String
+    /// `images`: the files the HTML references; the publisher makes them readable for Notes.
+    func publish(html: String, images: [URL], existingNoteID: String?, folderPath: [String]) async throws -> String
 }
 
 public struct SyncSettings: Sendable {
@@ -336,7 +337,7 @@ public actor SyncEngine {
         if nb.noteID != nil, nb.publishedHash == out.contentHash, nb.noteFolder == folderKey { return nil }
         onProgress(SyncProgress(phase: .publishing, detail: nb.title, done: 0, total: 1))
         do {
-            let noteID = try await notes.publish(html: out.html, existingNoteID: nb.noteID, folderPath: folder)
+            let noteID = try await notes.publish(html: out.html, images: out.images, existingNoteID: nb.noteID, folderPath: folder)
             let verb = nb.noteID == nil ? L("angelegt") : (noteID == nb.noteID ? L("aktualisiert") : L("neu angelegt (alte Notiz nicht mehr vorhanden)"))
             nb.noteID = noteID
             nb.noteFolder = folderKey
