@@ -86,7 +86,7 @@ jobs:
           osascript -e 'tell application "Notes" to activate' -e 'delay 1' -e 'tell application "System Events" to keystroke return' >/dev/null 2>&1 || true
           sleep 2
           echo "== notes self-test" | tee -a selftest.log
-          perl -e 'alarm 180; exec @ARGV' "$APP" --self-test-notes 2>&1 | grep -E "PASS|FAIL|SELFTEST" | tee -a selftest.log
+          perl -e 'alarm 180; exec @ARGV' "$APP" --self-test-notes 2>&1 | grep -E "PASS|FAIL|SELFTEST|INFO" | tee -a selftest.log
           RC=${PIPESTATUS[0]}
           echo "exit=$RC" | tee -a selftest.log
           exit $RC
