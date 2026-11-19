@@ -151,6 +151,7 @@ enum SelfTest {
                                              folderPath: ["Scribe Sync Selbsttest"])
             check("notes-created", id.hasPrefix("x-coredata"), id)
             await verify(id, "new")
+            print("INFO before update: " + (await MainActor.run { NotesScripting.debug(noteID: id, folderPath: ["Scribe Sync Selbsttest"]) }))
             nb.pages[0].ocrText = "ERSTER TEXT geändert\n[[Grafik 1]]\nZWEITER TEXT\n[[Grafik 2]]\nDRITTER TEXT"
             out = NotesRenderer.render(nb, figureURL: { _, f in f.imageFile == "1" ? f1 : f2 })
             let id2 = try await notes.publish(html: out.html, images: out.images, existingNoteID: id,

@@ -76,6 +76,36 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
         tell application "Notes" to set body of theNote to htmlBody
     end writeBody
 
+    on debugNote(noteId, accountName, folderPathText)
+        tell application "Notes"
+            set out to ""
+            try
+                set n to note id noteId
+                set out to out & "name=" & (name of n)
+                set out to out & " container=" & (id of container of n) & " containerName=" & (name of container of n)
+            on error e number k
+                set out to out & "lookup error " & k & " " & e
+            end try
+            try
+                set f to my ensureFolder(my resolveAccount(accountName), folderPathText)
+                set out to out & " target=" & (id of f) & " targetName=" & (name of f)
+            on error e number k
+                set out to out & " target error " & k & " " & e
+            end try
+            try
+                set fn to my findNote(noteId)
+                if fn is missing value then
+                    set out to out & " findNote=missing"
+                else
+                    set out to out & " findNote=ok containerId=" & my containerId(fn)
+                end if
+            on error e number k
+                set out to out & " findNote error " & k & " " & e
+            end try
+            return out
+        end tell
+    end debugNote
+
     on noteBody(noteId)
         tell application "Notes" to return body of note id noteId
     end noteBody
@@ -201,6 +231,10 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
     }
 
     @MainActor static func delete(noteID: String) throws { _ = try call("deleteNote", [noteID]) }
+
+    @MainActor static func debug(noteID: String, folderPath: [String]) -> String {
+        (try? call("debugNote", [noteID, "", folderPath.joined(separator: "/")]).stringValue) ?? "debug failed"
+    }
 
     @MainActor static func show(noteID: String) async {
         _ = try? call("showNote", [noteID])
