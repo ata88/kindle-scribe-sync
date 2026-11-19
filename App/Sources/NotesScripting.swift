@@ -21,7 +21,8 @@ enum NotesError: LocalizedError {
 /// Update rules – the fix for duplicated notes:
 /// * a known note is always updated in place (`set body`);
 /// * a new note is created ONLY if the old one provably no longer exists
-///   (deleted / in "Recently Deleted"); any other error is reported, never
+///   (deleted); a note in "Recently Deleted" or moved away by hand is no longer in
+///   its folder and is replaced as well; any other error is reported, never
 ///   silently turned into a new note;
 /// * if the Scribe folder changed, the note is recreated in the new folder and
 ///   the old one deleted – AppleScript's `move` is avoided (it can duplicate).
@@ -35,11 +36,10 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
         tell application "Notes"
             set targetAccount to my resolveAccount(accountName)
             set targetFolder to my ensureFolder(targetAccount, folderPathText)
-            set targetFolderId to id of targetFolder
             if noteId is not "" then
                 set theNote to my findNote(noteId)
                 if theNote is not missing value then
-                    if my containerId(theNote) is targetFolderId then
+                    if my noteInFolder(noteId, targetFolder) then
                         my writeBody(theNote, htmlBody, imagePathsText)
                         return id of theNote
                     end if
@@ -82,7 +82,7 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
             try
                 set n to note id noteId
                 set out to out & "name=" & (name of n)
-                set out to out & " container=" & (id of container of n) & " containerName=" & (name of container of n)
+                set out to out & " body=" & (length of (body of n))
             on error e number k
                 set out to out & "lookup error " & k & " " & e
             end try
@@ -97,7 +97,7 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
                 if fn is missing value then
                     set out to out & " findNote=missing"
                 else
-                    set out to out & " findNote=ok containerId=" & my containerId(fn)
+                    set out to out & " findNote=ok inFolder=" & (my noteInFolder(noteId, f))
                 end if
             on error e number k
                 set out to out & " findNote error " & k & " " & e
@@ -123,23 +123,21 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
                 if errNum is in {-1728, -1719, -10000, -1700} then return missing value
                 error errMsg number errNum
             end try
-            try
-                set folderName to name of container of theNote
-                if folderName is in {"Recently Deleted", "Zuletzt gelöscht"} then return missing value
-            end try
             return theNote
         end tell
     end findNote
 
-    on containerId(theNote)
+    -- "id of container of note" fails on current macOS (-1700), which made every update
+    -- look like a folder change; ask the folder for its notes instead.
+    on noteInFolder(noteId, targetFolder)
         tell application "Notes"
             try
-                return id of container of theNote
+                return (id of every note of targetFolder) contains noteId
             on error
-                return ""
+                return false
             end try
         end tell
-    end containerId
+    end noteInFolder
 
     on resolveAccount(accountName)
         tell application "Notes"
