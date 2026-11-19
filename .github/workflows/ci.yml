@@ -68,8 +68,30 @@ jobs:
           echo "exit=$RC" | tee -a selftest.log
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-1-${{ matrix.os }} || true
           exit $RC
-      - name: Screenshots of the UI (demo library)
-        continue-on-error: true
+      - name: Self-test Apple Notes (real Notes app, images must arrive)
+        run: |
+          set -o pipefail
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          ABS="$GITHUB_WORKSPACE/$APP"
+          # TCC attributes the app's Apple Events to the process that launched it (the runner chain)
+          CLIENTS="$ABS|1 io.github.ata88.scribesync|0 /bin/bash|1 /bin/zsh|1 /bin/sh|1 /usr/bin/perl|1 /usr/bin/perl5.34|1"
+          for c in $(ls -d /Users/runner/actions-runner/*/bin/Runner.Worker /Users/runner/actions-runner/*/bin/Runner.Listener /opt/hca/hosted-compute-agent 2>/dev/null); do CLIENTS="$CLIENTS $c|1"; done
+          for db in "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "/Library/Application Support/com.apple.TCC/TCC.db"; do
+            for c in $CLIENTS; do
+              sudo sqlite3 "$db" "INSERT OR REPLACE INTO access (service,client,client_type,auth_value,auth_reason,auth_version,csreq,policy_id,indirect_object_identifier_type,indirect_object_identifier,indirect_object_code_identity,flags,last_modified) VALUES ('kTCCServiceAppleEvents','${c%|*}',${c#*|},2,3,1,NULL,NULL,0,'com.apple.Notes',NULL,0,$(date +%s));" || true
+            done
+          done
+          open -a Notes; sleep 10
+          # get past the first-run welcome sheet
+          osascript -e 'tell application "Notes" to activate' -e 'delay 1' -e 'tell application "System Events" to keystroke return' >/dev/null 2>&1 || true
+          sleep 2
+          echo "== notes self-test" | tee -a selftest.log
+          perl -e 'alarm 180; exec @ARGV' "$APP" --self-test-notes 2>&1 | grep -E "PASS|FAIL|SELFTEST|INFO" | tee -a selftest.log
+          RC=${PIPESTATUS[0]}
+          echo "exit=$RC" | tee -a selftest.log
+          osascript -e 'tell application "Notes" to quit' || true
+          exit $RC
+      - name: Screenshots of the UI and stress test (demo library) – a crash fails CI
         run: |
           set -o pipefail
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
@@ -82,10 +104,32 @@ jobs:
           done
           export SCRIBE_SYNC_HOME="$RUNNER_TEMP/shots-home"
           echo "== screenshots" | tee -a selftest.log
-          perl -e 'alarm 240; exec @ARGV' "$APP" --screenshots "$RUNNER_TEMP/shots" 2>&1 | tail -40 | tee -a selftest.log
-          echo "exit=${PIPESTATUS[0]}" | tee -a selftest.log
+          set +e
+          SWIFT_BACKTRACE=enable=yes,interactive=no "$APP" --screenshots "$RUNNER_TEMP/shots" --stress > shots.log 2>&1 &
+          PID=$!
+          for i in $(seq 1 300); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          if kill -0 $PID 2>/dev/null; then
+            echo "== still running after 300 s – where it hangs:" >> shots.log
+            sample $PID 3 -file sample.txt >/dev/null 2>&1; grep -E "^\s+[0-9]+ .*(ScribeSync|Scribe Sync|SwiftUI|AppKit)" sample.txt | head -60 >> shots.log
+            kill -9 $PID
+          fi
+          wait $PID; echo "exit=$?" >> shots.log
+          # a crash leaves a report (written a little later): keep the crashing thread
+          if ! grep -q "^exit=0" shots.log; then
+            for i in $(seq 1 30); do
+              IPS=$(ls -t ~/Library/Logs/DiagnosticReports/*.ips /Library/Logs/DiagnosticReports/*.ips 2>/dev/null | grep -i scribe | head -1)
+              [ -n "$IPS" ] && break; sleep 2
+            done
+            echo "== crash reports: $(ls ~/Library/Logs/DiagnosticReports /Library/Logs/DiagnosticReports 2>/dev/null | tr '\n' ' ')" >> shots.log
+            [ -n "$IPS" ] && python3 scripts/crash-summary.py "$IPS" >> shots.log 2>&1
+            echo "== system log" >> shots.log
+            log show --last 10m --style compact --predicate 'process == "Scribe Sync"' 2>/dev/null \
+              | grep -iE -A6 "uncaught exception|reason:|NSGenericException|Layout Window passes|Update Constraints|NSInternalInconsistency" | head -60 >> shots.log
+          fi
+          tail -150 shots.log | tee -a selftest.log
           ls -l "$RUNNER_TEMP/shots" 2>&1 | tee -a selftest.log
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-2-${{ matrix.os }} || true
+          grep -q "^exit=0" shots.log
       - name: Publish screenshots
         if: always()
         env:

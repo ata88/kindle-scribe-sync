@@ -187,7 +187,7 @@ struct NotesSettings: View {
                     ForEach(Array(Set(accounts + [model.settings.notesAccount])).sorted(), id: \.self) { Text($0).tag($0) }
                 }
                 .task { accounts = NotesScripting.accountNames() }
-                TextField(L("Ordner in Notizen"), text: Binding(get: { model.settings.notesFolder }, set: { model.settings.notesFolder = $0 }))
+                NotesFolderField()
                 Toggle(L("Komplettes Seitenbild zusätzlich anhängen"), isOn: Binding(get: { model.settings.attachPageImages },
                                                                                      set: { model.settings.attachPageImages = $0 }))
             } footer: {
@@ -255,5 +255,30 @@ struct UpdateSettings: View {
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+/// The Notes folder name takes effect when editing ends (Return or leaving the field),
+/// not on every keystroke – otherwise a sync in between would file notes under "Kind…".
+private struct NotesFolderField: View {
+    @EnvironmentObject var model: AppModel
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        TextField(L("Ordner in Notizen"), text: $draft)
+            .focused($focused)
+            .onAppear { draft = model.settings.notesFolder }
+            .onSubmit(commit)
+            .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+            .onDisappear(perform: commit)
+    }
+
+    private func commit() {
+        let name = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { draft = model.settings.notesFolder; return }
+        guard name != model.settings.notesFolder else { return }
+        model.settings.notesFolder = name
+        model.log.log(.notes, L("Ordner in Notizen: „%@“ – Notizen werden beim nächsten Abgleich verschoben", name))
     }
 }

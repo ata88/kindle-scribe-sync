@@ -99,6 +99,11 @@ extension AmazonAuth: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         if webView === refreshView { finishRefresh(false) }
     }
+
+    /// No network or DNS failure before the first byte: give up at once instead of after 45 s.
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        if webView === refreshView { finishRefresh(false) }
+    }
 }
 
 // MARK: - Login sheet

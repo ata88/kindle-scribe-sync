@@ -15,8 +15,15 @@ OUT="$(mktemp -d)/${GITHUB_SHA:-local}-${NAME}.txt"
 cd "$(mktemp -d)"
 git init -q
 git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-if git fetch -q --depth 1 origin ci-logs; then git checkout -q -b ci-logs FETCH_HEAD; else git checkout -q --orphan ci-logs; fi
-cp "$OUT" .
-git add "$(basename "$OUT")"
-git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -q -m "build log ${GITHUB_SHA}"
-git push -q origin ci-logs
+# several jobs publish at the same time: on a rejected push start over from the newest
+# ci-logs tip; never fail the job over a log
+for i in 1 2 3 4 5; do
+  if git fetch -q --depth 1 origin ci-logs; then git checkout -q -f -B ci-logs FETCH_HEAD; else git checkout -q --orphan ci-logs; fi
+  cp "$OUT" .
+  git add "$(basename "$OUT")"
+  git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -q -m "build log ${GITHUB_SHA}"
+  git push -q origin ci-logs && exit 0
+  sleep $((i * 3))
+done
+echo "warning: could not publish ${NAME}" >&2
+exit 0

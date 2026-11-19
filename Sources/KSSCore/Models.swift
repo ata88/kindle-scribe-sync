@@ -50,8 +50,17 @@ public struct PageRecord: Codable, Hashable, Sendable, Identifiable {
     public var error: String?
     public var model: String?
     public var recognizedAt: Date?
+    /// Failed automatic recognition attempts since the page last changed.
+    public var attempts: Int?
 
     public var id: Int { index }
+
+    /// A failed page is retried automatically this often, then only on request –
+    /// a page the model cannot read must not load 6 GB into memory every few minutes.
+    public static let automaticAttempts = 3
+    public var waitsForRecognition: Bool {
+        status == .pending || (status == .failed && (attempts ?? 0) < Self.automaticAttempts)
+    }
 
     public init(index: Int, imageHash: String, imageFile: String, ocrText: String? = nil,
                 userText: String? = nil, figures: [Figure] = [], status: PageStatus = .pending,

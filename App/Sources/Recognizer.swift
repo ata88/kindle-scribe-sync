@@ -136,12 +136,13 @@ final class ModelManager: ObservableObject {
             }
             let src = URL(string: "https://huggingface.co/\(model.id)/resolve/main/\(file.rfilename)")!
             let base = done
+            let throttle = ProgressThrottle(start: Double(base) / Double(total))
             let tmp = try await FileDownload.fetch(src) { [weak self] written in
+                // URLSession reports every few KB: only every 0.5 % reaches the main thread
+                let p = Double(base + written) / Double(total)
+                guard throttle.shouldReport(p) else { return }
                 Task { @MainActor in
                     guard let self else { return }
-                    let p = Double(base + written) / Double(total)
-                    // at most ~200 updates for the whole download – keeps the UI smooth
-                    guard p - self.progress >= 0.005 || p >= 1 else { return }
                     self.progress = p
                     self.progressText = L("%@ von %@", ProcessMemory.format(UInt64(base + written)), ProcessMemory.format(UInt64(total)))
                 }
@@ -155,14 +156,29 @@ final class ModelManager: ObservableObject {
     }
 }
 
+/// Lets a progress value through only when it moved noticeably (thread-safe).
+private final class ProgressThrottle: @unchecked Sendable {
+    private let lock = NSLock()
+    private var last: Double
+    init(start: Double) { last = start }
+    func shouldReport(_ p: Double) -> Bool {
+        lock.withLock {
+            guard p - last >= 0.005 || (p >= 1 && last < 1) else { return false }
+            last = p
+            return true
+        }
+    }
+}
+
 /// URLSession download with byte progress, as async/await.
 private final class FileDownload: NSObject, URLSessionDownloadDelegate {
     private var continuation: CheckedContinuation<URL, Error>?
-    private let onProgress: (Int64) -> Void
+    /// Called on URLSession's delegate queue, never on the main thread.
+    private let onProgress: @Sendable (Int64) -> Void
 
-    private init(onProgress: @escaping (Int64) -> Void) { self.onProgress = onProgress }
+    private init(onProgress: @escaping @Sendable (Int64) -> Void) { self.onProgress = onProgress }
 
-    static func fetch(_ url: URL, onProgress: @escaping (Int64) -> Void) async throws -> URL {
+    static func fetch(_ url: URL, onProgress: @escaping @Sendable (Int64) -> Void) async throws -> URL {
         let d = FileDownload(onProgress: onProgress)
         let session = URLSession(configuration: .default, delegate: d, delegateQueue: nil)
         defer { session.finishTasksAndInvalidate() }

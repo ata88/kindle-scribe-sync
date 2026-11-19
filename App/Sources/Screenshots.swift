@@ -17,6 +17,7 @@ enum Screenshots {
     }
 
     static func run(into dir: URL) async {
+        setvbuf(stdout, nil, _IONBF, 0)   // keep the progress if CI has to kill us
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let model = AppModel.shared
         makeDemoLibrary(model.store)
@@ -80,16 +81,41 @@ enum Screenshots {
         render(ActivityPanel().environmentObject(model).tint(Theme.accent), size: NSSize(width: 340, height: 360), dir, "9-activity")
         render(OnboardingView().environmentObject(model).tint(Theme.accent), size: NSSize(width: 900, height: 820), dir, "10-onboarding")
         print("screenshots written to \(dir.path)")
+
+        // stress: what users do all day – open/close the original, switch notebooks and appearance
+        if CommandLine.arguments.contains("--stress") {
+            let ids = ["demo-kickoff", "demo-ideas", "demo-pending", "demo-shopping"]
+            for i in 0..<150 {
+                if i % 25 == 0 { print("stress round \(i)") }
+                if i % 11 == 0 {   // resize too: different heights realise different amounts of content
+                    let f = main.frame
+                    main.setFrame(NSRect(x: f.minX, y: f.minY, width: f.width, height: i % 22 == 0 ? f.height - 40 : f.height + 40), display: true)
+                }
+                model.selectedNotebookID = ids[i % ids.count]
+                await pause(0.25)
+                model.showInspector.toggle()
+                await pause(0.25)
+                if i % 7 == 0 { NSApp.appearance = NSAppearance(named: i % 14 == 0 ? .darkAqua : .aqua) }
+                if i % 9 == 0 { model.sidebar = i % 18 == 0 ? .tasks : .all }
+                model.scrollTarget = i % 2
+                await pause(0.15)
+            }
+            print("stress done")
+        }
         exit(0)
     }
 
     private static func pause(_ seconds: Double) async {
+        let t0 = Date()
         try? await Task.sleep(for: .seconds(seconds))
+        let late = Date().timeIntervalSince(t0) - seconds
+        if late > 1 { print("main thread was blocked for \(Int(late)) s") }
     }
 
     /// Real window pixels via screencapture (needs Screen Recording permission – CI grants it);
     /// falls back to drawing the view hierarchy, which misses materials and Metal layers.
     private static func capture(_ window: NSWindow, _ dir: URL, _ name: String) {
+        print("capturing \(name) …")
         let url = dir.appendingPathComponent(name + ".png")
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")

@@ -15,9 +15,11 @@ import UniformTypeIdentifiers
 enum SelfTest {
     static var requested: Bool {
         CommandLine.arguments.contains("--self-test") || CommandLine.arguments.contains("--self-test-recognition")
+            || CommandLine.arguments.contains("--self-test-notes")
     }
 
     static func run() async -> Int32 {
+        if CommandLine.arguments.contains("--self-test-notes") { return await notesTest() }
         var failures = 0
         func check(_ name: String, _ ok: Bool, _ detail: String = "") {
             print("\(ok ? "PASS" : "FAIL") \(name)\(detail.isEmpty ? "" : " – \(detail)")")
@@ -108,6 +110,60 @@ enum SelfTest {
             await rec.release()
             return 1
         }
+    }
+
+    /// `--self-test-notes`: writes a note with two sketches through the app's real Notes
+    /// code, updates it, and checks that Notes stored the image data at the right places.
+    private static func notesTest() async -> Int32 {
+        var failures = 0
+        func check(_ name: String, _ ok: Bool, _ detail: String = "") {
+            print("\(ok ? "PASS" : "FAIL") \(name)\(detail.isEmpty ? "" : " – \(detail)")")
+            if !ok { failures += 1 }
+        }
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("Scribe Sync Notes Test/nb 1")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let tools = MacImageTools()
+        let page = syntheticPage()
+        guard let crop = tools.cropFigure(page, box: NormRect(x0: 0.6, y0: 0.55, x1: 0.85, y1: 0.76)) else {
+            print("FAIL notes – no crop"); return 1
+        }
+        let f1 = dir.appendingPathComponent("fig-0001-1.png"), f2 = dir.appendingPathComponent("fig-0001-2.png")
+        try? crop.png.write(to: f1); try? crop.png.write(to: f2)
+        var nb = NotebookRecord(id: "selftest", title: "Scribe Sync Selbsttest", pages: [
+            PageRecord(index: 0, imageHash: "h", imageFile: "f", ocrText: "ERSTER TEXT\n[[Grafik 1]]\nZWEITER TEXT\n[[Grafik 2]]\nDRITTER TEXT",
+                       figures: [Figure(id: 1, box: crop.box, imageFile: "1"), Figure(id: 2, box: crop.box, imageFile: "2")],
+                       status: .recognized)])
+        let notes = NotesScripting(accountName: { "" })
+        func verify(_ id: String, _ label: String) async {
+            try? await Task.sleep(for: .seconds(3))
+            let body = (try? await MainActor.run { try NotesScripting.body(noteID: id) }) ?? ""
+            let empty = body.components(separatedBy: "base64,(null)").count - 1
+            let images = body.components(separatedBy: "src=\"data:image").count - 1
+            let order = [body.range(of: "ERSTER")?.lowerBound, body.range(of: "data:image")?.lowerBound,
+                         body.range(of: "ZWEITER")?.lowerBound, body.range(of: "DRITTER")?.lowerBound]
+            let ordered = order.allSatisfy { $0 != nil } && zip(order, order.dropFirst()).allSatisfy { $0! < $1! }
+            check("notes-images-\(label)", images == 2 && empty == 0 && ordered,
+                  "images \(images), empty \(empty), in order \(ordered)")
+        }
+        do {
+            var out = NotesRenderer.render(nb, figureURL: { _, f in f.imageFile == "1" ? f1 : f2 })
+            let id = try await notes.publish(html: out.html, images: out.images, existingNoteID: nil,
+                                             folderPath: ["Scribe Sync Selbsttest"])
+            check("notes-created", id.hasPrefix("x-coredata"), id)
+            await verify(id, "new")
+            print("INFO before update: " + (await MainActor.run { NotesScripting.debug(noteID: id, folderPath: ["Scribe Sync Selbsttest"]) }))
+            nb.pages[0].ocrText = "ERSTER TEXT geändert\n[[Grafik 1]]\nZWEITER TEXT\n[[Grafik 2]]\nDRITTER TEXT"
+            out = NotesRenderer.render(nb, figureURL: { _, f in f.imageFile == "1" ? f1 : f2 })
+            let id2 = try await notes.publish(html: out.html, images: out.images, existingNoteID: id,
+                                              folderPath: ["Scribe Sync Selbsttest"])
+            check("notes-updated-in-place", id2 == id, id2)
+            await verify(id2, "updated")
+            try? await MainActor.run { try NotesScripting.delete(noteID: id2) }
+        } catch {
+            check("notes-publish", false, error.localizedDescription)
+        }
+        print(failures == 0 ? "NOTES SELFTEST OK" : "NOTES SELFTEST FAILED (\(failures))")
+        return failures == 0 ? 0 : 1
     }
 
     /// A 1240x1754 page, transparent background, handwriting-style text and a small sketch.

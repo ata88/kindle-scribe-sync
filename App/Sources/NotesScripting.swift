@@ -21,7 +21,8 @@ enum NotesError: LocalizedError {
 /// Update rules – the fix for duplicated notes:
 /// * a known note is always updated in place (`set body`);
 /// * a new note is created ONLY if the old one provably no longer exists
-///   (deleted / in "Recently Deleted"); any other error is reported, never
+///   (deleted); a note in "Recently Deleted" or moved away by hand is no longer in
+///   its folder and is replaced as well; any other error is reported, never
 ///   silently turned into a new note;
 /// * if the Scribe folder changed, the note is recreated in the new folder and
 ///   the old one deleted – AppleScript's `move` is avoided (it can duplicate).
@@ -31,28 +32,87 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
     init(accountName: @escaping @Sendable () -> String) { self.accountName = accountName }
 
     private static let source = #"""
-    on upsertNote(noteId, accountName, folderPathText, htmlBody)
+    on upsertNote(noteId, accountName, folderPathText, htmlBody, imagePathsText)
         tell application "Notes"
             set targetAccount to my resolveAccount(accountName)
             set targetFolder to my ensureFolder(targetAccount, folderPathText)
-            set targetFolderId to id of targetFolder
             if noteId is not "" then
                 set theNote to my findNote(noteId)
                 if theNote is not missing value then
-                    if my containerId(theNote) is targetFolderId then
-                        set body of theNote to htmlBody
+                    if my noteInFolder(noteId, targetFolder) then
+                        my writeBody(theNote, htmlBody, imagePathsText)
                         return id of theNote
                     end if
                     -- the notebook moved to another folder on the Scribe
                     set newNote to make new note at targetFolder with properties {body:htmlBody}
+                    my writeBody(newNote, htmlBody, imagePathsText)
                     delete theNote
                     return id of newNote
                 end if
             end if
             set newNote to make new note at targetFolder with properties {body:htmlBody}
+            my writeBody(newNote, htmlBody, imagePathsText)
             return id of newNote
         end tell
     end upsertNote
+
+    -- Notes is sandboxed and cannot read <img src="file://…"> on its own (it shows an
+    -- empty placeholder). Attaching a file hands it over together with read access;
+    -- setting the body afterwards puts every image at its place in the text and
+    -- replaces these temporary attachments.
+    on writeBody(theNote, htmlBody, imagePathsText)
+        if imagePathsText is not "" then
+            set AppleScript's text item delimiters to linefeed
+            set imagePaths to text items of imagePathsText
+            set AppleScript's text item delimiters to ""
+            tell application "Notes"
+                repeat with p in imagePaths
+                    try
+                        make new attachment at end of attachments of theNote with data (POSIX file (p as text))
+                    end try
+                end repeat
+            end tell
+        end if
+        tell application "Notes" to set body of theNote to htmlBody
+    end writeBody
+
+    on debugNote(noteId, accountName, folderPathText)
+        tell application "Notes"
+            set out to ""
+            try
+                set n to note id noteId
+                set out to out & "name=" & (name of n)
+                set out to out & " body=" & (length of (body of n))
+            on error e number k
+                set out to out & "lookup error " & k & " " & e
+            end try
+            try
+                set f to my ensureFolder(my resolveAccount(accountName), folderPathText)
+                set out to out & " target=" & (id of f) & " targetName=" & (name of f)
+            on error e number k
+                set out to out & " target error " & k & " " & e
+            end try
+            try
+                set fn to my findNote(noteId)
+                if fn is missing value then
+                    set out to out & " findNote=missing"
+                else
+                    set out to out & " findNote=ok inFolder=" & (my noteInFolder(noteId, f))
+                end if
+            on error e number k
+                set out to out & " findNote error " & k & " " & e
+            end try
+            return out
+        end tell
+    end debugNote
+
+    on noteBody(noteId)
+        tell application "Notes" to return body of note id noteId
+    end noteBody
+
+    on deleteNote(noteId)
+        tell application "Notes" to delete note id noteId
+    end deleteNote
 
     on findNote(noteId)
         tell application "Notes"
@@ -63,23 +123,21 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
                 if errNum is in {-1728, -1719, -10000, -1700} then return missing value
                 error errMsg number errNum
             end try
-            try
-                set folderName to name of container of theNote
-                if folderName is in {"Recently Deleted", "Zuletzt gelöscht"} then return missing value
-            end try
             return theNote
         end tell
     end findNote
 
-    on containerId(theNote)
+    -- "id of container of note" fails on current macOS (-1700), which made every update
+    -- look like a folder change; ask the folder for its notes instead.
+    on noteInFolder(noteId, targetFolder)
         tell application "Notes"
             try
-                return id of container of theNote
+                return (id of every note of targetFolder) contains noteId
             on error
-                return ""
+                return false
             end try
         end tell
-    end containerId
+    end noteInFolder
 
     on resolveAccount(accountName)
         tell application "Notes"
@@ -154,15 +212,27 @@ final class NotesScripting: NotesPublisher, @unchecked Sendable {
         return result
     }
 
-    func publish(html: String, existingNoteID: String?, folderPath: [String]) async throws -> String {
+    func publish(html: String, images: [URL], existingNoteID: String?, folderPath: [String]) async throws -> String {
         let path = folderPath.map { $0.replacingOccurrences(of: "/", with: "∕") }.joined(separator: "/")
         let account = accountName()
         return try await MainActor.run {
-            try Self.call("upsertNote", [existingNoteID ?? "", account, path, html]).stringValue ?? ""
+            try Self.call("upsertNote", [existingNoteID ?? "", account, path, html,
+                                         images.map(\.path).joined(separator: "\n")]).stringValue ?? ""
         }
     }
 
     @MainActor static func compileCheck() throws { _ = try script() }
+
+    /// For the self-test: the note's body as Notes stores it (images as data URIs).
+    @MainActor static func body(noteID: String) throws -> String {
+        try call("noteBody", [noteID]).stringValue ?? ""
+    }
+
+    @MainActor static func delete(noteID: String) throws { _ = try call("deleteNote", [noteID]) }
+
+    @MainActor static func debug(noteID: String, folderPath: [String]) -> String {
+        (try? call("debugNote", [noteID, "", folderPath.joined(separator: "/")]).stringValue) ?? "debug failed"
+    }
 
     @MainActor static func show(noteID: String) async {
         _ = try? call("showNote", [noteID])

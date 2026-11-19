@@ -112,7 +112,9 @@ struct MenuBarPanel: View {
                 Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 30, height: 30)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Scribe Sync").font(.headline)
-                    Text(model.statusLine).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    TimelineView(.periodic(from: .now, by: 30)) { _ in
+                        Text(model.statusLine).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
                 }
                 Spacer()
                 Button { model.syncNow(reason: L("Menüleiste")) } label: {

@@ -21,13 +21,10 @@ struct DiagnosticsView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 280), spacing: 12, alignment: .top)], spacing: 12) {
-                    syncCard
-                    MemoryCard()
-                    powerCard
-                    amazonCard
-                    libraryCard
-                    processCard
+                // a plain Grid: lazy grids re-measure live-updating cards (memory) and can loop
+                Grid(horizontalSpacing: 12, verticalSpacing: 12) {
+                    GridRow(alignment: .top) { syncCard; MemoryCard(); powerCard }
+                    GridRow(alignment: .top) { amazonCard; libraryCard; processCard }
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity)

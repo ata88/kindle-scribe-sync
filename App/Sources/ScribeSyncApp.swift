@@ -11,7 +11,7 @@ struct ScribeSyncApp: App {
         Window("Scribe Sync", id: "main") {
             MainView()
                 .environmentObject(model)
-                .frame(minWidth: 980, minHeight: 600)
+                .frame(minWidth: WindowSizing.mainMinimum.width, minHeight: WindowSizing.mainMinimum.height)
                 .tint(Theme.accent)
         }
         .defaultSize(WindowSizing.main)
@@ -20,7 +20,7 @@ struct ScribeSyncApp: App {
         Window(L("Diagnose"), id: "diagnostics") {
             DiagnosticsView()
                 .environmentObject(model)
-                .frame(minWidth: 820, minHeight: 560)
+                .frame(minWidth: WindowSizing.diagnosticsMinimum.width, minHeight: WindowSizing.diagnosticsMinimum.height)
                 .tint(Theme.accent)
         }
         .defaultSize(WindowSizing.diagnostics)
@@ -73,6 +73,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if FigureLab.requested {
+            Task.detached { exit(await FigureLab.run()) }
+            return
+        }
         if SelfTest.requested {
             Task.detached {
                 let code = await SelfTest.run()
@@ -122,13 +126,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 /// Default window sizes that always fit the screen – a window taller than the
 /// display would otherwise be laid out with its top and bottom cut off.
 enum WindowSizing {
-    static func fitted(_ width: CGFloat, _ height: CGFloat) -> CGSize {
+    /// Never below the content's minimum size: asking for less makes AppKit and SwiftUI
+    /// disagree about the window size.
+    static func fitted(_ width: CGFloat, _ height: CGFloat, minimum: CGSize) -> CGSize {
         guard let screen = (NSScreen.main ?? NSScreen.screens.first)?.visibleFrame else {
             return CGSize(width: width, height: height)
         }
-        return CGSize(width: min(width, (screen.width * 0.92).rounded()),
-                      height: min(height, (screen.height * 0.92).rounded()))
+        return CGSize(width: max(minimum.width, min(width, (screen.width * 0.92).rounded())),
+                      height: max(minimum.height, min(height, (screen.height * 0.92).rounded())))
     }
-    static var main: CGSize { fitted(1320, 840) }
-    static var diagnostics: CGSize { fitted(980, 720) }
+    static let mainMinimum = CGSize(width: 980, height: 600)
+    static let diagnosticsMinimum = CGSize(width: 820, height: 560)
+    static var main: CGSize { fitted(1320, 840, minimum: mainMinimum) }
+    static var diagnostics: CGSize { fitted(980, 720, minimum: diagnosticsMinimum) }
 }
