@@ -1,0 +1,29 @@
+commit db39233978f24b49643d0dfe25be259d5d5d49ad job app run 44544468815
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+Command line invocation:
+    /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild -project ScribeSync.xcodeproj -scheme ScribeSync -configuration Release -derivedDataPath /Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/build -destination platform=macOS,arch=arm64 -skipMacroValidation -skipPackagePluginValidation MARKETING_VERSION=0.0.0 CURRENT_PROJECT_VERSION=73 ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build
+
+Build settings from command line:
+    ARCHS = arm64
+    CODE_SIGNING_ALLOWED = NO
+    CURRENT_PROJECT_VERSION = 73
+    MARKETING_VERSION = 0.0.0
+    ONLY_ACTIVE_ARCH = YES
+
+Resolve Package Graph
+
+Fetching from https://github.com/huggingface/swift-transformers
+
+Fetching from https://github.com/sparkle-project/Sparkle
+
+Fetching from https://github.com/ml-explore/mlx-swift-lm
+
+Fetching from https://github.com/swiftlang/swift-syntax.git
