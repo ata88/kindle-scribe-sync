@@ -17,6 +17,7 @@ enum Screenshots {
     }
 
     static func run(into dir: URL) async {
+        setvbuf(stdout, nil, _IONBF, 0)   // keep the progress if CI has to kill us
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let model = AppModel.shared
         makeDemoLibrary(model.store)
@@ -84,12 +85,16 @@ enum Screenshots {
     }
 
     private static func pause(_ seconds: Double) async {
+        let t0 = Date()
         try? await Task.sleep(for: .seconds(seconds))
+        let late = Date().timeIntervalSince(t0) - seconds
+        if late > 1 { print("main thread was blocked for \(Int(late)) s") }
     }
 
     /// Real window pixels via screencapture (needs Screen Recording permission – CI grants it);
     /// falls back to drawing the view hierarchy, which misses materials and Metal layers.
     private static func capture(_ window: NSWindow, _ dir: URL, _ name: String) {
+        print("capturing \(name) …")
         let url = dir.appendingPathComponent(name + ".png")
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")

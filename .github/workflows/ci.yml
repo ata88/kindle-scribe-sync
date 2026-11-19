@@ -89,6 +89,7 @@ jobs:
           perl -e 'alarm 180; exec @ARGV' "$APP" --self-test-notes 2>&1 | grep -E "PASS|FAIL|SELFTEST|INFO" | tee -a selftest.log
           RC=${PIPESTATUS[0]}
           echo "exit=$RC" | tee -a selftest.log
+          osascript -e 'tell application "Notes" to quit' || true
           exit $RC
       - name: Screenshots of the UI (demo library)
         continue-on-error: true
@@ -104,8 +105,17 @@ jobs:
           done
           export SCRIBE_SYNC_HOME="$RUNNER_TEMP/shots-home"
           echo "== screenshots" | tee -a selftest.log
-          perl -e 'alarm 240; exec @ARGV' "$APP" --screenshots "$RUNNER_TEMP/shots" 2>&1 | tail -40 | tee -a selftest.log
-          echo "exit=${PIPESTATUS[0]}" | tee -a selftest.log
+          set +e
+          "$APP" --screenshots "$RUNNER_TEMP/shots" > shots.log 2>&1 &
+          PID=$!
+          for i in $(seq 1 240); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          if kill -0 $PID 2>/dev/null; then
+            echo "== still running after 240 s – where it hangs:" >> shots.log
+            sample $PID 3 -file sample.txt >/dev/null 2>&1; grep -E "^\s+[0-9]+ .*(ScribeSync|Scribe Sync|SwiftUI|AppKit)" sample.txt | head -60 >> shots.log
+            kill -9 $PID
+          fi
+          wait $PID; echo "exit=$?" >> shots.log
+          grep -v "^20[0-9][0-9]-" shots.log | tail -60 | tee -a selftest.log
           ls -l "$RUNNER_TEMP/shots" 2>&1 | tee -a selftest.log
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-2-${{ matrix.os }} || true
       - name: Publish screenshots
