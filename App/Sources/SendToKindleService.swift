@@ -198,6 +198,7 @@ final class SendToKindleService: ObservableObject {
         devices = [STKDevice(name: "Annas Kindle Scribe", serial: "G1"), STKDevice(name: "Kindle Paperwhite", serial: "G2"),
                    STKDevice(name: "Kindle für iPhone", serial: "G3")]
         selectedDevices = ["G1"]
+        worker?.cancel()
         jobs = [
             SendJob(fileName: "Atomic Habits.epub", title: "Atomic Habits", author: "James Clear", bytes: 2_430_000,
                     devices: ["Annas Kindle Scribe"], via: .app, state: .uploading(0.62)),
@@ -329,7 +330,7 @@ final class SendToKindleService: ObservableObject {
     private func startWorker() {
         guard worker == nil else { return }
         worker = Task { [weak self] in
-            while let self, let job = self.jobs.last(where: { $0.state == .waiting }) {
+            while !Task.isCancelled, let self, let job = self.jobs.last(where: { $0.state == .waiting }) {
                 guard self.isReady else { break }   // waits until set up; the view shows why
                 await self.process(job)
             }
