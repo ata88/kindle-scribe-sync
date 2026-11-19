@@ -1,0 +1,106 @@
+commit e991e02d728f768adbd19f4f0953dfc4e239ee06 job app run 44506446730
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 56M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 49M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 99672
+drwxr-xr-x  3 runner  staff        96 Nov 19 10:44 .
+drwxr-xr-x  7 runner  staff       224 Nov 19 10:44 ..
+-rwxr-xr-x  1 runner  staff  51028664 Nov 19 10:44 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 19 10:44 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 368x421 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8741935483870967, y1: 0.7748004561003421)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
+== notes self-test
+PASS notes-created – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p6
+PASS notes-images-new – images 2, empty 0, in order true
+INFO before update: name=Scribe Sync Selbsttestlookup error -1700 Can’t make length of «class body» of «class note» id "x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p6" of application "Notes" into type Unicode text. target=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICFolder/p4 targetName=Scribe Sync Selbsttest findNote=ok inFolder=true
+PASS notes-updated-in-place – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p6
+PASS notes-images-updated – images 2, empty 0, in order true
+NOTES SELFTEST OK
+exit=0
+== screenshots
+screen (0.0, 60.0, 1024.0, 677.0) default window (22.0, 72.0, 980.0, 652.0)
+capturing 1-reader-light …
+saved 1-reader-light (screencapture)
+capturing 2-reader-inspector-light …
+saved 2-reader-inspector-light (screencapture)
+capturing 3-figures-light …
+saved 3-figures-light (screencapture)
+capturing 4-pending-light …
+saved 4-pending-light (screencapture)
+capturing 5-tasks-light …
+saved 5-tasks-light (screencapture)
+capturing 1-reader-dark …
+saved 1-reader-dark (screencapture)
+capturing 2-reader-inspector-dark …
+saved 2-reader-inspector-dark (screencapture)
+capturing 3-figures-dark …
+saved 3-figures-dark (screencapture)
+capturing 4-pending-dark …
+saved 4-pending-dark (screencapture)
+capturing 5-tasks-dark …
+saved 5-tasks-dark (screencapture)
+capturing 6-diagnostics …
+saved 6-diagnostics (screencapture)
+saved 7-settings-general
+saved 7-settings-sync
+saved 7-settings-recognition
+saved 7-settings-notes
+saved 7-settings-amazon
+saved 7-settings-updates
+saved 8-menubar
+saved 9-activity
+saved 10-onboarding
+screenshots written to /Users/runner/work/_temp/shots
+exit=0
+total 2992
+-rw-r--r--@ 1 runner  staff  125579 Nov 19 10:46 1-reader-dark.png
+-rw-r--r--@ 1 runner  staff  129969 Nov 19 10:45 1-reader-light.png
+-rw-r--r--  1 runner  staff   82580 Nov 19 10:46 10-onboarding.png
+-rw-r--r--@ 1 runner  staff  101051 Nov 19 10:46 2-reader-inspector-dark.png
+-rw-r--r--@ 1 runner  staff   99541 Nov 19 10:45 2-reader-inspector-light.png
+-rw-r--r--@ 1 runner  staff  107374 Nov 19 10:46 3-figures-dark.png
+-rw-r--r--@ 1 runner  staff  119555 Nov 19 10:46 3-figures-light.png
+-rw-r--r--@ 1 runner  staff  100364 Nov 19 10:46 4-pending-dark.png
+-rw-r--r--@ 1 runner  staff  100804 Nov 19 10:46 4-pending-light.png
+-rw-r--r--@ 1 runner  staff   86090 Nov 19 10:46 5-tasks-dark.png
+-rw-r--r--@ 1 runner  staff   86393 Nov 19 10:46 5-tasks-light.png
+-rw-r--r--@ 1 runner  staff   83019 Nov 19 10:46 6-diagnostics.png
+-rw-r--r--  1 runner  staff   21724 Nov 19 10:46 7-settings-amazon.png
+-rw-r--r--  1 runner  staff   28572 Nov 19 10:46 7-settings-general.png
+-rw-r--r--  1 runner  staff   33093 Nov 19 10:46 7-settings-notes.png
+-rw-r--r--  1 runner  staff   46826 Nov 19 10:46 7-settings-recognition.png
+-rw-r--r--  1 runner  staff   45589 Nov 19 10:46 7-settings-sync.png
+-rw-r--r--  1 runner  staff   28402 Nov 19 10:46 7-settings-updates.png
+-rw-r--r--  1 runner  staff   39551 Nov 19 10:46 8-menubar.png
+-rw-r--r--  1 runner  staff   16501 Nov 19 10:46 9-activity.png
