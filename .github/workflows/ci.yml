@@ -106,11 +106,11 @@ jobs:
           export SCRIBE_SYNC_HOME="$RUNNER_TEMP/shots-home"
           echo "== screenshots" | tee -a selftest.log
           set +e
-          "$APP" --screenshots "$RUNNER_TEMP/shots" > shots.log 2>&1 &
+          "$APP" --screenshots "$RUNNER_TEMP/shots" --stress > shots.log 2>&1 &
           PID=$!
-          for i in $(seq 1 240); do kill -0 $PID 2>/dev/null || break; sleep 1; done
+          for i in $(seq 1 300); do kill -0 $PID 2>/dev/null || break; sleep 1; done
           if kill -0 $PID 2>/dev/null; then
-            echo "== still running after 240 s – where it hangs:" >> shots.log
+            echo "== still running after 300 s – where it hangs:" >> shots.log
             sample $PID 3 -file sample.txt >/dev/null 2>&1; grep -E "^\s+[0-9]+ .*(ScribeSync|Scribe Sync|SwiftUI|AppKit)" sample.txt | head -60 >> shots.log
             kill -9 $PID
           fi

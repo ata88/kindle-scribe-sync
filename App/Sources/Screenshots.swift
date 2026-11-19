@@ -81,6 +81,23 @@ enum Screenshots {
         render(ActivityPanel().environmentObject(model).tint(Theme.accent), size: NSSize(width: 340, height: 360), dir, "9-activity")
         render(OnboardingView().environmentObject(model).tint(Theme.accent), size: NSSize(width: 900, height: 820), dir, "10-onboarding")
         print("screenshots written to \(dir.path)")
+
+        // stress: what users do all day – open/close the original, switch notebooks and appearance
+        if CommandLine.arguments.contains("--stress") {
+            let ids = ["demo-kickoff", "demo-ideas", "demo-pending", "demo-shopping"]
+            for i in 0..<60 {
+                if i % 10 == 0 { print("stress round \(i)") }
+                model.selectedNotebookID = ids[i % ids.count]
+                await pause(0.25)
+                model.showInspector.toggle()
+                await pause(0.25)
+                if i % 7 == 0 { NSApp.appearance = NSAppearance(named: i % 14 == 0 ? .darkAqua : .aqua) }
+                if i % 9 == 0 { model.sidebar = i % 18 == 0 ? .tasks : .all }
+                model.scrollTarget = i % 2
+                await pause(0.15)
+            }
+            print("stress done")
+        }
         exit(0)
     }
 
