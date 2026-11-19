@@ -124,7 +124,8 @@ jobs:
             echo "== crash reports: $(ls ~/Library/Logs/DiagnosticReports /Library/Logs/DiagnosticReports 2>/dev/null | tr '\n' ' ')" >> shots.log
             [ -n "$IPS" ] && python3 scripts/crash-summary.py "$IPS" >> shots.log 2>&1
             echo "== system log" >> shots.log
-            log show --last 10m --style compact --predicate 'process == "Scribe Sync" AND (messageType == fault OR messageType == error)' 2>/dev/null | tail -40 >> shots.log
+            log show --last 10m --style compact --predicate 'process == "Scribe Sync"' 2>/dev/null \
+              | grep -iE -A6 "uncaught exception|reason:|NSGenericException|Layout Window passes|NSInternalInconsistency" | head -60 >> shots.log
           fi
           tail -150 shots.log | tee -a selftest.log
           ls -l "$RUNNER_TEMP/shots" 2>&1 | tee -a selftest.log
