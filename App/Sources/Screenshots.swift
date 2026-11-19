@@ -85,8 +85,12 @@ enum Screenshots {
         // stress: what users do all day – open/close the original, switch notebooks and appearance
         if CommandLine.arguments.contains("--stress") {
             let ids = ["demo-kickoff", "demo-ideas", "demo-pending", "demo-shopping"]
-            for i in 0..<60 {
-                if i % 10 == 0 { print("stress round \(i)") }
+            for i in 0..<150 {
+                if i % 25 == 0 { print("stress round \(i)") }
+                if i % 11 == 0 {   // resize too: different heights realise different amounts of content
+                    let f = main.frame
+                    main.setFrame(NSRect(x: f.minX, y: f.minY, width: f.width, height: i % 22 == 0 ? f.height - 40 : f.height + 40), display: true)
+                }
                 model.selectedNotebookID = ids[i % ids.count]
                 await pause(0.25)
                 model.showInspector.toggle()

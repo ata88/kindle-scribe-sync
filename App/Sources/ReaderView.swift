@@ -10,7 +10,10 @@ struct ReaderView: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
+                // Not lazy on purpose: a LazyVStack re-estimates the height of pages as they
+                // render (images, live preview) and can loop until AppKit gives up
+                // ("more Update Constraints in Window passes than there are views") – a crash.
+                VStack(alignment: .leading, spacing: 0) {
                     ReaderHeader(notebook: notebook)
                         .padding(.bottom, 18)
                     ForEach(notebook.pages) { page in
@@ -421,7 +424,7 @@ struct ScanInspector: View {
             }
             Divider()
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 8) {
+                HStack(spacing: 8) {
                     ForEach(notebook.pages) { p in
                         CachedImage(url: model.store.url(for: p.imageFile), maxPixel: 80, contentMode: .fill, revision: p.imageHash)
                             .frame(width: 44, height: 62)
