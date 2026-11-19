@@ -91,9 +91,15 @@ enum Screenshots {
             let ids = ["demo-kickoff", "demo-ideas", "demo-pending", "demo-shopping"]
             for i in 0..<150 {
                 if i % 25 == 0 { print("stress round \(i)") }
-                if i % 11 == 0 {   // resize too: different heights realise different amounts of content
+                if i % 11 == 0 {
+                    // resize like a user can: setFrame ignores minSize, the mouse does not – so stay inside
+                    // [minSize, screen]; going below the minimum is a state users can never reach
                     let f = main.frame
-                    main.setFrame(NSRect(x: f.minX, y: f.minY, width: f.width, height: i % 22 == 0 ? f.height - 40 : f.height + 40), display: true)
+                    let screen = (main.screen ?? NSScreen.main)?.visibleFrame ?? f
+                    let minW = max(main.minSize.width, 980), minH = max(main.minSize.height, 652)
+                    let w = i % 22 == 0 ? minW : min(screen.width, minW + 60)
+                    let h = i % 33 == 0 ? minH : min(screen.height, minH + 40)
+                    main.setFrame(NSRect(x: screen.minX, y: screen.maxY - h, width: w, height: h), display: true)
                 }
                 model.selectedNotebookID = ids[i % ids.count]
                 await pause(0.25)
