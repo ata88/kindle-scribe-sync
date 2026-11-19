@@ -1,0 +1,51 @@
+name: Lab
+# Experiments on a real macOS runner; results go to the ci-logs branch under lab/<sha>/.
+on:
+  push:
+    branches: ["lab/**"]
+permissions:
+  contents: write
+jobs:
+  notes:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Notes image lab
+        run: lab/notes-lab2.sh lab-out || true
+      - name: Publish results
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/publish-ci-files.sh lab-out lab-notes
+  figures:
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select newest Xcode
+        run: |
+          XC=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XC"
+          xcodebuild -downloadComponent MetalToolchain || true
+      - run: brew install xcodegen
+      - name: Build app
+        timeout-minutes: 45
+        run: scripts/build-app.sh 0.0.0 ${{ github.run_number }}
+      - name: Figure lab with several model sizes
+        run: |
+          mkdir -p lab-out
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          sysctl hw.memsize | tee -a lab-out/figures.txt
+          for M in Qwen3.5-2B-4bit Qwen3.5-4B-4bit Qwen3.5-9B-4bit; do
+            echo "===== $M" | tee -a lab-out/figures.txt
+            rm -rf "$RUNNER_TEMP/model"
+            python3 scripts/download_model.py "mlx-community/$M" "$RUNNER_TEMP/model" 2>&1 | tail -1 | tee -a lab-out/figures.txt
+            SCRIBE_SELFTEST_MODEL_DIR="$RUNNER_TEMP/model" FIGLAB_OUT="$PWD/lab-out/$M" \
+              perl -e 'alarm 1800; exec @ARGV' "$APP" --figure-lab 2>&1 | grep -v "^20" | tee -a lab-out/figures.txt || true
+          done
+      - name: Publish results
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: scripts/publish-ci-files.sh lab-out lab-figures

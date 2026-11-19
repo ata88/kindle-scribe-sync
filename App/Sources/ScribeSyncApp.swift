@@ -73,6 +73,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if FigureLab.requested {
+            Task.detached { exit(await FigureLab.run()) }
+            return
+        }
         if SelfTest.requested {
             Task.detached {
                 let code = await SelfTest.run()
