@@ -95,7 +95,19 @@ public actor SyncEngine {
         onProgress(SyncProgress(phase: .listing, detail: "", done: 0, total: 0))
         let items = try await source.listItems()
         log.log(.amazon, L("%ld Notizbücher in der Amazon-Cloud", items.count))
-        var touched = Set<String>()
+        // An empty answer while we know notebooks may be a hiccup on Amazon's side: only
+        // believe "everything was deleted" when it comes twice in a row.
+        let emptyMarker = store.root.appendingPathComponent(".empty-listing")
+        var trustDeletions = true
+        if items.isEmpty && !store.all().isEmpty {
+            trustDeletions = FileManager.default.fileExists(atPath: emptyMarker.path)
+            if !trustDeletions {
+                FileManager.default.createFile(atPath: emptyMarker.path, contents: nil)
+                log.log(.amazon, L("Amazon meldet keine Notizbücher – wird beim nächsten Abgleich bestätigt"), level: .warning)
+            }
+        } else {
+            try? FileManager.default.removeItem(at: emptyMarker)
+        }
 
         // phase 1: download changed notebooks
         for (n, item) in items.enumerated() {
@@ -104,7 +116,6 @@ public actor SyncEngine {
             onProgress(SyncProgress(phase: .downloading, detail: item.title, done: n, total: items.count, notebookID: item.id))
             do {
                 if try await fetch(item, force: force) {
-                    touched.insert(item.id)
                     report.downloadedNotebooks.append(item.title)
                 }
             } catch let e as AmazonError {
@@ -115,23 +126,21 @@ public actor SyncEngine {
         }
 
         // phase 2: recognize every pending page in one batch (model loaded once)
-        let (recognized, deferred, recognizedNotebooks) = try await recognizePending(&report)
+        let (recognized, deferred, _) = try await recognizePending(&report)
         report.recognizedPages = recognized
         report.deferredPages = deferred
-        touched.formUnion(recognizedNotebooks)
 
-        // phase 3: publish what changed
-        for id in touched.sorted() {
-            if let title = try await publishIfNeeded(id, report: &report) { report.published.append(title) }
-        }
-        // also retry notebooks whose last publish failed
-        for nb in store.all() where nb.noteID == nil && nb.status == .done && notes != nil && !touched.contains(nb.id) {
+        // phase 3: publish every notebook whose note is missing or out of date – also ones that did
+        // not change in this pass (a failed earlier write, or a newer app version that renders notes
+        // differently). publishIfNeeded only writes when the rendered content differs.
+        for nb in store.all() {
+            try Task.checkCancellation()
             if let title = try await publishIfNeeded(nb.id, report: &report) { report.published.append(title) }
         }
 
         // deleted on the Scribe: keep our copy and the note, just mark it
         let remote = Set(items.map(\.id))
-        for var nb in store.all() where !remote.contains(nb.id) {
+        for var nb in store.all() where trustDeletions && !remote.contains(nb.id) {
             nb.status = .deleted
             try store.save(nb)
             onChange(nb)
@@ -150,7 +159,12 @@ public actor SyncEngine {
     /// Download a notebook if it changed. Returns true if anything changed.
     private func fetch(_ item: RemoteItem, force: Bool) async throws -> Bool {
         var nb = store.notebook(item.id) ?? NotebookRecord(id: item.id, title: item.title, folderPath: item.folderPath)
-        let renamed = nb.title != item.title || nb.folderPath != item.folderPath
+        var renamed = nb.title != item.title || nb.folderPath != item.folderPath
+        if nb.status == .deleted {
+            // back on the Scribe (or the earlier listing was incomplete)
+            nb.status = nb.pages.contains { $0.status != .recognized } ? .recognizing : .done
+            renamed = true
+        }
         nb.title = item.title
         nb.folderPath = item.folderPath
         // images are complete locally (pages may still wait for recognition – that is fine)
@@ -196,7 +210,7 @@ public actor SyncEngine {
             if i < old.count, old[i].ocrText != nil {
                 // the page was extended/changed: keep old text and corrections for the merge
                 var p = old[i]
-                p.imageHash = hash; p.imageFile = file; p.status = .pending; p.error = nil
+                p.imageHash = hash; p.imageFile = file; p.status = .pending; p.error = nil; p.attempts = nil
                 pages.append(p)
             } else {
                 pages.append(PageRecord(index: i, imageHash: hash, imageFile: file))
@@ -231,7 +245,7 @@ public actor SyncEngine {
     // MARK: recognition
 
     private func recognizePending(_ report: inout SyncReport) async throws -> (Int, Int, Set<String>) {
-        let queue = store.all().flatMap { nb in nb.pages.filter { $0.status != .recognized }.map { (nb.id, $0.index) } }
+        let queue = store.all().flatMap { nb in nb.pages.filter(\.waitsForRecognition).map { (nb.id, $0.index) } }
         guard !queue.isEmpty else { return (0, 0, []) }
         let (allowed, reason) = recognitionAllowed()
         guard allowed else {
@@ -309,13 +323,17 @@ public actor SyncEngine {
             }
             page.status = .recognized
             page.error = nil
+            page.attempts = nil
             page.model = recognizer.modelName
             page.recognizedAt = Date()
             nb.pages[pi] = page
             return true
+        } catch is CancellationError {
+            return false   // stopped by the user: not the page's fault, try again next time
         } catch {
             page.status = .failed
             page.error = error.localizedDescription
+            page.attempts = (page.attempts ?? 0) + 1
             nb.pages[pi] = page
             log.log(.model, L("„%@“ Seite %ld: %@", nb.title, page.index + 1, error.localizedDescription), level: .error)
             return false
@@ -367,7 +385,6 @@ public actor SyncEngine {
         if let e = report.errors.first { throw NSError(domain: "Notes", code: 1, userInfo: [NSLocalizedDescriptionKey: e]) }
     }
 
-    /// Discard the recognition of one page and read it again on the next pass.
     /// Crop every stored figure again with the current crop logic (after an update
     /// that improved it). Uses the stored box as the hint; no recognition needed.
     /// Returns the number of figures that changed.
@@ -394,9 +411,11 @@ public actor SyncEngine {
         return changedFigures
     }
 
+    /// Discard the recognition of one page and read it again on the next pass.
     public func requeue(notebookID: String, pageIndex: Int) throws {
         guard var nb = store.notebook(notebookID), let pi = nb.pages.firstIndex(where: { $0.index == pageIndex }) else { return }
         nb.pages[pi].status = .pending
+        nb.pages[pi].attempts = nil
         nb.status = .recognizing
         try store.save(nb)
         onChange(nb)

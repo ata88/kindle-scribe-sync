@@ -38,7 +38,10 @@ public enum NotesRenderer {
             case .pending:
                 parts.append("<div><i>\(escape(L("(wird erkannt …)")))</i></div>")
             case .failed:
-                parts.append("<div><i>\(escape(L("(Texterkennung fehlgeschlagen – wird erneut versucht)")))</i></div>")
+                let note = page.waitsForRecognition
+                    ? L("(Texterkennung fehlgeschlagen – wird erneut versucht)")
+                    : L("(Texterkennung fehlgeschlagen – in Scribe Sync erneut versuchen)")
+                parts.append("<div><i>\(escape(note))</i></div>")
             }
             if let pageURL, let url = pageURL(page) {
                 images.append(url)

@@ -108,7 +108,9 @@ struct SidebarStatus: View {
                     }
                     .frame(width: 18)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(model.statusLine).font(.callout).lineLimit(1).truncationMode(.middle)
+                        TimelineView(.periodic(from: .now, by: 30)) { _ in   // keeps "5 min ago" current
+                            Text(model.statusLine).font(.callout).lineLimit(1).truncationMode(.middle)
+                        }
                         if let f = model.progressFraction, model.isSyncing {
                             ProgressView(value: f).progressViewStyle(.linear).controlSize(.mini)
                         } else if model.modelLoaded {
@@ -411,7 +413,8 @@ struct TaskRow: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.open(notebookID: item.notebookID, page: item.pageIndex) }
+        .onTapGesture { model.open(notebookID: item.notebookID, page: item.pageIndex) }
+        .help(L("Klicken, um die Aufgabe im Notizbuch zu zeigen"))
         .contextMenu {
             Button(L("Im Notizbuch zeigen")) { model.open(notebookID: item.notebookID, page: item.pageIndex) }
         }

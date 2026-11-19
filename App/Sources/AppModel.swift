@@ -222,17 +222,20 @@ final class AppModel: ObservableObject {
 
     /// Notebooks of the current sidebar entry, filtered by the search field.
     var listedNotebooks: [NotebookRecord] {
+        // newest first, like Notes
+        let byDate = notebooks.sorted {
+            ($0.syncedAt ?? .distantPast, $1.title.lowercased()) > ($1.syncedAt ?? .distantPast, $0.title.lowercased())
+        }
         var list: [NotebookRecord]
         switch sidebar ?? .all {
-        case .all, .tasks: list = notebooks
+        case .all, .tasks: list = byDate
         case .recent:
             let cutoff = Date().addingTimeInterval(-14 * 86_400)
-            list = notebooks.filter { ($0.syncedAt ?? .distantPast) > cutoff }
-                .sorted { ($0.syncedAt ?? .distantPast) > ($1.syncedAt ?? .distantPast) }
+            list = byDate.filter { ($0.syncedAt ?? .distantPast) > cutoff }
         case .review:
-            list = notebooks.filter { nb in nb.pages.contains { Self.needsReview($0) } }
+            list = byDate.filter { nb in nb.pages.contains { Self.needsReview($0) } }
         case .folder(let path):
-            list = notebooks.filter { $0.folderPath.joined(separator: "/") == path }
+            list = byDate.filter { $0.folderPath.joined(separator: "/") == path }
         }
         let q = search.trimmingCharacters(in: .whitespaces).lowercased()
         guard !q.isEmpty else { return list }
@@ -459,18 +462,63 @@ final class AppModel: ObservableObject {
         Task { await NotesScripting.show(noteID: id) }
     }
 
+    /// Markdown file plus a folder with the sketches next to it, linked at their places.
     func exportMarkdown(_ nb: NotebookRecord) {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = nb.title + ".md"
+        panel.nameFieldStringValue = Self.safeFileName(nb.title) + ".md"
         panel.allowedContentTypes = [.init(filenameExtension: "md") ?? .plainText]
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        try? Self.markdown(nb).write(to: url, atomically: true, encoding: .utf8)
+        let base = url.deletingPathExtension().lastPathComponent
+        let imageDir = url.deletingLastPathComponent().appendingPathComponent(L("%@ – Skizzen", base), isDirectory: true)
+        var copied = 0
+        let md = Self.markdown(nb) { page, fig in
+            guard let file = fig.imageFile else { return nil }
+            let name = "\(L("Seite %ld", page.index + 1)) – \(L("Grafik %ld", fig.id)).png"
+            do {
+                try FileManager.default.createDirectory(at: imageDir, withIntermediateDirectories: true)
+                let target = imageDir.appendingPathComponent(name)
+                try? FileManager.default.removeItem(at: target)
+                try FileManager.default.copyItem(at: store.url(for: file), to: target)
+                copied += 1
+            } catch { return nil }
+            let rel = (imageDir.lastPathComponent + "/" + name).addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? name
+            return "![\(L("Grafik %ld", fig.id))](\(rel))"
+        }
+        do {
+            try md.write(to: url, atomically: true, encoding: .utf8)
+            log.log(.app, L("„%@“ als Markdown exportiert (%ld Skizzen)", nb.title, copied))
+        } catch {
+            lastError = error.localizedDescription
+        }
     }
 
-    static func markdown(_ nb: NotebookRecord) -> String {
+    /// The notebook as Markdown. `figure` turns a sketch into Markdown (e.g. an image link);
+    /// without it, sketch placeholders are left out – for the clipboard.
+    static func markdown(_ nb: NotebookRecord, figure: ((PageRecord, Figure) -> String?)? = nil) -> String {
         "# \(nb.title)\n\n" + nb.pages.map { p in
-            (nb.pages.count > 1 ? "## \(L("Seite %ld", p.index + 1))\n\n" : "") + p.text
+            (nb.pages.count > 1 ? "## \(L("Seite %ld", p.index + 1))\n\n" : "") + pageText(p, figure: figure)
         }.joined(separator: "\n\n")
+    }
+
+    /// A page's text with the internal `[[Grafik N]]` placeholders replaced (or removed).
+    static func pageText(_ p: PageRecord, figure: ((PageRecord, Figure) -> String?)? = nil) -> String {
+        var out: [String] = []
+        for line in p.text.components(separatedBy: "\n") {
+            var l = line
+            while let m = l.firstMatch(of: #/\[\[Grafik (\d+)\]\]/#) {
+                let id = Int(m.1) ?? 0
+                let replacement = p.figures.first(where: { $0.id == id }).flatMap { f in figure?(p, f) } ?? ""
+                l.replaceSubrange(m.range, with: replacement)
+            }
+            // a line that only held a placeholder disappears instead of leaving a gap
+            if l.trimmingCharacters(in: .whitespaces).isEmpty && !line.trimmingCharacters(in: .whitespaces).isEmpty { continue }
+            out.append(l)
+        }
+        return out.joined(separator: "\n")
+    }
+
+    static func safeFileName(_ s: String) -> String {
+        s.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
     }
 
     // MARK: status texts

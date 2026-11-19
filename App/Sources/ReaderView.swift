@@ -210,6 +210,10 @@ struct PageSection: View {
                         Label(L("Texterkennung fehlgeschlagen"), systemImage: "exclamationmark.triangle")
                             .foregroundStyle(Theme.warm).font(.callout.weight(.semibold))
                         if let e = page.error { Text(e).font(.caption).foregroundStyle(.secondary) }
+                        Text(page.waitsForRecognition
+                             ? L("Wird beim nächsten Abgleich automatisch erneut versucht.")
+                             : L("Nach %ld Versuchen wird nicht mehr automatisch erneut versucht.", PageRecord.automaticAttempts))
+                            .font(.caption).foregroundStyle(.secondary)
                         Button(L("Erneut versuchen")) { model.rerecognize(notebookID: notebook.id, page: page.index) }
                             .controlSize(.small)
                     }
@@ -247,7 +251,7 @@ struct PageSection: View {
 
     private func copy() {
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(page.text, forType: .string)
+        NSPasteboard.general.setString(AppModel.pageText(page), forType: .string)
     }
 }
 
@@ -585,7 +589,8 @@ enum SpellService {
         let results: [NSTextCheckingResult] = await withCheckedContinuation { cont in
             _ = checker.requestChecking(of: clean, range: NSRange(location: 0, length: (clean as NSString).length),
                                     types: NSTextCheckingResult.CheckingType.spelling.rawValue,
-                                    options: nil, inSpellDocumentWithTag: tag) { _, results, _, _ in
+                                    options: nil, inSpellDocumentWithTag: tag) { @Sendable _, results, _, _ in
+                // called on a background queue: must not be isolated to the main actor
                 cont.resume(returning: results)
             }
         }

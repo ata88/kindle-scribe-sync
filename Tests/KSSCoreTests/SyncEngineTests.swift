@@ -145,6 +145,63 @@ struct Harness {
         #expect(h.store.notebook("a")!.pages[0].figures[0].imageFile != nil)
     }
 
+    @Test func failingPageStopsLoadingTheModelAfterThreeAttempts() async throws {
+        let h = try Harness()
+        h.recognizer.failOn = ["bad"]
+        h.source.set("a", .init(title: "T", folder: [], mtime: 1, pages: [page("bad")]))
+        for _ in 0..<5 { _ = try await h.engine().run() }
+        #expect(h.recognizer.calls.filter { $0 == "bad" }.count == PageRecord.automaticAttempts)
+        #expect(h.recognizer.prepares == PageRecord.automaticAttempts, "no model load once retries are used up")
+        // "Erneut versuchen" in the app starts over
+        try await h.engine().requeue(notebookID: "a", pageIndex: 0)
+        _ = try await h.engine().run()
+        #expect(h.recognizer.calls.filter { $0 == "bad" }.count == PageRecord.automaticAttempts + 1)
+    }
+
+    @Test func emptyListingDoesNotDeleteEverything() async throws {
+        let h = try Harness()
+        h.source.set("a", .init(title: "T", folder: [], mtime: 1, pages: [page("p")]))
+        _ = try await h.engine().run()
+        h.source.remove("a")
+        _ = try await h.engine().run()     // Amazon answered with an empty list once
+        #expect(h.store.notebook("a")?.status == .done)
+        h.source.set("a", .init(title: "T", folder: [], mtime: 1, pages: [page("p")]))
+        _ = try await h.engine().run()     // and then normally again
+        h.source.remove("a")
+        _ = try await h.engine().run()     // a single empty answer later is again not trusted
+        #expect(h.store.notebook("a")?.status == .done)
+    }
+
+    @Test func notebookBackOnTheScribeReappears() async throws {
+        let h = try Harness()
+        h.source.set("a", .init(title: "T", folder: [], mtime: 1, pages: [page("p")]))
+        h.source.set("b", .init(title: "B", folder: [], mtime: 1, pages: [page("q")]))
+        _ = try await h.engine().run()
+        let nb = h.source.notebooks["a"]!
+        h.source.remove("a")
+        _ = try await h.engine().run()
+        #expect(h.store.notebook("a")?.status == .deleted)
+        h.source.set("a", nb)
+        _ = try await h.engine().run()
+        #expect(h.store.notebook("a")?.status == .done)
+        #expect(h.store.all().contains { $0.id == "a" })
+    }
+
+    @Test func outdatedNotesAreRewrittenWithoutAnyChange() async throws {
+        let h = try Harness()
+        h.source.set("a", .init(title: "T", folder: [], mtime: 1, pages: [page("p")]))
+        _ = try await h.engine().run()
+        #expect(h.notes.writes == 1)
+        var nb = h.store.notebook("a")!
+        nb.publishedHash = "written-by-an-older-version"
+        try h.store.save(nb)
+        _ = try await h.engine().run()
+        #expect(h.notes.writes == 2, "the note is brought up to date")
+        #expect(h.notes.created == 1, "…in place")
+        _ = try await h.engine().run()
+        #expect(h.notes.writes == 2)
+    }
+
     @Test func authErrorPropagates() async throws {
         let h = try Harness()
         h.source.authExpired = true
@@ -156,6 +213,8 @@ struct Harness {
         h.source.set("a", .init(title: "Weg", folder: [], mtime: 1, pages: [page("a")]))
         _ = try await h.engine().run()
         h.source.remove("a")
+        let first = try await h.engine().run()
+        #expect(first.deleted.isEmpty, "a single empty listing could be a hiccup")
         let r = try await h.engine().run()
         #expect(r.deleted == ["Weg"])
         #expect(h.store.notebook("a")?.status == .deleted)
