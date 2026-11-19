@@ -114,7 +114,7 @@ public enum RecognitionPrompt {
 
         var text = between(s, "<text>", "</text>") ?? s
         if let figStart = text.range(of: "<grafiken>") { text = String(text[..<figStart.lowerBound]) }
-        text = stripFences(text).trimmingCharacters(in: .whitespacesAndNewlines)
+        text = cleanUp(stripFences(text))
 
         var figures: [Figure] = []
         if let figJSON = between(s, "<grafiken>", "</grafiken>").map(stripFences),
@@ -157,6 +157,25 @@ public enum RecognitionPrompt {
         let rest = s[a.upperBound...]
         let end = rest.range(of: close)?.lowerBound ?? rest.endIndex
         return String(rest[..<end])
+    }
+
+    /// Models sometimes emit HTML line breaks, runs of empty lines, or the same line over and
+    /// over (seen in the lab on mind maps). None of that belongs in the transcript.
+    static func cleanUp(_ s: String) -> String {
+        var t = s.replacingOccurrences(of: #"(?i)<br\s*/?>"#, with: "\n", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)</?(p|div|span)[^>]*>"#, with: "", options: .regularExpression)
+        // the same line again right after itself (ignoring blank lines) is a generation loop: keep it once
+        var lines: [String] = []
+        var lastText = ""
+        for line in t.components(separatedBy: "\n") {
+            let key = line.trimmingCharacters(in: .whitespaces)
+            if !key.isEmpty && key == lastText { continue }
+            if !key.isEmpty { lastText = key }
+            lines.append(line.replacingOccurrences(of: #"\s+$"#, with: "", options: .regularExpression))
+        }
+        t = lines.joined(separator: "\n")
+        t = t.replacingOccurrences(of: #"\n{3,}"#, with: "\n\n", options: .regularExpression)
+        return t.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func stripFences(_ s: String) -> String {

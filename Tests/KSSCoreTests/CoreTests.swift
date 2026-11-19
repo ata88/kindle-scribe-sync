@@ -62,6 +62,28 @@ import Testing
         #expect(NotesRenderer.render(nb, figureURL: { _, _ in nil }).contentHash != a)
     }
 
+    @Test func modelGarbageIsCleanedUp() {
+        let raw = """
+        <text>
+        # Ideen Urlaub
+
+        Wann? Juli<br>oder August
+        <br>
+
+        <br>
+
+        <br>
+        - Meer
+        - Meer
+        - Meer
+        - Berge
+        </text>
+        <grafiken>[]</grafiken>
+        """
+        let text = RecognitionPrompt.parse(raw).markdown
+        #expect(text == "# Ideen Urlaub\n\nWann? Juli\noder August\n\n- Meer\n- Berge", "\(text)")
+    }
+
     @Test func markdownSubset() {
         let html = NotesRenderer.markdownToHTML("""
         # Kopf
