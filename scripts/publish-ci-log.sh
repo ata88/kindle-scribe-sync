@@ -19,4 +19,11 @@ if git fetch -q --depth 1 origin ci-logs; then git checkout -q -b ci-logs FETCH_
 cp "$OUT" .
 git add "$(basename "$OUT")"
 git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -q -m "build log ${GITHUB_SHA}"
-git push -q origin ci-logs
+# several jobs publish at the same time: retry on a rejected push; never fail the job over a log
+for i in 1 2 3 4 5; do
+  git push -q origin ci-logs && exit 0
+  sleep $((i * 3))
+  git pull -q --rebase origin ci-logs
+done
+echo "warning: could not publish ${NAME}" >&2
+exit 0

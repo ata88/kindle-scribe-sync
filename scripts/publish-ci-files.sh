@@ -12,4 +12,6 @@ mkdir -p "$PREFIX/${GITHUB_SHA}"
 cp -R "$SRC"/. "$PREFIX/${GITHUB_SHA}/"
 git add "$PREFIX"
 git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -q -m "$PREFIX ${GITHUB_SHA}"
-for i in 1 2 3; do git push -q origin ci-logs && break; git pull -q --rebase origin ci-logs; done
+for i in 1 2 3 4 5; do git push -q origin ci-logs && exit 0; sleep $((i * 3)); git pull -q --rebase origin ci-logs; done
+echo "warning: could not publish ${PREFIX}" >&2
+exit 0
