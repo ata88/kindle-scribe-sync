@@ -1,0 +1,102 @@
+commit 5803f574636466af31c7f34f77771b7393275c0d job app run 44499931649
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 56M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 49M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 99672
+drwxr-xr-x  3 runner  staff        96 Nov 19 10:02 .
+drwxr-xr-x  7 runner  staff       224 Nov 19 10:01 ..
+-rwxr-xr-x  1 runner  staff  51031832 Nov 19 10:02 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 19 10:01 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 368x421 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8741935483870967, y1: 0.7748004561003421)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
+== notes self-test
+PASS notes-created – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7
+PASS notes-images-new – images 2, empty 0, in order true
+INFO before update: name=Scribe Sync Selbsttestlookup error -1700 Can’t make length of «class body» of «class note» id "x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7" of application "Notes" into type Unicode text. target=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICFolder/p4 targetName=Scribe Sync Selbsttest findNote=ok inFolder=true
+PASS notes-updated-in-place – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7
+PASS notes-images-updated – images 2, empty 0, in order true
+NOTES SELFTEST OK
+exit=0
+== screenshots
+== recognition
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 368x421 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8741935483870967, y1: 0.7748004561003421)
+PASS flatten-white-background
+PASS notes-html-figure
+INFO model loaded in 8 s, footprint 44.2 MB → 1.17 GB, MLX active 1,010.7 MB
+INFO recognized in 36 s
+----- markdown -----
+Einkaufsliste
+
+- Milch
+- Brot
+- Äpfel
+
+Termin mit Anna am Montag
+
+[[Grafik 1]]
+----- figures: ["1: NormRect(x0: 0.64, y0: 0.547, x1: 0.82, y1: 0.753)"] -----
+INFO after release: footprint 161 MB, MLX active 44 bytes, cache Zero KB
+PASS recognition-reads-text
+PASS model-memory-released (MLX active 44 bytes)
+SELFTEST OK
+exit=0
+== release dry run ==
+1 identity imported.
+/Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/build/Build/Products/Release/Scribe Sync.app: replacing existing signature
+Identifier=io.github.ata88.scribesync
+Signature size=1696
+Authority=Scribe Sync Signing
+TeamIdentifier=not set
+sparkle:edSignature="rkCW+ii7uJAjS6Og8cRMsCQI5/kBdKkNxgtC2zjsMUamY8imbniXbJqM4XdoRoF5YojEN43dXmGTadAX2RiICQ==" length="13159174"
+ZIP=/Users/runner/work/kindle-scribe-sync/kindle-scribe-sync/ScribeSync-0.0.0.zip
+NOTES=/Users/runner/work/_temp/notes.md
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Scribe Sync</title>
+    <link>https://github.com/ata88/kindle-scribe-sync</link>
+    <item>
+      <title>Version 0.0.0</title>
+      <pubDate>Thu, 19 Nov 2026 10:05:11 GMT</pubDate>
+      <sparkle:version>48</sparkle:version>
+      <sparkle:shortVersionString>0.0.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <description><![CDATA[<p>Scribe Sync 0.0.0</p>]]></description>
+      <enclosure url="https://github.com/ata88/kindle-scribe-sync/releases/download/v0.0.0/ScribeSync-0.0.0.zip" length="13159174" type="application/octet-stream" sparkle:edSignature="rkCW+ii7uJAjS6Og8cRMsCQI5/kBdKkNxgtC2zjsMUamY8imbniXbJqM4XdoRoF5YojEN43dXmGTadAX2RiICQ=="/>
+    </item>
+  </channel>
+</rss>
