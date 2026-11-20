@@ -41,13 +41,22 @@ struct KindleLibraryListView: View {
         .navigationSubtitle(lib.store)
         .toolbar {
             ToolbarItem {
+                Menu {
+                    Picker(L("Amazon-Shop"), selection: $lib.store) {
+                        ForEach(KindleLibrary.stores, id: \.self) { Text($0).tag($0) }
+                    }
+                    .pickerStyle(.inline)
+                } label: { Label(lib.store, systemImage: "globe") }
+                .help(L("Amazon-Shop, bei dem dein Kindle registriert ist"))
+            }
+            ToolbarItem {
                 Button { Task { await lib.reload() } } label: { Label(L("Neu laden"), systemImage: "arrow.clockwise") }
                     .help(L("Kindle-Bibliothek neu laden"))
                     .disabled(lib.phase == .loading)
             }
         }
         .overlay { overlay }
-        .task { if lib.phase == .idle { await lib.reload() } }
+        .task(id: lib.store) { if lib.phase == .idle { await lib.reload() } }
         .sheet(isPresented: $lib.showSignIn) { KindleLibrarySignInView().environmentObject(model) }
     }
 

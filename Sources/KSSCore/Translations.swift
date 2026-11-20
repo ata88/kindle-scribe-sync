@@ -136,6 +136,7 @@ enum Translations {
         "%ld Notizbücher": "%ld notebooks",
         "Keine Notizbücher": "No Notebooks",
         "Keine Treffer": "No Results",
+        "Amazon-Shop, bei dem dein Kindle registriert ist": "Amazon store your Kindle is registered with",
         "Aktion fehlgeschlagen": "Action Failed",
         "Amazon kann Dokumente nicht umbenennen. Scribe Sync sendet das Dokument deshalb unter dem neuen Namen erneut und löscht danach die alte Fassung. Lesezeichen und Notizen auf dem Kindle gehören zur alten Fassung.": "Amazon cannot rename documents. Scribe Sync therefore sends the document again under the new name and then deletes the old copy. Bookmarks and notes on the Kindle belong to the old copy.",
         "Amazon meldet: %@": "Amazon says: %@",
