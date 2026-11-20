@@ -59,6 +59,11 @@ enum Screenshots {
             model.sidebar = .sendToKindle
             await pause(1.5)
             capture(main, dir, "11-send-to-kindle-\(suffix)")
+            if suffix == "light" { model.kindleLibrary.loadShowcase() }
+            model.selectedLibraryItem = "D2"
+            model.sidebar = .kindleLibrary
+            await pause(1.5)
+            capture(main, dir, "12-kindle-library-\(suffix)")
             model.sidebar = .all
         }
         NSApp.appearance = NSAppearance(named: .aqua)

@@ -184,7 +184,8 @@ struct SendHistoryView: View {
         .toolbar {
             ToolbarItem {
                 Button { stk.clearFinished() } label: { Label(L("Liste leeren"), systemImage: "trash") }
-                    .help(L("Gesendete Einträge aus der Liste entfernen"))
+                    .help(L("Gesendete Einträge aus der Liste entfernen – auch die aufbewahrten Originale (%@), die zum Umbenennen dienen",
+                            STK.formatBytes(stk.archiveBytes)))
                     .disabled(!stk.jobs.contains { $0.state == .sent })
             }
         }

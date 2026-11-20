@@ -8,6 +8,7 @@ Eine native Mac-App, die deine **Kindle-Scribe-Notizbücher automatisch** auf de
 - **Skizzen** werden als echtes Bild des jeweiligen Seitenbereichs eingebettet, an ihrer ursprünglichen Position.
 - **Aufgaben:** Checkboxen aus allen Notizbüchern an einem Ort, direkt abhakbar.
 - **KI direkt auf dem Mac:** Qwen 3.5 (9B) über Apple MLX. Kein Cloud-Dienst, keine Kosten. Das Modell ist nur im Arbeitsspeicher, während neue Seiten erkannt werden. Mit Live-Vorschau des gerade gelesenen Texts.
+- **Kindle-Bibliothek:** sehen, was auf dem Kindle liegt; Dokumente löschen und umbenennen.
 - **An Kindle senden:** EPUB, PDF, Word, Text oder Bilder in die App ziehen, auf das Dock-Symbol ziehen oder mit *Öffnen mit › Scribe Sync* öffnen. Sie landen drahtlos auf dem Kindle. PDFs bleiben im Original-Layout, auf dem Scribe kannst du darauf schreiben.
 - **Spotlight, Mitteilungen, Export als Markdown** (mit den Skizzen als Bilddateien), Deutsch und Englisch umschaltbar.
 
@@ -61,6 +62,13 @@ Bereich *Kindle › An Kindle senden* in der Seitenleiste. Es gibt zwei Wege, di
 | **Per E-Mail** (Ausweichweg) | Die Datei geht als Anhang über die App Mail an deine persönliche `…@kindle.com`-Adresse, höchstens 50 MB. Deine Absenderadresse muss bei Amazon unter *Inhalte und Geräte › Einstellungen › Persönliche Dokumente* als genehmigt eingetragen sein. |
 
 Dateien, die noch nicht gesendet sind, bleiben in der Warteschlange, auch über einen Neustart hinweg. Ein fehlgeschlagener Versand lässt sich mit *Erneut senden* wiederholen.
+
+### Kindle-Bibliothek
+
+*Kindle › Kindle-Bibliothek* zeigt, was in deiner Kindle-Bibliothek liegt: persönliche Dokumente und gekaufte Bücher, mit Suche. Die Daten kommen von Amazons Seite „Inhalte und Geräte verwalten“. Dafür meldest du dich einmal an und wählst den Amazon-Shop, bei dem dein Kindle registriert ist, etwa amazon.de.
+
+- **Löschen** entfernt ein Dokument aus der Bibliothek und von allen Geräten. Gekaufte Bücher löscht die App bewusst nicht, denn das würde den Kauf endgültig entfernen.
+- **Umbenennen:** Amazon kann Dokumente nicht umbenennen. Die App sendet das Dokument deshalb unter dem neuen Titel erneut und löscht danach die alte Fassung. Bei Dateien, die mit Scribe Sync gesendet wurden, nimmt sie dafür das aufbewahrte Original. Bei anderen fragt sie einmal nach der Originaldatei.
 
 ### Wie kommen die Notizen vom Scribe?
 

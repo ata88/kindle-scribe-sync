@@ -15,6 +15,7 @@ struct MainView: View {
                 switch model.sidebar {
                 case .tasks: TaskListView()
                 case .sendToKindle: SendHistoryView(stk: model.sendToKindle)
+                case .kindleLibrary: KindleLibraryListView(lib: model.kindleLibrary)
                 default: NotebookListView()
                 }
             }
@@ -23,6 +24,7 @@ struct MainView: View {
             DetailRoot()
         }
         .searchable(text: $model.search, placement: .sidebar, prompt: Text(L("Suchen")))
+        .modifier(LibraryActionsModifier())
         .toolbar {
             ToolbarItem(placement: .primaryAction) { SyncButton() }
         }
@@ -75,6 +77,7 @@ struct SidebarView: View {
                 row(.sendToKindle, count: model.sendToKindle.jobs.filter { $0.state != .sent }.count)
                     .dropDestination(for: URL.self) { urls, _ in model.sendToKindle(urls); return true }
                     .help(L("Dateien hierher ziehen, um sie an den Kindle zu senden"))
+                row(.kindleLibrary, count: nil)
             }
             if !model.folders.isEmpty {
                 Section(L("Ordner")) {
@@ -443,6 +446,8 @@ struct DetailRoot: View {
     var body: some View {
         if model.sidebar == .sendToKindle {
             SendToKindleView(stk: model.sendToKindle)
+        } else if model.sidebar == .kindleLibrary {
+            KindleLibraryDetailView(lib: model.kindleLibrary)
         } else if needsSetup || model.notebooks.isEmpty {
             OnboardingView()
         } else if let nb = model.notebook(model.selectedNotebookID) {

@@ -105,8 +105,11 @@ struct SendJob: Identifiable, Codable, Equatable {
     var via: SendToKindleService.Method
     var state: State = .waiting
     var date = Date()
-    /// Where the file is while it waits; not kept after sending.
+    /// Where the file is while it waits.
     var localPath: String?
+    /// The original after sending, kept so the document can be renamed later
+    /// (Amazon cannot rename: the app sends it again under the new title).
+    var archivePath: String?
 }
 
 /// Everything around sending documents to the Kindle: sign-in, devices, queue, history.
@@ -143,6 +146,14 @@ final class SendToKindleService: ObservableObject {
     private let crypto = MacSTKCrypto()
     private static let keychainAccount = "send-to-kindle"
     private static var historyFile: URL { AppPaths.support.appendingPathComponent("send-to-kindle.json") }
+    private static var archive: URL {
+        let u = AppPaths.support.appendingPathComponent("Send to Kindle/Originale", isDirectory: true)
+        try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
+        return u
+    }
+    /// Called once a job finished (true = sent); used by "rename" to delete the old entry.
+    private var finishHandlers: [UUID: (Bool) -> Void] = [:]
+
     private static var inbox: URL {
         let u = AppPaths.support.appendingPathComponent("Send to Kindle", isDirectory: true)
         try? FileManager.default.createDirectory(at: u, withIntermediateDirectories: true)
@@ -281,8 +292,10 @@ final class SendToKindleService: ObservableObject {
     // MARK: queue
 
     /// Files dropped or opened: copied into the app's inbox, then sent one after another.
+    /// `title`/`author` replace what the file says (used when renaming).
     @discardableResult
-    func enqueue(_ urls: [URL]) -> [String] {
+    func enqueue(_ urls: [URL], title: String? = nil, author: String? = nil,
+                 onFinish: ((Bool) -> Void)? = nil) -> [String] {
         var rejected: [String] = []
         for url in urls {
             guard let format = STK.format(of: url) else {
@@ -302,10 +315,15 @@ final class SendToKindleService: ObservableObject {
             } catch {
                 rejected.append(L("„%@“: %@", url.lastPathComponent, error.localizedDescription)); continue
             }
-            let meta = DocumentMetadata.read(copy, fallbackName: url.deletingPathExtension().lastPathComponent)
+            var meta = DocumentMetadata.read(copy, fallbackName: url.deletingPathExtension().lastPathComponent)
+            if let title { meta.title = title }
+            if let author { meta.author = author }
+            // by e-mail Amazon takes the title from the file name
+            let fileName = title.map { AppModel.safeFileName($0) + "." + format } ?? url.lastPathComponent
             let names = devices.filter { selectedDevices.contains($0.serial) }.map(\.name)
-            jobs.insert(SendJob(id: id, fileName: url.lastPathComponent, title: meta.title, author: meta.author, bytes: bytes,
+            jobs.insert(SendJob(id: id, fileName: fileName, title: meta.title, author: meta.author, bytes: bytes,
                                 devices: method == .email ? [kindleEmail] : names, via: method, localPath: copy.path), at: 0)
+            if let onFinish { finishHandlers[id] = onFinish }
             log.log(.app, L("„%@“ wartet auf den Versand an den Kindle", meta.title))
         }
         rejected.forEach { log.log(.app, $0, level: .warning) }
@@ -317,14 +335,28 @@ final class SendToKindleService: ObservableObject {
     func retry(_ job: SendJob) { update(job.id) { $0.state = .waiting }; startWorker() }
 
     func remove(_ job: SendJob) {
-        if let p = job.localPath { try? FileManager.default.removeItem(atPath: p) }
+        [job.localPath, job.archivePath].compactMap { $0 }.forEach { try? FileManager.default.removeItem(atPath: $0) }
         jobs.removeAll { $0.id == job.id }
         save()
     }
 
+    /// Removes sent entries and their kept originals.
     func clearFinished() {
+        jobs.filter { $0.state == .sent }.compactMap(\.archivePath).forEach { try? FileManager.default.removeItem(atPath: $0) }
         jobs.removeAll { $0.state == .sent }
         save()
+    }
+
+    /// The kept original of the last document sent under this title.
+    func archivedOriginal(title: String) -> URL? {
+        jobs.first { $0.state == .sent && $0.title == title && $0.archivePath.map(FileManager.default.fileExists) == true }
+            .flatMap { $0.archivePath.map(URL.init(fileURLWithPath:)) }
+    }
+
+    var archiveBytes: Int64 {
+        jobs.compactMap(\.archivePath).reduce(Int64(0)) { sum, p in
+            sum + Int64((try? FileManager.default.attributesOfItem(atPath: p)[.size] as? NSNumber)??.int64Value ?? 0)
+        }
     }
 
     private func startWorker() {
@@ -366,14 +398,20 @@ final class SendToKindleService: ObservableObject {
                 update(job.id) { $0.state = .delivering }
                 try await MailSender.send(file: file, named: job.fileName, to: kindleEmail)
             }
+            // keep the original (for renaming later); the inbox copy goes away
+            let kept = Self.archive.appendingPathComponent(job.id.uuidString + "." + file.pathExtension)
+            let archived = (try? FileManager.default.moveItem(at: file, to: kept)) != nil
+            if !archived { try? FileManager.default.removeItem(at: file) }
             update(job.id) {
                 $0.state = .sent
                 $0.date = Date()
                 $0.localPath = nil
+                $0.archivePath = archived ? kept.path : nil
             }
-            try? FileManager.default.removeItem(at: file)
             log.log(.app, L("„%@“ an den Kindle gesendet", job.title))
+            finishHandlers.removeValue(forKey: job.id)?(true)
         } catch {
+            finishHandlers.removeValue(forKey: job.id)?(false)
             update(job.id) { $0.state = .failed(error.localizedDescription) }
             log.log(.app, L("„%@“ nicht gesendet: %@", job.title, error.localizedDescription), level: .error)
             if case .http(let code, _)? = error as? STKError, code == 401 || code == 403 { signOut() }
