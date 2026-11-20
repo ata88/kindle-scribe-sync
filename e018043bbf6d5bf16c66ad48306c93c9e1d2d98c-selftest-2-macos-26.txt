@@ -1,0 +1,148 @@
+commit e018043bbf6d5bf16c66ad48306c93c9e1d2d98c job app run 44706975610
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 58M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 50M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 102616
+drwxr-xr-x  3 runner  staff        96 Nov 20 09:09 .
+drwxr-xr-x  7 runner  staff       224 Nov 20 09:09 ..
+-rwxr-xr-x  1 runner  staff  52536440 Nov 20 09:09 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 20 09:09 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 368x421 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8741935483870967, y1: 0.7748004561003421)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
+== send to kindle self-test
+PASS stk-request-signature
+PASS stk-request-complete
+== notes self-test
+PASS notes-created – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p6
+PASS notes-images-new – images 2, empty 0, in order true
+INFO before update: name=Scribe Sync Selbsttestlookup error -1700 Can’t make length of «class body» of «class note» id "x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p6" of application "Notes" into type Unicode text. target=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICFolder/p4 targetName=Scribe Sync Selbsttest findNote=ok inFolder=true
+PASS notes-updated-in-place – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p6
+PASS notes-images-updated – images 2, empty 0, in order true
+NOTES SELFTEST OK
+exit=0
+== screenshots
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+screen (0.0, 60.0, 1024.0, 677.0) default window (22.0, 74.0, 980.0, 652.0)
+capturing 1-reader-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 1-reader-light (screencapture)
+capturing 2-reader-inspector-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 2-reader-inspector-light (screencapture)
+capturing 3-figures-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 3-figures-light (screencapture)
+capturing 4-pending-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 4-pending-light (screencapture)
+capturing 5-tasks-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 5-tasks-light (screencapture)
+capturing 11-send-to-kindle-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 11-send-to-kindle-light (screencapture)
+capturing 12a-kindle-library-signin …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 12a-kindle-library-signin (screencapture)
+capturing 12-kindle-library-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 12-kindle-library-light (screencapture)
+capturing 1-reader-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 1-reader-dark (screencapture)
+capturing 2-reader-inspector-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 2-reader-inspector-dark (screencapture)
+capturing 3-figures-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 3-figures-dark (screencapture)
+capturing 4-pending-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 4-pending-dark (screencapture)
+capturing 5-tasks-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 5-tasks-dark (screencapture)
+capturing 11-send-to-kindle-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 11-send-to-kindle-dark (screencapture)
+capturing 12-kindle-library-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 12-kindle-library-dark (screencapture)
+capturing 6-diagnostics …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 6-diagnostics (screencapture)
+saved 7-settings-general
+saved 7-settings-sync
+saved 7-settings-recognition
+saved 7-settings-notes
+saved 7-settings-amazon
+saved 7-settings-updates
+saved 8-menubar
+saved 9-activity
+saved 10-onboarding
+screenshots written to /Users/runner/work/_temp/shots
+stress round 0
+stress round 25
+stress round 50
+stress round 75
+stress round 100
+stress round 125
+stress done
+exit=0
+total 4200
+-rw-r--r--@ 1 runner  staff  128545 Nov 20 09:11 1-reader-dark.png
+-rw-r--r--@ 1 runner  staff  132763 Nov 20 09:11 1-reader-light.png
+-rw-r--r--  1 runner  staff   82580 Nov 20 09:11 10-onboarding.png
+-rw-r--r--@ 1 runner  staff  122013 Nov 20 09:11 11-send-to-kindle-dark.png
+-rw-r--r--@ 1 runner  staff  122777 Nov 20 09:11 11-send-to-kindle-light.png
+-rw-r--r--@ 1 runner  staff   93537 Nov 20 09:11 12-kindle-library-dark.png
+-rw-r--r--@ 1 runner  staff   94140 Nov 20 09:11 12-kindle-library-light.png
+-rw-r--r--@ 1 runner  staff   96861 Nov 20 09:11 12a-kindle-library-signin.png
+-rw-r--r--@ 1 runner  staff  120708 Nov 20 09:11 2-reader-inspector-dark.png
+-rw-r--r--@ 1 runner  staff  124200 Nov 20 09:11 2-reader-inspector-light.png
+-rw-r--r--@ 1 runner  staff  112124 Nov 20 09:11 3-figures-dark.png
+-rw-r--r--@ 1 runner  staff  123389 Nov 20 09:11 3-figures-light.png
+-rw-r--r--@ 1 runner  staff  106859 Nov 20 09:11 4-pending-dark.png
+-rw-r--r--@ 1 runner  staff  106881 Nov 20 09:11 4-pending-light.png
+-rw-r--r--@ 1 runner  staff   92296 Nov 20 09:11 5-tasks-dark.png
+-rw-r--r--@ 1 runner  staff   92341 Nov 20 09:11 5-tasks-light.png
+-rw-r--r--@ 1 runner  staff   82941 Nov 20 09:11 6-diagnostics.png
+-rw-r--r--  1 runner  staff   21724 Nov 20 09:11 7-settings-amazon.png
+-rw-r--r--  1 runner  staff   28572 Nov 20 09:11 7-settings-general.png
+-rw-r--r--  1 runner  staff   35693 Nov 20 09:11 7-settings-notes.png
+-rw-r--r--  1 runner  staff   46826 Nov 20 09:11 7-settings-recognition.png
+-rw-r--r--  1 runner  staff   45589 Nov 20 09:11 7-settings-sync.png
+-rw-r--r--  1 runner  staff   28472 Nov 20 09:11 7-settings-updates.png
+-rw-r--r--  1 runner  staff   39490 Nov 20 09:11 8-menubar.png
+-rw-r--r--  1 runner  staff   16501 Nov 20 09:11 9-activity.png
