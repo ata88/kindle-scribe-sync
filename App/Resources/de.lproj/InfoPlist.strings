@@ -1,2 +1,2 @@
 "CFBundleDisplayName" = "Scribe Sync";
-"NSAppleEventsUsageDescription" = "Scribe Sync schreibt deine erkannten Kindle-Scribe-Notizen in die App Notizen und aktualisiert sie dort.";
+"NSAppleEventsUsageDescription" = "Scribe Sync schreibt deine erkannten Kindle-Scribe-Notizen in die App Notizen und aktualisiert sie dort. Wenn du „Per E-Mail senden“ wählst, verschickt Scribe Sync Dateien über die App Mail an deinen Kindle.";

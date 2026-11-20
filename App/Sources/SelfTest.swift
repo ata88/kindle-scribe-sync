@@ -15,11 +15,14 @@ import UniformTypeIdentifiers
 enum SelfTest {
     static var requested: Bool {
         CommandLine.arguments.contains("--self-test") || CommandLine.arguments.contains("--self-test-recognition")
-            || CommandLine.arguments.contains("--self-test-notes")
+            || CommandLine.arguments.contains("--self-test-notes") || CommandLine.arguments.contains("--self-test-stk")
     }
 
     static func run() async -> Int32 {
         if CommandLine.arguments.contains("--self-test-notes") { return await notesTest() }
+        if let i = CommandLine.arguments.firstIndex(of: "--self-test-stk"), i + 1 < CommandLine.arguments.count {
+            return stkSignatureTest(vector: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
+        }
         var failures = 0
         func check(_ name: String, _ ok: Bool, _ detail: String = "") {
             print("\(ok ? "PASS" : "FAIL") \(name)\(detail.isEmpty ? "" : " – \(detail)")")
@@ -164,6 +167,35 @@ enum SelfTest {
         }
         print(failures == 0 ? "NOTES SELFTEST OK" : "NOTES SELFTEST FAILED (\(failures))")
         return failures == 0 ? 0 : 1
+    }
+
+    /// `--self-test-stk VECTOR`: the Send-to-Kindle request signature made with the Mac's
+    /// crypto must equal the reference made by Python (scripts/stk-vector.py).
+    private static func stkSignatureTest(vector: URL) -> Int32 {
+        guard let data = try? Data(contentsOf: vector),
+              let v = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+              let pem = v["pem"], let adp = v["adp"], let date = v["date"], let path = v["path"],
+              let body = v["body"], let expected = v["header"] else {
+            print("FAIL stk-vector – unreadable"); return 1
+        }
+        let reg = STKRegistration(privateKeyPEM: pem, adpToken: adp, deviceType: "A1K6D1WRW0MALS", userName: "",
+                                  userDeviceName: "", homeRegion: nil)
+        do {
+            let header = try STK.requestDigest(method: "POST", path: path, body: body, date: date,
+                                               registration: reg, crypto: MacSTKCrypto())
+            let ok = header == expected
+            print("\(ok ? "PASS" : "FAIL") stk-request-signature\(ok ? "" : " – got \(header.prefix(24))…, want \(expected.prefix(24))…")")
+            // and the body the app builds for that call is byte-identical to the reference client's
+            let fmt = ISO8601DateFormatter()
+            let req = try STK.apiRequestForSelfTest(path, registration: reg, crypto: MacSTKCrypto(), now: fmt.date(from: date)!)
+            let sameBody = String(decoding: req.body ?? Data(), as: UTF8.self) == body
+                && req.headers["X-ADP-Request-Digest"] == expected
+            print("\(sameBody ? "PASS" : "FAIL") stk-request-complete")
+            return ok && sameBody ? 0 : 1
+        } catch {
+            print("FAIL stk-request-signature – \(error.localizedDescription)")
+            return 1
+        }
     }
 
     /// A 1240x1754 page, transparent background, handwriting-style text and a small sketch.

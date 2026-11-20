@@ -1,0 +1,45 @@
+import Foundation
+@testable import KSSCore
+
+/// Reference vector for Amazon's ADP request signature, produced with Python's
+/// `cryptography` exactly like the reference client "stkclient" signs requests.
+/// The key is a throwaway test key generated for this purpose – it unlocks nothing.
+enum STKVector {
+    static let pkcs8PEM = """
+-----BEGIN PRIVATE KEY-----
+MIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQDTj8qrqYrVrxp8
+HsxwYusxl+VbPLaOF4u+Z2Fd5tCp5LBwjIyqaQRRh2Uj3uZsM3sitkUm44TNm2hw
+MieB/uZWfPTkBHjZyjXHk1zUn11WUq6hjzyBf9s9UB5AGgcXVIpMmRC1g/MgoXSc
+TA+Dn7r4bptRWCwOMTl1MntddgWZmO0hniWI6yR4V/9QI7lfMLqn/4H7SMq9mpge
+A1CTGPvIn7mc7kScKGWn8WzZ/uNa9HkBX+DGYutc+8rlPqeYSvh4DNm60GgYOPPW
+USsPsiqKoQM/gS2ERmfeHCATN/S1owroKSJ0Mj8O5xAcM/QnoKTDyr2WjeAeLy4a
+zRKHIcbpAgMBAAECgf8kG1d1RdHH1VzcmrHWYulnfnps4ouBUpjE6GzAXBmrbckv
+KADicn0dZHwcXL1yixsDj3pCJrjsM7nUsHZexAZ/BNjPXnQF+9ilEuFx11IhZ1S3
+qMD5yAEC73Q6PHs5V5RciyD/+9hRu4DLZ9HxOCCZdL6aJZrFpqVQUI907q2Buiyz
+l00f2CO6P8Lkf/EmFq55menjzRnmXYMrBdeY+roECq8nqIfIiEJrcBzb+/M7ahE+
+j7BVuZbLuvptUSod71tz+RIIh0DlIe9jIRFTkNhwvHFTIJ7K0hY81GvBWaHCcZ3a
+MUs8CQqJYbkRcC4pc9hD/+pi5jXe3WmvdJHE6uECgYEA60ocucb3sbD33u/wwFHl
+OUox97nGlRh9QVMAAwgzpRgvGRRt7OY550LtBOccyNuFqPg/hrtTejTqfphEDJTD
+Rp2wsJA9fsZAx6efh1AbxgEwRH6YMHS3/E0001H38HINIKwQG6vwICSmiZ3O9PNO
+hmh8PiWZOAqej4BamY3lYWECgYEA5i8CdE9IRtpjEptQBIjkZnsNt2yiPm2Ae9pI
+60fgXOsevohZj/WgHq6p4tzIXX2jpY3RGzm1BVKH54b22Lox3JkYyd5DsZG4t1I0
+hB/fmkJbzM0YxUhYr64aLSde2lzTPCPsa76Q3/IspUFxKfngs/Q3akiWJX6XgPa4
+qGMe6okCgYB3uL9DHGW+qaCGdKqZAVLUwtcICSRtiwd47MXNxSeaMuMMLOP+Let6
+rAg0fXCdF248Wwzf/oNsZG6JOesuR6fRT72vKcXQswoVTUqULIPlTYeE4rGHvmw7
+2gEuIcA6PZ5GaKbNncBSarO+xGihJQhoxdOqP7Fl3alutU3kYlo8IQKBgFBwIRVw
+FzvbWT/JUp8jD13YpqRwrAnQzlN5pn3B8l/GMko278Vk+n1+YBPNP5+cJjHWazpu
+YhnoC2IXQe/esUn7njP9Hf7Rg5FcgsmhMcyAYAAjtAJNE+DgoHkjBvyb751WmGnW
+gF4iDQP66IbYsXNxZmQX1ZBoupzwmvsNGGKxAoGBALE/2kl+y+miuwYKroyItmdq
+SdOzmOBMCd1ZlNnCM74J26HT7edGWmoSZnqwrfkCq7BArnfFPD/h5JoXfH54Rs0O
+JCOSeY8trqfhp/DdK5o3NAquJ+1HxsdqsNH7Q4TnR62+zlePYS2wCQnR+c0H99An
+A1YVMkETbj9kjoc7xdA1
+-----END PRIVATE KEY-----
+"""
+    static let pkcs1DERBase64 = "MIIEoQIBAAKCAQEA04/Kq6mK1a8afB7McGLrMZflWzy2jheLvmdhXebQqeSwcIyMqmkEUYdlI97mbDN7IrZFJuOEzZtocDIngf7mVnz05AR42co1x5Nc1J9dVlKuoY88gX/bPVAeQBoHF1SKTJkQtYPzIKF0nEwPg5+6+G6bUVgsDjE5dTJ7XXYFmZjtIZ4liOskeFf/UCO5XzC6p/+B+0jKvZqYHgNQkxj7yJ+5nO5EnChlp/Fs2f7jWvR5AV/gxmLrXPvK5T6nmEr4eAzZutBoGDjz1lErD7IqiqEDP4EthEZn3hwgEzf0taMK6CkidDI/DucQHDP0J6Ckw8q9lo3gHi8uGs0ShyHG6QIDAQABAoH/JBtXdUXRx9Vc3Jqx1mLpZ356bOKLgVKYxOhswFwZq23JLygA4nJ9HWR8HFy9cosbA496Qia47DO51LB2XsQGfwTYz150BfvYpRLhcddSIWdUt6jA+cgBAu90Ojx7OVeUXIsg//vYUbuAy2fR8TggmXS+miWaxaalUFCPdO6tgboss5dNH9gjuj/C5H/xJhaueZnp480Z5l2DKwXXmPq6BAqvJ6iHyIhCa3Ac2/vzO2oRPo+wVbmWy7r6bVEqHe9bc/kSCIdA5SHvYyERU5DYcLxxUyCeytIWPNRrwVmhwnGd2jFLPAkKiWG5EXAuKXPYQ//qYuY13t1pr3SRxOrhAoGBAOtKHLnG97Gw997v8MBR5TlKMfe5xpUYfUFTAAMIM6UYLxkUbezmOedC7QTnHMjbhaj4P4a7U3o06n6YRAyUw0adsLCQPX7GQMenn4dQG8YBMER+mDB0t/xNNNNR9/ByDSCsEBur8CAkpomdzvTzToZofD4lmTgKno+AWpmN5WFhAoGBAOYvAnRPSEbaYxKbUASI5GZ7Dbdsoj5tgHvaSOtH4FzrHr6IWY/1oB6uqeLcyF19o6WN0Rs5tQVSh+eG9ti6MdyZGMneQ7GRuLdSNIQf35pCW8zNGMVIWK+uGi0nXtpc0zwj7Gu+kN/yLKVBcSn54LP0N2pIliV+l4D2uKhjHuqJAoGAd7i/QxxlvqmghnSqmQFS1MLXCAkkbYsHeOzFzcUnmjLjDCzj/i3reqwINH1wnRduPFsM3/6DbGRuiTnrLken0U+9rynF0LMKFU1KlCyD5U2HhOKxh75sO9oBLiHAOj2eRmimzZ3AUmqzvsRooSUIaMXTqj+xZd2pbrVN5GJaPCECgYBQcCEVcBc721k/yVKfIw9d2KakcKwJ0M5TeaZ9wfJfxjJKNu/FZPp9fmATzT+fnCYx1ms6bmIZ6AtiF0Hv3rFJ+54z/R3+0YORXILJoTHMgGAAI7QCTRPg4KB5Iwb8m++dVphp1oBeIg0D+uiG2LFzcWZkF9WQaLqc8Jr7DRhisQKBgQCxP9pJfsvporsGCq6MiLZnaknTs5jgTAndWZTZwjO+Cduh0+3nRlpqEmZ6sK35AquwQK53xTw/4eSaF3x+eEbNDiQjknmPLa6n4afw3SuaNzQKriftR8bHarDR+0OE50etvs5Xj2EtsAkJ0fnNB/fQJwNWFTJBE24/ZI6HO8XQNQ=="
+    static let adpToken = "{enc:TESTTOKEN}{key:abc}{iv:def}{name:QURQVG9rZW5FbmNyeXB0aW9uS2V5}{serial:Mg==}"
+    static let date = "2026-11-19T15:30:00Z"
+    static let path = "/import/kindle-doc/get-device-list"
+    static let body = #"{"clientInfo":{"appName":"ShellExtension","appVersion":"1.1.1.253","os":"MacOSX_10.14.6_x64","osArchitecture":"x64"}}"#
+    static let digestHex = "ada2c94b0d06dcf9100b1402cfdea1a027cdfe8e700029afd18bf90079d4d6eb"
+    static let header = "VTylUnSpj2nX8LsuMTD7dw0+HoLgQL8p3ykBObdzvfYSZbrFcyHuNa27U3VuU179/KgmSkG8RIKVZIam+C/8UvpXGYXfMxWojeT0xwtMd/SVPURJaMYQDTfZAkk9j/0tgIm944oq5ShyanlSX/5NLRQ9kCUh/H1vX0HvnTNaydpc24m+wJSQYy5rXJSDhbl6zgsvbgZGpf3sd0t28Jeq/VtX2kLSSnCGObiMLyIlsQPWuWGNksyNK39k0Ipy0X/WgMDnnp/uj2zBAiEGaXzkyecO35Yf4M8+pA3xU+ZZ2VzVu3HhUMM1AekV1unbjNleZ+AFQO6xRtdpA7uxP8gTFQ==:2026-11-19T15:30:00Z"
+}

@@ -157,7 +157,7 @@ final class ModelManager: ObservableObject {
 }
 
 /// Lets a progress value through only when it moved noticeably (thread-safe).
-private final class ProgressThrottle: @unchecked Sendable {
+final class ProgressThrottle: @unchecked Sendable {
     private let lock = NSLock()
     private var last: Double
     init(start: Double) { last = start }

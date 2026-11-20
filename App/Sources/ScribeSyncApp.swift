@@ -91,6 +91,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in AppModel.shared.start() }
     }
 
+    /// Files dropped on the Dock icon or opened with Scribe Sync go to the Kindle.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard !SelfTest.requested, !FigureLab.requested, Screenshots.requestedDirectory == nil else { return }
+        Task { @MainActor in AppModel.shared.sendToKindle(urls) }
+    }
+
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag { Task { @MainActor in AppModel.shared.showMainWindow() } }
         return true

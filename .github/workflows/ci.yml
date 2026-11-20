@@ -68,16 +68,28 @@ jobs:
           echo "exit=$RC" | tee -a selftest.log
           GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} scripts/publish-ci-log.sh selftest.log selftest-1-${{ matrix.os }} || true
           exit $RC
+      - name: Self-test Send to Kindle signature (Mac crypto vs. Python reference)
+        run: |
+          set -o pipefail
+          APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
+          python3 -m venv "$RUNNER_TEMP/venv" && "$RUNNER_TEMP/venv/bin/pip" install -q cryptography
+          "$RUNNER_TEMP/venv/bin/python" scripts/stk-vector.py "$RUNNER_TEMP/stk-vector.json"
+          echo "== send to kindle self-test" | tee -a selftest.log
+          perl -e 'alarm 60; exec @ARGV' "$APP" --self-test-stk "$RUNNER_TEMP/stk-vector.json" 2>&1 | grep -E "PASS|FAIL" | tee -a selftest.log
+          exit ${PIPESTATUS[0]}
       - name: Self-test Apple Notes (real Notes app, images must arrive)
         run: |
           set -o pipefail
           APP="build/Build/Products/Release/Scribe Sync.app/Contents/MacOS/Scribe Sync"
           ABS="$GITHUB_WORKSPACE/$APP"
-          # TCC attributes the app's Apple Events to the process that launched it (the runner chain)
-          CLIENTS="$ABS|1 io.github.ata88.scribesync|0 /bin/bash|1 /bin/zsh|1 /bin/sh|1 /usr/bin/perl|1 /usr/bin/perl5.34|1"
-          for c in $(ls -d /Users/runner/actions-runner/*/bin/Runner.Worker /Users/runner/actions-runner/*/bin/Runner.Listener /opt/hca/hosted-compute-agent 2>/dev/null); do CLIENTS="$CLIENTS $c|1"; done
+          # TCC attributes the app's Apple Events to the process that launched it (the runner chain).
+          # An array: the app path contains spaces.
+          CLIENTS=("$ABS|1" "io.github.ata88.scribesync|0" "/bin/bash|1" "/bin/zsh|1" "/bin/sh|1" "/usr/bin/perl|1" "/usr/bin/perl5.34|1")
+          for c in /Users/runner/actions-runner/*/bin/Runner.Worker /Users/runner/actions-runner/*/bin/Runner.Listener /opt/hca/hosted-compute-agent; do
+            [ -e "$c" ] && CLIENTS+=("$c|1")
+          done
           for db in "$HOME/Library/Application Support/com.apple.TCC/TCC.db" "/Library/Application Support/com.apple.TCC/TCC.db"; do
-            for c in $CLIENTS; do
+            for c in "${CLIENTS[@]}"; do
               sudo sqlite3 "$db" "INSERT OR REPLACE INTO access (service,client,client_type,auth_value,auth_reason,auth_version,csreq,policy_id,indirect_object_identifier_type,indirect_object_identifier,indirect_object_code_identity,flags,last_modified) VALUES ('kTCCServiceAppleEvents','${c%|*}',${c#*|},2,3,1,NULL,NULL,0,'com.apple.Notes',NULL,0,$(date +%s));" || true
             done
           done

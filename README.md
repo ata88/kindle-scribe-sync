@@ -8,6 +8,8 @@ Eine native Mac-App, die deine **Kindle-Scribe-Notizbücher automatisch** auf de
 - **Skizzen** werden als echtes Bild des jeweiligen Seitenbereichs eingebettet, an ihrer ursprünglichen Position.
 - **Aufgaben:** Checkboxen aus allen Notizbüchern an einem Ort, direkt abhakbar.
 - **KI direkt auf dem Mac:** Qwen 3.5 (9B) über Apple MLX. Kein Cloud-Dienst, keine Kosten. Das Modell ist nur im Arbeitsspeicher, während neue Seiten erkannt werden. Mit Live-Vorschau des gerade gelesenen Texts.
+- **Kindle-Bibliothek:** sehen, was auf dem Kindle liegt; Dokumente löschen und umbenennen.
+- **An Kindle senden:** EPUB, PDF, Word, Text oder Bilder in die App ziehen, auf das Dock-Symbol ziehen oder mit *Öffnen mit › Scribe Sync* öffnen. Sie landen drahtlos auf dem Kindle. PDFs bleiben im Original-Layout, auf dem Scribe kannst du darauf schreiben.
 - **Spotlight, Mitteilungen, Export als Markdown** (mit den Skizzen als Bilddateien), Deutsch und Englisch umschaltbar.
 
 ## Installation
@@ -50,6 +52,24 @@ Schreibst du auf dem Scribe später weiter auf derselben Seite, liest die KI die
 
 Bitte nicht direkt in Apple Notes korrigieren: Die Notiz wird bei der nächsten Änderung neu geschrieben.
 
+### An Kindle senden
+
+Bereich *Kindle › An Kindle senden* in der Seitenleiste. Es gibt zwei Wege, die Datei zu übertragen:
+
+| | |
+|---|---|
+| **Direkt** (Standard) | Die App meldet sich einmal auf Amazons Anmeldeseite an, so wie Amazons eigene App „Send to Kindle für Mac“. Danach wählst du das Gerät, zum Beispiel deinen Scribe. Erlaubt sind EPUB, PDF, DOC(X), TXT, RTF, HTML und Bilder bis 200 MB. Titel und Autor liest die App aus der Datei. |
+| **Per E-Mail** (Ausweichweg) | Die Datei geht als Anhang über die App Mail an deine persönliche `…@kindle.com`-Adresse, höchstens 50 MB. Deine Absenderadresse muss bei Amazon unter *Inhalte und Geräte › Einstellungen › Persönliche Dokumente* als genehmigt eingetragen sein. |
+
+Dateien, die noch nicht gesendet sind, bleiben in der Warteschlange, auch über einen Neustart hinweg. Ein fehlgeschlagener Versand lässt sich mit *Erneut senden* wiederholen.
+
+### Kindle-Bibliothek
+
+*Kindle › Kindle-Bibliothek* zeigt, was in deiner Kindle-Bibliothek liegt: persönliche Dokumente und gekaufte Bücher, mit Suche. Die Daten kommen von Amazons Seite „Inhalte und Geräte verwalten“. Dafür meldest du dich einmal an und wählst den Amazon-Shop, bei dem dein Kindle registriert ist, etwa amazon.de.
+
+- **Löschen** entfernt ein Dokument aus der Bibliothek und von allen Geräten. Gekaufte Bücher löscht die App bewusst nicht, denn das würde den Kauf endgültig entfernen.
+- **Umbenennen:** Amazon kann Dokumente nicht umbenennen. Die App sendet das Dokument deshalb unter dem neuen Titel erneut und löscht danach die alte Fassung. Bei Dateien, die mit Scribe Sync gesendet wurden, nimmt sie dafür das aufbewahrte Original. Bei anderen fragt sie einmal nach der Originaldatei.
+
 ### Wie kommen die Notizen vom Scribe?
 
 Der Scribe synchronisiert seine Notizbücher selbst in die Amazon-Cloud. Für alle Länder liegen sie auf `read.amazon.com`. Die App nutzt die interne Schnittstelle von Kindle for Web:
@@ -62,7 +82,7 @@ Der Scribe synchronisiert seine Notizbücher selbst in die Amazon-Cloud. Für al
 
 Das ist eine **inoffizielle Schnittstelle**. Wenn Amazon sie ändert, zeigt die Diagnose den Fehler, und die App muss angepasst werden.
 
-Daten verlassen deinen Mac nur zu Amazon (Notizbücher abrufen) und zu Hugging Face (einmaliger Modell-Download). Die Amazon-Anmeldung liegt im macOS-Schlüsselbund.
+Daten verlassen deinen Mac nur zu Amazon (Notizbücher abrufen, Dateien an den Kindle senden) und zu Hugging Face (einmaliger Modell-Download). Die Amazon-Anmeldung liegt im macOS-Schlüsselbund.
 
 ## Entwicklung
 

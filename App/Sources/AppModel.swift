@@ -13,6 +13,7 @@ final class LivePreview: ObservableObject {
 enum SidebarItem: Hashable {
     case all, recent, tasks, review
     case folder(String)
+    case sendToKindle, kindleLibrary
 
     var title: String {
         switch self {
@@ -21,6 +22,8 @@ enum SidebarItem: Hashable {
         case .tasks: return L("Aufgaben")
         case .review: return L("Zu prüfen")
         case .folder(let path): return path.components(separatedBy: "/").last ?? path
+        case .sendToKindle: return L("An Kindle senden")
+        case .kindleLibrary: return L("Kindle-Bibliothek")
         }
     }
 
@@ -31,6 +34,8 @@ enum SidebarItem: Hashable {
         case .tasks: return "checklist"
         case .review: return "text.badge.checkmark"
         case .folder: return "folder"
+        case .sendToKindle: return "paperplane"
+        case .kindleLibrary: return "books.vertical.circle"
         }
     }
 }
@@ -57,6 +62,8 @@ final class AppModel: ObservableObject {
     let settings = AppSettings()
     let auth: AmazonAuth
     let models: ModelManager
+    let sendToKindle: SendToKindleService
+    let kindleLibrary: KindleLibraryService
     let updater = UpdaterController()
     let store: LibraryStore
     let power = PowerManager()
@@ -100,6 +107,8 @@ final class AppModel: ObservableObject {
     private init() {
         auth = AmazonAuth(log: log)
         models = ModelManager(log: log)
+        sendToKindle = SendToKindleService(log: log)
+        kindleLibrary = KindleLibraryService(log: log, sender: sendToKindle)
         if let s = try? LibraryStore(root: AppPaths.library) {
             store = s
         } else {
@@ -113,6 +122,8 @@ final class AppModel: ObservableObject {
             }
         }
         for publisher in [auth.objectWillChange.eraseToAnyPublisher(), models.objectWillChange.eraseToAnyPublisher(),
+                          sendToKindle.objectWillChange.eraseToAnyPublisher(),
+                          kindleLibrary.objectWillChange.eraseToAnyPublisher(),
                           settings.objectWillChange.eraseToAnyPublisher(), power.objectWillChange.eraseToAnyPublisher(),
                           updater.objectWillChange.eraseToAnyPublisher()] {
             publisher.receive(on: RunLoop.main).sink { [weak self] _ in self?.objectWillChange.send() }.store(in: &cancellables)
@@ -198,6 +209,25 @@ final class AppModel: ObservableObject {
 
     // MARK: navigation
 
+    /// Files dropped on the Dock icon, opened with the app, or dropped on the sidebar entry.
+    func sendToKindle(_ urls: [URL]) {
+        sidebar = .sendToKindle
+        lastSendRejections = sendToKindle.enqueue(urls)
+        showMainWindow()
+    }
+
+    @Published var lastSendRejections: [String] = []
+
+    // Kindle library
+    enum LibraryAction: Equatable {
+        case rename(KindleLibraryItem), delete(KindleLibraryItem)
+        var isRename: Bool { if case .rename = self { return true } else { return false } }
+        var isDelete: Bool { if case .delete = self { return true } else { return false } }
+    }
+    @Published var selectedLibraryItem: String?
+    @Published var libraryAction: LibraryAction?
+    @Published var libraryError: String?
+
     func open(notebookID: String, page: Int?) {
         if notebook(notebookID)?.status == .deleted { return }
         if case .tasks = sidebar { } else if case .review = sidebar { } else { sidebar = .all }
@@ -228,7 +258,7 @@ final class AppModel: ObservableObject {
         }
         var list: [NotebookRecord]
         switch sidebar ?? .all {
-        case .all, .tasks: list = byDate
+        case .all, .tasks, .sendToKindle, .kindleLibrary: list = byDate
         case .recent:
             let cutoff = Date().addingTimeInterval(-14 * 86_400)
             list = byDate.filter { ($0.syncedAt ?? .distantPast) > cutoff }
