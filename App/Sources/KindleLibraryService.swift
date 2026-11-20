@@ -188,6 +188,12 @@ final class KindleLibraryService: ObservableObject {
     /// The original file if it was sent with Scribe Sync.
     func original(for item: KindleLibraryItem) -> URL? { sender?.archivedOriginal(title: item.title) }
 
+    /// The not-yet-connected state, for the CI screenshots.
+    func showcaseSignIn() {
+        documents = []; books = []
+        phase = .needsSignIn
+    }
+
     /// Demo content for the CI screenshots.
     func loadShowcase() {
         let now = Date()

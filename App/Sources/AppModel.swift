@@ -526,8 +526,10 @@ final class AppModel: ObservableObject {
     /// The notebook as Markdown. `figure` turns a sketch into Markdown (e.g. an image link);
     /// without it, sketch placeholders are left out – for the clipboard.
     static func markdown(_ nb: NotebookRecord, figure: ((PageRecord, Figure) -> String?)? = nil) -> String {
-        "# \(nb.title)\n\n" + nb.pages.map { p in
-            (nb.pages.count > 1 ? "## \(L("Seite %ld", p.index + 1))\n\n" : "") + pageText(p, figure: figure)
+        // page starts only if wanted, and then just as a small italic line
+        let labels = shared.settings.pageLabels && nb.pages.count > 1
+        return "# \(nb.title)\n\n" + nb.pages.map { p in
+            (labels ? "*\(L("Seite %ld", p.index + 1))*\n\n" : "") + pageText(p, figure: figure)
         }.joined(separator: "\n\n")
     }
 

@@ -35,6 +35,8 @@ final class AppSettings: ObservableObject {
     @Published var notesAccount: String { didSet { d.set(notesAccount, forKey: "notesAccount") } }
     @Published var notesFolder: String { didSet { d.set(notesFolder, forKey: "notesFolder") } }
     @Published var attachPageImages: Bool { didSet { d.set(attachPageImages, forKey: "attachPageImages") } }
+    /// A small grey "Page 2" where a page starts – in the reader, in Notes and when copying.
+    @Published var pageLabels: Bool { didSet { d.set(pageLabels, forKey: "pageLabels") } }
     @Published var modelID: String { didSet { d.set(modelID, forKey: "modelID") } }
 
     init() {
@@ -43,7 +45,7 @@ final class AppSettings: ObservableObject {
             "syncIntervalMinutes": 5, "batteryMode": BatteryMode.normal.rawValue, "minBatteryPercent": 25,
             "keepAwakeOnAC": true, "notifications": true, "spotlight": true,
             "notesEnabled": true, "notesAccount": "iCloud", "notesFolder": "Kindle Scribe",
-            "attachPageImages": false, "modelID": ModelCatalog.defaultModelID,
+            "attachPageImages": false, "pageLabels": false, "modelID": ModelCatalog.defaultModelID,
         ])
         language = AppLanguage(rawValue: d.string(forKey: Loc.defaultsKey) ?? "") ?? .system
         syncIntervalMinutes = max(1, d.integer(forKey: "syncIntervalMinutes"))
@@ -56,6 +58,7 @@ final class AppSettings: ObservableObject {
         notesAccount = d.string(forKey: "notesAccount") ?? "iCloud"
         notesFolder = d.string(forKey: "notesFolder") ?? "Kindle Scribe"
         attachPageImages = d.bool(forKey: "attachPageImages")
+        pageLabels = d.bool(forKey: "pageLabels")
         modelID = d.string(forKey: "modelID") ?? ModelCatalog.defaultModelID
     }
 
@@ -73,6 +76,7 @@ final class AppSettings: ObservableObject {
         s.notesEnabled = notesEnabled
         s.notesRootFolder = notesFolder.isEmpty ? "Kindle Scribe" : notesFolder
         s.attachPageImages = attachPageImages
+        s.pageLabels = pageLabels
         return s
     }
 }

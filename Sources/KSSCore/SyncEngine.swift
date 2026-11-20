@@ -20,6 +20,8 @@ public struct SyncSettings: Sendable {
     public var notesEnabled = true
     public var notesRootFolder = "Kindle Scribe"
     public var attachPageImages = false
+    /// A small grey "Page 2" where a page starts (off: pages simply follow each other).
+    public var pageLabels = false
     public init() {}
 }
 
@@ -351,7 +353,7 @@ public actor SyncEngine {
         let store = self.store
         let out = NotesRenderer.render(nb, figureURL: { _, fig in
             fig.imageFile.map { store.url(for: $0) }.flatMap { FileManager.default.fileExists(atPath: $0.path) ? $0 : nil }
-        }, pageURL: settings.attachPageImages ? { store.url(for: $0.imageFile) } : nil)
+        }, pageURL: settings.attachPageImages ? { store.url(for: $0.imageFile) } : nil, pageLabels: settings.pageLabels)
         if nb.noteID != nil, nb.publishedHash == out.contentHash, nb.noteFolder == folderKey { return nil }
         onProgress(SyncProgress(phase: .publishing, detail: nb.title, done: 0, total: 1))
         do {
