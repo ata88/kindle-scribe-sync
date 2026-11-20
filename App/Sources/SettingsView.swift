@@ -190,6 +190,9 @@ struct NotesSettings: View {
                 NotesFolderField()
                 Toggle(L("Komplettes Seitenbild zusätzlich anhängen"), isOn: Binding(get: { model.settings.attachPageImages },
                                                                                      set: { model.settings.attachPageImages = $0 }))
+                Toggle(L("Seitenwechsel klein anzeigen"), isOn: Binding(get: { model.settings.pageLabels },
+                                                                        set: { model.settings.pageLabels = $0; model.republishAll() }))
+                    .help(L("Eine kleine graue Zeile „Seite 2“ dort, wo eine neue Seite beginnt – in Scribe Sync, in Notizen und beim Kopieren. Ohne diese Option gehen die Seiten einfach ineinander über."))
             } footer: {
                 Text(L("Jedes Notizbuch ist genau eine Notiz, die bei Änderungen aktualisiert wird – über iCloud auch auf iPhone und iPad. Korrekturen bitte in Scribe Sync machen: Änderungen direkt in Notizen werden beim nächsten Abgleich überschrieben."))
                     .font(.caption).foregroundStyle(.secondary)

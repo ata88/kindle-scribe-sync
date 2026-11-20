@@ -54,6 +54,18 @@ import Testing
         #expect(!html.contains("base64"))
     }
 
+    @Test func noPageHeadingsUnlessAskedFor() {
+        let nb = NotebookRecord(id: "a", title: "T", pages: [
+            PageRecord(index: 0, imageHash: "h0", imageFile: "f0", ocrText: "Erste", status: .recognized),
+            PageRecord(index: 1, imageHash: "h1", imageFile: "f1", ocrText: "Zweite", status: .recognized)])
+        let plain = NotesRenderer.render(nb, figureURL: { _, _ in nil }).html
+        #expect(!plain.contains("<h2>") && !plain.contains(L("Seite %ld", 2)))
+        #expect(plain.contains("<div>Erste</div>") && plain.contains("<div>Zweite</div>"))
+        let labelled = NotesRenderer.render(nb, figureURL: { _, _ in nil }, pageLabels: true).html
+        #expect(labelled.contains("<small>\(L("Seite %ld", 2))</small>"))
+        #expect(!labelled.contains("<h2>"))
+    }
+
     @Test func hashChangesWhenOnlyTheImageChanges() {
         var nb = NotebookRecord(id: "a", title: "T", pages: [PageRecord(index: 0, imageHash: "h1", imageFile: "f",
                                                                           ocrText: "x", status: .recognized)])

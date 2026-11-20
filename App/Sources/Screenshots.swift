@@ -59,7 +59,13 @@ enum Screenshots {
             model.sidebar = .sendToKindle
             await pause(1.5)
             capture(main, dir, "11-send-to-kindle-\(suffix)")
-            if suffix == "light" { model.kindleLibrary.loadShowcase() }
+            if suffix == "light" {
+                model.kindleLibrary.showcaseSignIn()
+                model.sidebar = .kindleLibrary
+                await pause(1.5)
+                capture(main, dir, "12a-kindle-library-signin")
+                model.kindleLibrary.loadShowcase()
+            }
             model.selectedLibraryItem = "D2"
             model.sidebar = .kindleLibrary
             await pause(1.5)

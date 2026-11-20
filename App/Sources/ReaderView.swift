@@ -134,7 +134,7 @@ struct PageSection: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            if notebook.pages.count > 1 {
+            if notebook.pages.count > 1 && model.settings.pageLabels {
                 Text(L("Seite %ld", page.index + 1).uppercased())
                     .font(.caption.weight(.semibold)).tracking(0.6)
                     .foregroundStyle(.tertiary)

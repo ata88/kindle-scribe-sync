@@ -64,38 +64,19 @@ struct KindleLibraryListView: View {
         switch lib.phase {
         case .loading where items.isEmpty:
             ProgressView(L("Bibliothek wird geladen …"))
+        // the narrow middle column only says what is going on; sign-in lives in the wide detail column
         case .needsSignIn:
-            ContentUnavailableView {
-                Label(L("Anmeldung nötig"), systemImage: "person.crop.circle.badge.questionmark")
-            } description: {
-                Text(L("Einmal bei %@ anmelden, dann zeigt Scribe Sync hier alles, was in deiner Kindle-Bibliothek ist.", lib.store))
-            } actions: {
-                Button(L("Bei Amazon anmelden …")) { lib.showSignIn = true }.buttonStyle(.borderedProminent).tint(Theme.accent)
-                StorePicker(lib: lib)
-            }
-        case .failed(let message):
-            ContentUnavailableView {
-                Label(L("Bibliothek nicht geladen"), systemImage: "exclamationmark.triangle")
-            } description: { Text(message) } actions: {
-                Button(L("Erneut versuchen")) { Task { await lib.reload() } }
-                StorePicker(lib: lib)
-            }
+            ContentUnavailableView(L("Nicht verbunden"), systemImage: "person.crop.circle.badge.questionmark",
+                                   description: Text(L("Rechts mit Amazon verbinden.")))
+        case .failed:
+            ContentUnavailableView(L("Bibliothek nicht geladen"), systemImage: "exclamationmark.triangle",
+                                   description: Text(L("Details rechts.")))
         default:
             if items.isEmpty && lib.phase == .loaded {
                 ContentUnavailableView(tab == "books" ? L("Keine Bücher") : L("Keine Dokumente"), systemImage: "books.vertical",
                                        description: Text(model.search.isEmpty ? L("Hier ist noch nichts.") : L("Keine Treffer")))
             }
         }
-    }
-}
-
-private struct StorePicker: View {
-    @ObservedObject var lib: KindleLibraryService
-    var body: some View {
-        Picker(L("Amazon-Shop"), selection: $lib.store) {
-            ForEach(KindleLibrary.stores, id: \.self) { Text($0).tag($0) }
-        }
-        .frame(maxWidth: 240)
     }
 }
 
@@ -137,7 +118,9 @@ struct KindleLibraryDetailView: View {
 
     var body: some View {
         Group {
-            if let item {
+            if lib.phase == .needsSignIn || isFailed {
+                ConnectCard(lib: lib)
+            } else if let item {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
                         Image(systemName: item.kind == .book ? "book.closed.fill" : "doc.text.fill")
@@ -182,6 +165,49 @@ struct KindleLibraryDetailView: View {
             }
         }
         .navigationTitle(item?.title ?? L("Kindle-Bibliothek"))
+    }
+
+    private var isFailed: Bool { if case .failed = lib.phase { return true } else { return false } }
+}
+
+/// Sign-in / error card in the wide detail column.
+private struct ConnectCard: View {
+    @ObservedObject var lib: KindleLibraryService
+
+    private var failure: String? { if case .failed(let m) = lib.phase { return m } else { return nil } }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Image(systemName: failure == nil ? "books.vertical.circle.fill" : "exclamationmark.triangle.fill")
+                    .font(.system(size: 52)).foregroundStyle(failure == nil ? Theme.accent : Theme.warm)
+                Text(failure == nil ? L("Kindle-Bibliothek verbinden") : L("Bibliothek nicht geladen"))
+                    .font(.system(size: 26, weight: .bold))
+                Text(failure ?? L("Einmal bei Amazon anmelden, dann zeigt Scribe Sync alles, was in deiner Kindle-Bibliothek ist – zum Durchsuchen, Löschen und Umbenennen."))
+                    .font(.title3).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                Surface {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Picker(L("Amazon-Shop"), selection: $lib.store) {
+                            ForEach(KindleLibrary.stores, id: \.self) { Text($0).tag($0) }
+                        }
+                        .frame(maxWidth: 320)
+                        Text(L("Der Shop, bei dem dein Kindle registriert ist."))
+                            .font(.caption).foregroundStyle(.secondary)
+                        HStack(spacing: 10) {
+                            Button(L("Bei %@ anmelden …", lib.store)) { lib.showSignIn = true }
+                                .buttonStyle(.borderedProminent).tint(Theme.accent).controlSize(.large)
+                            if failure != nil {
+                                Button(L("Erneut versuchen")) { Task { await lib.reload() } }.controlSize(.large)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(40)
+            .frame(maxWidth: 600, alignment: .leading)
+            .frame(maxWidth: .infinity)
+        }
+        .background(Theme.paper)
     }
 }
 

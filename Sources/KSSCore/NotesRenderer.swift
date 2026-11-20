@@ -17,6 +17,7 @@ public enum NotesRenderer {
     public static func render(_ nb: NotebookRecord,
                               figureURL: (PageRecord, Figure) -> URL?,
                               pageURL: ((PageRecord) -> URL?)? = nil,
+                              pageLabels: Bool = false,
                               stamp: Date = Date()) -> Output {
         var images: [URL] = []
         var parts: [String] = ["<div><h1>\(escape(nb.title))</h1></div>"]
@@ -25,7 +26,10 @@ public enum NotesRenderer {
         }
         for page in nb.pages {
             parts.append("<div><br></div>")
-            if nb.pages.count > 1 { parts.append("<div><h2>\(escape(L("Seite %ld", page.index + 1)))</h2></div>") }
+            // no page headings in the text; optionally a small grey marker where a page starts
+            if pageLabels && nb.pages.count > 1 {
+                parts.append("<div><font color=\"#9a9a9a\"><small>\(escape(L("Seite %ld", page.index + 1)))</small></font></div>")
+            }
             switch page.status {
             case .recognized:
                 parts.append(markdownToHTML(page.text) { id in
