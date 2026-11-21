@@ -64,6 +64,24 @@ struct Harness {
         #expect(h.recognizer.contexts.last?.earlierText == "Termin mit Müller")
     }
 
+    /// The reported bug: last paragraph corrected, next day more written below it – the new
+    /// text was dropped. The model repeats the corrected text (it gets it as a template).
+    @Test func additionAfterCorrectedLastParagraphIsKept() async throws {
+        let h = try Harness()
+        h.recognizer.outputs["day1"] = "<text>Einkauf\n\nTermin mit Anan im Buro</text><grafiken>[]</grafiken>"
+        h.recognizer.outputs["day2"] = "<text>Einkauf\n\nTermin mit Anna im Büro\n\nNoch Blumen kaufen</text><grafiken>[]</grafiken>"
+        h.source.set("a", .init(title: "Tag", folder: [], mtime: 1, pages: [page("day1")]))
+        let engine = h.engine()
+        _ = try await engine.run()
+        try await engine.saveCorrection(notebookID: "a", pageIndex: 0, text: "Einkauf\n\nTermin mit Anna im Büro")
+
+        h.source.mutate("a") { $0.pages = [page("day2")]; $0.mtime = 2 }
+        _ = try await engine.run()
+        let text = try #require(h.store.notebook("a")).pages[0].text
+        #expect(text == "Einkauf\n\nTermin mit Anna im Büro\n\nNoch Blumen kaufen")
+        #expect(h.notes.notes.values.first!.html.contains("Noch Blumen kaufen"))
+    }
+
     @Test func correctionMatchingOCRClearsUserText() async throws {
         let h = try Harness()
         h.source.set("a", .init(title: "T", folder: [], mtime: 1, pages: [page("x")]))

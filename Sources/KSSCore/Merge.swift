@@ -8,7 +8,7 @@ import Foundation
 ///   theirs = what the model reads now (the page got longer / changed)
 ///
 /// Changes from both sides are combined; where both changed the same words,
-/// the user's correction wins.
+/// the user's correction wins – but text the new reading adds there is kept.
 public enum Merge {
     public static func threeWay(base: String, ours: String, theirs: String) -> String {
         if ours == base { return theirs }
@@ -16,6 +16,31 @@ public enum Merge {
         let b = tokenize(base), a = tokenize(ours), t = tokenize(theirs)
         let ha = hunks(from: b, to: a), ht = hunks(from: b, to: t)
         return merge(base: b, ours: ha, theirs: ht).joined()
+    }
+
+    /// Repair for pages hit by the old merge: lines at the end of the model's reading that the
+    /// corrected text lacks entirely (text written later, dropped by the old conflict rule) are
+    /// appended to the correction. Returns nil when nothing is missing.
+    public static func restoreDroppedEnding(corrected: String, reading: String) -> String? {
+        func norm(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces).lowercased() }
+        let have = Set(corrected.components(separatedBy: "\n").map(norm).filter { !$0.isEmpty })
+        var missing: [String] = []
+        for line in reading.components(separatedBy: "\n").reversed() {
+            let n = norm(line)
+            if n.isEmpty { if !missing.isEmpty { missing.insert(line, at: 0) }; continue }
+            if have.contains(n) { break }
+            // a line the user may have edited (shares most words with a corrected line) ends the search
+            let words = Set(n.split(separator: " "))
+            let edited = have.contains { h in
+                let w = Set(h.split(separator: " "))
+                return !w.isEmpty && Double(words.intersection(w).count) / Double(max(words.count, w.count)) >= 0.5
+            }
+            if edited { break }
+            missing.insert(line, at: 0)
+        }
+        while let first = missing.first, norm(first).isEmpty { missing.removeFirst() }
+        guard !missing.isEmpty else { return nil }
+        return corrected.trimmingCharacters(in: .whitespacesAndNewlines) + "\n\n" + missing.joined(separator: "\n")
     }
 
     /// Words and the whitespace between them, so joining restores the text exactly.
@@ -96,11 +121,56 @@ public enum Merge {
             let versionT = apply(groupT, base: base, lo: lo, hi: hi)
             if groupT.isEmpty { out.append(contentsOf: versionA) }
             else if groupA.isEmpty { out.append(contentsOf: versionT) }
-            else { out.append(contentsOf: versionA) }  // conflict: the user's correction wins
+            else { out.append(contentsOf: resolve(ours: versionA, theirs: versionT)) }
             pos = hi
         }
         out.append(contentsOf: base[pos...])
         return out
+    }
+
+    /// Both sides changed the same spot. The user's words win – but whatever the new
+    /// reading *adds* (text written on the Scribe since) must not get lost with them:
+    /// the new reading often repeats the corrected words and continues right after them.
+    static func resolve(ours a: [String], theirs t: [String]) -> [String] {
+        if a == t { return a }
+        if t.starts(with: a) || t.reversed().starts(with: a.reversed()) { return t }  // pure extension
+        var out: [String] = []
+        var pos = 0
+        for h in hunks(from: a, to: t) {
+            out.append(contentsOf: a[pos..<h.lo])
+            let kept = Array(a[h.lo..<h.hi])          // the user's words in this span stay
+            let extra = h.replacement.count - kept.count
+            if kept.isEmpty {
+                out.append(contentsOf: h.replacement)   // only new text here: take it
+            } else if extra > 0 {
+                // the new reading has more here than it replaces: keep the user's words and
+                // add the surplus on the side where it is (compare which end matches better)
+                let r = h.replacement
+                let atEnd = similarity(kept, Array(r.prefix(kept.count))) >= similarity(kept, Array(r.suffix(kept.count)))
+                let surplus = atEnd ? Array(r.suffix(extra)) : Array(r.prefix(extra))
+                // real new writing starts a new line or is more than one word; a single extra
+                // fragment is just the old words read differently ("An na" for "Anna")
+                let words = surplus.filter { !$0.allSatisfy(\.isWhitespace) }.count
+                if surplus.contains(where: { $0.contains("\n") }) || words >= 2 {
+                    out.append(contentsOf: atEnd ? kept + surplus : surplus + kept)
+                } else {
+                    out.append(contentsOf: kept)
+                }
+            } else {
+                out.append(contentsOf: kept)            // a different reading of the user's words
+            }
+            pos = h.hi
+        }
+        out.append(contentsOf: a[pos...])
+        return out
+    }
+
+    /// How alike two token runs are (shared characters at the same positions, roughly).
+    private static func similarity(_ x: [String], _ y: [String]) -> Int {
+        zip(x, y).reduce(0) { sum, pair in
+            let (p, q) = (Array(pair.0.lowercased()), Array(pair.1.lowercased()))
+            return sum + zip(p, q).filter { $0 == $1 }.count + (pair.0 == pair.1 ? 2 : 0)
+        }
     }
 
     private static func overlaps(_ h: Hunk, lo: Int, hi: Int) -> Bool {

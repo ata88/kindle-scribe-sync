@@ -92,6 +92,8 @@ public enum RecognitionPrompt {
             <bisher>
             \(earlier)
             </bisher>
+            Wichtig: Transkribiere die GANZE Seite, wie sie jetzt ist – auch alles, was seitdem \
+            neu dazugeschrieben wurde (oft am Ende der Seite). Neuer Text darf nicht fehlen.
             """
         }
         if !ctx.previousPageTail.isEmpty {

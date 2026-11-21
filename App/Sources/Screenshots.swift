@@ -45,6 +45,12 @@ enum Screenshots {
             model.showInspector = true
             await pause(1.5)
             capture(main, dir, "2-reader-inspector-\(suffix)")
+            if suffix == "light" {   // a click on the second thumbnail must show page 2
+                model.showOriginal(page: 1)
+                await pause(1.5)
+                capture(main, dir, "2b-reader-inspector-page2")
+                print("inspector page after picking page 2: \(model.inspectorPage + 1)")
+            }
             model.showInspector = false
             model.selectedNotebookID = "demo-ideas"
             await pause(1.5)
