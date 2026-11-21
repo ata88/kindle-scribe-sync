@@ -363,12 +363,15 @@ struct BlockStack: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         case .table(let rows):
+            // too wide for the column: scroll sideways instead of breaking words apart
+            ScrollView(.horizontal, showsIndicators: false) {
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
                     GridRow {
                         ForEach(Array(row.enumerated()), id: \.offset) { _, cell in
                             Text(InlineStyler.attributed(cell, misspelled: misspelled))
                                 .font(i == 0 ? Theme.bodyFont.weight(.semibold) : Theme.bodyFont)
+                                .fixedSize()
                         }
                     }
                     if i == 0 { Divider().gridCellUnsizedAxes(.horizontal) }
@@ -376,6 +379,7 @@ struct BlockStack: View {
             }
             .padding(12)
             .background(RoundedRectangle(cornerRadius: 8).fill(.quaternary.opacity(0.4)))
+            }
         case .figure(let id):
             FigureView(page: page, figureID: id)
         case .spacer:
@@ -434,8 +438,10 @@ struct ScanInspector: View {
                     Button { step(-1) } label: { Image(systemName: "chevron.left") }
                         .buttonStyle(.borderless).disabled(p.index == notebook.pages.first?.index)
                         .help(L("Vorherige Seite"))
-                    Text(L("Seite %ld von %ld", p.index + 1, notebook.pages.count))
+                    Text("\(p.index + 1) / \(notebook.pages.count)")
                         .font(.callout).foregroundStyle(.secondary).monospacedDigit()
+                        .fixedSize()
+                        .help(L("Seite %ld von %ld", p.index + 1, notebook.pages.count))
                     Button { step(1) } label: { Image(systemName: "chevron.right") }
                         .buttonStyle(.borderless).disabled(p.index == notebook.pages.last?.index)
                         .help(L("Nächste Seite"))
