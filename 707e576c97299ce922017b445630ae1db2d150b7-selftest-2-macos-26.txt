@@ -1,0 +1,210 @@
+commit 707e576c97299ce922017b445630ae1db2d150b7 job app run 44888709765
+ProductName:		macOS
+ProductVersion:		26.7.2
+BuildVersion:		25G332
+Xcode 26.6
+Build version 17F113
+
+== errors ==
+
+== tail ==
+== bundle
+ 58M	build/Build/Products/Release/Scribe Sync.app
+2.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Frameworks
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/Info.plist
+ 50M	build/Build/Products/Release/Scribe Sync.app/Contents/MacOS
+4.0K	build/Build/Products/Release/Scribe Sync.app/Contents/PkgInfo
+4.8M	build/Build/Products/Release/Scribe Sync.app/Contents/Resources
+== MacOS
+total 102768
+drwxr-xr-x  3 runner  staff        96 Nov 21 09:26 .
+drwxr-xr-x  7 runner  staff       224 Nov 21 09:26 ..
+-rwxr-xr-x  1 runner  staff  52613224 Nov 21 09:26 Scribe Sync
+== Frameworks
+libswiftCompatibilitySpan.dylib
+Sparkle.framework
+== Resources (bundles/metallib)
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/de.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/en.lproj
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-transformers_Hub.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/swift-crypto_Crypto.bundle
+build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle
+== metallib anywhere
+-rw-r--r--  1 runner  staff  4695872 Nov 21 09:26 build/Build/Products/Release/Scribe Sync.app/Contents/Resources/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib
+== self-test
+PASS notes-applescript-compiles
+PASS pixel-hash-stable – 8a8296d1f5b8fe087e8e5a5dc232049b
+PASS pixel-size – 1240x1754
+PASS figure-crop – crop 368x421 box NormRect(x0: 0.5774193548387097, y0: 0.5347776510832383, x1: 0.8741935483870967, y1: 0.7748004561003421)
+PASS flatten-white-background
+PASS notes-html-figure
+SELFTEST OK
+exit=0
+== send to kindle self-test
+PASS stk-request-signature
+PASS stk-request-complete
+== notes self-test
+PASS notes-created – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7
+PASS notes-images-new – images 2, empty 0, in order true
+INFO before update: name=Scribe Sync Selbsttestlookup error -1700 Can’t make length of «class body» of «class note» id "x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7" of application "Notes" into type Unicode text. target=x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICFolder/p5 targetName=Scribe Sync Selbsttest findNote=ok inFolder=true
+PASS notes-updated-in-place – x-coredata://3555AEBD-CB8A-4E9D-9A6B-C4AECDB94A64/ICNote/p7
+PASS notes-images-updated – images 2, empty 0, in order true
+NOTES SELFTEST OK
+exit=0
+== screenshots
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+screen (0.0, 60.0, 1024.0, 677.0) default window (22.0, 74.0, 980.0, 652.0)
+capturing 1-reader-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 1-reader-light (screencapture)
+capturing 2-reader-inspector-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 2-reader-inspector-light (screencapture)
+capturing 2b-reader-inspector-page2 …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 2b-reader-inspector-page2 (screencapture)
+inspector page after picking page 2: 2
+capturing 3-figures-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 3-figures-light (screencapture)
+capturing 4-pending-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 4-pending-light (screencapture)
+capturing 5-tasks-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 5-tasks-light (screencapture)
+capturing 11-send-to-kindle-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 11-send-to-kindle-light (screencapture)
+capturing 12a-kindle-library-signin …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 12a-kindle-library-signin (screencapture)
+capturing 12-kindle-library-light …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 12-kindle-library-light (screencapture)
+capturing 1-reader-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 1-reader-dark (screencapture)
+capturing 2-reader-inspector-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 2-reader-inspector-dark (screencapture)
+capturing 3-figures-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 3-figures-dark (screencapture)
+capturing 4-pending-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 4-pending-dark (screencapture)
+capturing 5-tasks-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 5-tasks-dark (screencapture)
+capturing 11-send-to-kindle-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 11-send-to-kindle-dark (screencapture)
+capturing 12-kindle-library-dark …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 12-kindle-library-dark (screencapture)
+capturing 6-diagnostics …
+swift runtime: backtrace-on-crash is not supported for privileged executables.
+saved 6-diagnostics (screencapture)
+saved 7-settings-general
+saved 7-settings-sync
+saved 7-settings-recognition
+saved 7-settings-notes
+saved 7-settings-amazon
+saved 7-settings-updates
+saved 8-menubar
+saved 9-activity
+saved 10-onboarding
+screenshots written to /Users/runner/work/_temp/shots
+stress round 0
+== still running after 300 s – where it hangs:
+        80       NSPerformVisuallyAtomicChange  (in AppKit) + 128  [0x1917502d8]
+        41       __reusableDependencyContextForKey_block_invoke  (in AppKit) + 140  [0x1926a04b0]
+        37       -[NSView _layoutSubtreeWithOldSize:]  (in AppKit) + 100  [0x191754ba4]
+        37       -[NSView _updateConstraintsForSubtreeIfNeededCollectingViewsWithInvalidBaselines:]  (in AppKit) + 372  [0x191791f9c]
+        33       __36-[NSView _layoutSubtreeWithOldSize:]_block_invoke  (in AppKit) + 684  [0x192438ea4]
+        29       ???  (in AppKit)  load address 0x1916d6000 + 0x56450c  [0x191c3a50c]
+        29       ???  (in AppKit)  load address 0x1916d6000 + 0x564534  [0x191c3a534]
+        29       NSViewHierarchyNoteGeometryInWindowDidChange  (in AppKit) + 316  [0x19172c2a0]
+        26       ???  (in AppKit)  load address 0x1916d6000 + 0x5297a0  [0x191bff7a0]
+        26       ???  (in AppKit)  load address 0x1916d6000 + 0x529dec  [0x191bffdec]
+        26       _NSViewLayout  (in AppKit) + 96  [0x191754c10]
+        26       __36-[NSView _layoutSubtreeWithOldSize:]_block_invoke  (in AppKit) + 372  [0x192438d6c]
+        26       ___NSViewLayout_block_invoke  (in AppKit) + 624  [0x192443078]
+        21       -[NSView setFrame:]  (in AppKit) + 300  [0x191747434]
+        20       LayoutEngineBox.sizeThatFits(_:)  (in SwiftUICore) + 144  [0x23b1373e8]
+        17       ViewGraphRootValueUpdater.render(interval:updateDisplayList:targetTimestamp:)  (in SwiftUICore) + 584  [0x23b3d8f7c]
+        16       +[NSAnimationContext runAnimationGroup:]  (in AppKit) + 56  [0x191725f58]
+        16       __cons_NSDP_NSDPTypeEdgeInsets_block_invoke.417  (in AppKit) + 44  [0x1926a4e68]
+        15       NSDP_getComputedPropertyValue  (in AppKit) + 968  [0x1926a38ec]
+        14       -[NSView _updateConstraintsForSubtreeIfNeededCollectingViewsWithInvalidBaselines:]  (in AppKit) + 204  [0x191791ef4]
+        14       __82-[NSView _updateConstraintsForSubtreeIfNeededCollectingViewsWithInvalidBaselines:]_block_invoke  (in AppKit) + 228  [0x19179e1e4]
+        13       ???  (in SwiftUICore)  load address 0x23a6a7000 + 0x19840  [0x23a6c0840]
+        13       LayoutProxy.size(in:)  (in SwiftUICore) + 244  [0x23aa6a5c8]
+        12       UnaryLayoutEngine.sizeThatFits(_:)  (in SwiftUICore) + 1120  [0x23ac97074]
+        11       -[NSView(NSSafeAreas) _safeAreaInsetsForFrame:inSuperview:withAdaptivityAxis:]  (in AppKit) + 140  [0x192711838]
+        11       partial apply for implicit closure #1 in closure #1 in closure #1 in Attribute.init<A>(_:)  (in SwiftUICore) + 32  [0x23a8f6ad8]
+        10       <deduplicated_symbol>  (in SwiftUI) + 28  [0x1c2f15fcc]
+        10       <deduplicated_symbol>  (in SwiftUI) + 44  [0x1c2ef5084]
+        10       @objc NSHostingView.layout()  (in SwiftUI) + 28  [0x1c2efb060]
+        10       GraphHost.flushTransactions()  (in SwiftUICore) + 180  [0x23ae6e760]
+        10       NSHostingView.layout()  (in SwiftUI) + 480  [0x1c2efaae4]
+        10       closure #1 in NSHostingView.layout()  (in SwiftUI) + 484  [0x1c2efad6c]
+        10       specialized GraphHost.runTransaction(_:do:id:)  (in SwiftUICore) + 368  [0x23ae8b7a0]
+        9       closure #1 in ViewGraphRootValueUpdater.render(interval:updateDisplayList:targetTimestamp:)  (in SwiftUICore) + 420  [0x23b3dabb8]
+        8       NSDP_getComputedPropertyValue  (in AppKit) + 344  [0x1926a367c]
+        8       __cons_NSDP_NSDPTypeCopiedObject_block_invoke_3  (in AppKit) + 40  [0x1926a3fd4]
+        8       closure #1 in ViewGraphRootValueUpdater.render(interval:updateDisplayList:targetTimestamp:)  (in SwiftUICore) + 872  [0x23b3dad7c]
+        7       -[NSView _updateConstraintsForSubtreeIfNeededCollectingViewsWithInvalidBaselines:]  (in AppKit) + 84  [0x191791e7c]
+        7       -[NSView setFrameSize:]  (in AppKit) + 920  [0x1917399ac]
+        7       -[NSView(NSConstraintBasedLayoutInternal) _populateEngineWithConstraintsForViewSubtree:forComputingFittingSizeOfView:]  (in AppKit) + 420  [0x192710644]
+        7       DynamicBody.updateValue()  (in SwiftUICore) + 1220  [0x23abec2a0]
+        7       NSViewHierarchyInvalidateVisibleRect  (in AppKit) + 180  [0x19172af58]
+        7       closure #1 in DynamicBody.updateValue()  (in SwiftUICore) + 1076  [0x23abecae4]
+        6       ???  (in AppKit)  load address 0x1916d6000 + 0x41d69c  [0x191af369c]
+        6       ???  (in AppKit)  load address 0x1916d6000 + 0x41d6d0  [0x191af36d0]
+        6       ???  (in AppKit)  load address 0x1916d6000 + 0x42a728  [0x191b00728]
+        6       ???  (in AppKit)  load address 0x1916d6000 + 0x42d284  [0x191b03284]
+        6       ???  (in AppKit)  load address 0x1916d6000 + 0x5efb08  [0x191cc5b08]
+        6       ???  (in AppKit)  load address 0x1916d6000 + 0x5efb40  [0x191cc5b40]
+        6       @objc NSHostingView._willUpdateConstraintsForSubtree()  (in SwiftUI) + 28  [0x1c2efa6f4]
+        6       NSHostingView.SizeConstraints.update(from:)  (in SwiftUI) + 448  [0x1c2ef8f08]
+        6       NSHostingView._willUpdateConstraintsForSubtree()  (in SwiftUI) + 752  [0x1c2efa5cc]
+        6       NSHostingView.minSize()  (in SwiftUI) + 284  [0x1c2ee82dc]
+        6       NSViewActuallyUpdateFrameFromLayoutEngine  (in AppKit) + 236  [0x191795608]
+        6       ViewBodyAccessor.updateBody(of:changed:)  (in SwiftUICore) + 348  [0x23aa905f0]
+        6       ViewGraphRootValueUpdater._sizeThatFits(_:)  (in SwiftUICore) + 100  [0x23b3d9c04]
+        6       _FlexFrameLayout.sizeThatFits(in:context:child:)  (in SwiftUICore) + 356  [0x23aef5a34]
+        6       closure #1 in ViewBodyAccessor.updateBody(of:changed:)  (in SwiftUICore) + 1152  [0x23aa90aa8]
+        6       protocol witness for BodyAccessor.updateBody(of:changed:) in conformance ViewBodyAccessor<A>  (in SwiftUICore) + 16  [0x23aa90c00]
+        6       protocol witness for UnaryLayout.sizeThatFits(in:context:child:) in conformance _FlexFrameLayout  (in SwiftUICore) + 60  [0x23aef6570]
+exit=137
+== crash reports: /Library/Logs/DiagnosticReports: bsdtar_2026-11-17-053336_Ankas-Virtual-Machine.diag curl_2026-11-17-053547_Ankas-Virtual-Machine.diag DiagnosticLogs dsymutil_2026-11-21-092657_iad20-eo1211-d074cd93-097d-4091-828c-ba4430dbac46-FA3C41B84799.diag mds_stores_2026-11-17-054535_Ankas-Virtual-Machine.diag Retired shutdown_stall_2026-11-17-044259_Ankas-Virtual-Machine.shutdownStall shutdown_stall_2026-11-17-053248_Ankas-Virtual-Machine.shutdownStall shutdown_stall_2026-11-17-054809_Ankas-Virtual-Machine.shutdownStall STExtractionService.privileged_2026-11-17-050359_Ankas-Virtual-Machine.diag STExtractionService.privileged_2026-11-17-051717_Ankas-Virtual-Machine.diag system_installd_2026-11-16-204019_Ankas-Virtual-Machine.diag unxip_2026-11-17-045836_Ankas-Virtual-Machine.diag update_dyld_sim_shared_cache_2026-11-17-050731_Ankas-Virtual-Machine.diag  /Users/runner/Library/Logs/DiagnosticReports: Retired 
+== system log
+total 4488
+-rw-r--r--@ 1 runner  staff  128656 Nov 21 09:28 1-reader-dark.png
+-rw-r--r--@ 1 runner  staff  132595 Nov 21 09:27 1-reader-light.png
+-rw-r--r--  1 runner  staff   82580 Nov 21 09:28 10-onboarding.png
+-rw-r--r--@ 1 runner  staff  122013 Nov 21 09:28 11-send-to-kindle-dark.png
+-rw-r--r--@ 1 runner  staff  122777 Nov 21 09:28 11-send-to-kindle-light.png
+-rw-r--r--@ 1 runner  staff   93503 Nov 21 09:28 12-kindle-library-dark.png
+-rw-r--r--@ 1 runner  staff   94248 Nov 21 09:28 12-kindle-library-light.png
+-rw-r--r--@ 1 runner  staff   96861 Nov 21 09:28 12a-kindle-library-signin.png
+-rw-r--r--@ 1 runner  staff  127643 Nov 21 09:28 2-reader-inspector-dark.png
+-rw-r--r--@ 1 runner  staff  132280 Nov 21 09:27 2-reader-inspector-light.png
+-rw-r--r--@ 1 runner  staff  127517 Nov 21 09:27 2b-reader-inspector-page2.png
+-rw-r--r--@ 1 runner  staff  112109 Nov 21 09:28 3-figures-dark.png
+-rw-r--r--@ 1 runner  staff  123085 Nov 21 09:27 3-figures-light.png
+-rw-r--r--@ 1 runner  staff  106559 Nov 21 09:28 4-pending-dark.png
+-rw-r--r--@ 1 runner  staff  106423 Nov 21 09:28 4-pending-light.png
+-rw-r--r--@ 1 runner  staff   92033 Nov 21 09:28 5-tasks-dark.png
+-rw-r--r--@ 1 runner  staff   92231 Nov 21 09:28 5-tasks-light.png
+-rw-r--r--@ 1 runner  staff   82807 Nov 21 09:28 6-diagnostics.png
+-rw-r--r--  1 runner  staff   21724 Nov 21 09:28 7-settings-amazon.png
+-rw-r--r--  1 runner  staff   28572 Nov 21 09:28 7-settings-general.png
+-rw-r--r--  1 runner  staff   35693 Nov 21 09:28 7-settings-notes.png
+-rw-r--r--  1 runner  staff   46826 Nov 21 09:28 7-settings-recognition.png
+-rw-r--r--  1 runner  staff   45589 Nov 21 09:28 7-settings-sync.png
+-rw-r--r--  1 runner  staff   28346 Nov 21 09:28 7-settings-updates.png
+-rw-r--r--  1 runner  staff   39529 Nov 21 09:28 8-menubar.png
+-rw-r--r--  1 runner  staff   16501 Nov 21 09:28 9-activity.png
