@@ -413,6 +413,31 @@ public actor SyncEngine {
         return changedFigures
     }
 
+    /// One-time repair after the merge fix: restore text written below a corrected
+    /// paragraph that the old merge dropped. Returns the number of pages repaired.
+    @discardableResult
+    public func repairDroppedAdditions() async throws -> Int {
+        var repaired = 0
+        for var nb in store.all() {
+            var changed = false
+            for i in nb.pages.indices {
+                guard let user = nb.pages[i].userText, let ocr = nb.pages[i].ocrText,
+                      let fixed = Merge.restoreDroppedEnding(corrected: user, reading: ocr) else { continue }
+                nb.pages[i].userText = fixed
+                changed = true
+                repaired += 1
+                log.log(.sync, L("„%@“ Seite %ld: später dazugeschriebenen Text wiederhergestellt", nb.title, nb.pages[i].index + 1))
+            }
+            if changed {
+                try store.save(nb)
+                onChange(nb)
+                var report = SyncReport()
+                _ = try await publishIfNeeded(nb.id, report: &report)
+            }
+        }
+        return repaired
+    }
+
     /// Discard the recognition of one page and read it again on the next pass.
     public func requeue(notebookID: String, pageIndex: Int) throws {
         guard var nb = store.notebook(notebookID), let pi = nb.pages.firstIndex(where: { $0.index == pageIndex }) else { return }

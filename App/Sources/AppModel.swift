@@ -77,6 +77,17 @@ final class AppModel: ObservableObject {
     @Published var scrollTarget: Int?
     @Published var search = ""
     @Published var showInspector = false
+    /// Page shown in the original-scan inspector – chosen there or by scrolling the reader.
+    @Published var inspectorPage = 0
+    /// When the user last picked a page in the inspector; scrolling right after it does not override.
+    var inspectorPickedAt = Date.distantPast
+
+    func showOriginal(page: Int) {
+        inspectorPage = page
+        inspectorPickedAt = Date()
+        showInspector = true
+        scrollTarget = page
+    }
 
     // library + sync state
     @Published private(set) var notebooks: [NotebookRecord] = [] { didSet { recomputeDerived() } }
@@ -177,6 +188,7 @@ final class AppModel: ObservableObject {
         if settings.spotlight { SpotlightIndex.index(notebooks) }
         Task {
             await self.recropFiguresAfterUpdate()
+            await self.repairDroppedAdditionsOnce()
             try? await Task.sleep(for: .seconds(1.5))
             self.syncNow(reason: L("Programmstart"))
         }
@@ -191,6 +203,19 @@ final class AppModel: ObservableObject {
         do {
             try await makeEngine(offline: true).recropAllFigures()
             UserDefaults.standard.set(Self.figureCropVersion, forKey: key)
+            reloadNotebooks()
+        } catch {
+            log.log(.sync, error.localizedDescription, level: .warning)
+        }
+    }
+
+    /// 1.2.2: text written below a corrected paragraph was dropped by the old merge – restore it once.
+    private func repairDroppedAdditionsOnce() async {
+        let key = "repairedDroppedAdditions"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        do {
+            try await makeEngine(offline: true).repairDroppedAdditions()
+            UserDefaults.standard.set(true, forKey: key)
             reloadNotebooks()
         } catch {
             log.log(.sync, error.localizedDescription, level: .warning)

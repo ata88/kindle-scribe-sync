@@ -1,3 +1,4 @@
+import AppKit
 import CoreSpotlight
 import KSSCore
 import SwiftUI
@@ -5,7 +6,6 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.openWindow) private var openWindow
-
     var body: some View {
         NavigationSplitView {
             SidebarView()

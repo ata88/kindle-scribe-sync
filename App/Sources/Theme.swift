@@ -43,8 +43,9 @@ struct Pill: View {
     var body: some View {
         HStack(spacing: 4) {
             if let systemImage { Image(systemName: systemImage).imageScale(.small) }
-            Text(text)
+            Text(text).lineLimit(1)
         }
+        .fixedSize()   // a label never wraps letter by letter in a narrow column
         .font(.caption.weight(.medium))
         .padding(.horizontal, 7).padding(.vertical, 2)
         .foregroundStyle(tint)

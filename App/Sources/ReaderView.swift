@@ -30,7 +30,16 @@ struct ReaderView: View {
             .scrollPosition(id: $visiblePage, anchor: .top)
             .defaultScrollAnchor(.top)
             .background(Theme.paper)
-            .onAppear { jump(proxy) }
+            .onAppear {
+                model.inspectorPage = model.scrollTarget ?? 0
+                jump(proxy)
+            }
+            .onChange(of: visiblePage) { _, page in
+                // follow the reader – unless a page was just picked in the inspector (a short
+                // notebook cannot scroll page 2 to the top, so the reader would report page 1)
+                guard let page, Date().timeIntervalSince(model.inspectorPickedAt) > 1.5 else { return }
+                model.inspectorPage = page
+            }
             .onChange(of: model.scrollTarget) { _, _ in jump(proxy) }
         }
         .navigationTitle(notebook.title)
@@ -53,7 +62,7 @@ struct ReaderView: View {
             }
         }
         .inspector(isPresented: $model.showInspector) {
-            ScanInspector(notebook: notebook, page: visiblePage ?? 0)
+            ScanInspector(notebook: notebook, page: model.inspectorPage)
                 .inspectorColumnWidth(min: 260, ideal: 360, max: 560)
         }
     }
@@ -160,10 +169,7 @@ struct PageSection: View {
                 HStack(spacing: 2) {
                     iconButton("pencil", L("Bearbeiten (Doppelklick)")) { startEditing() }
                     iconButton("doc.on.doc", L("Text kopieren")) { copy() }
-                    iconButton("photo", L("Original zeigen")) {
-                        model.showInspector = true
-                        model.scrollTarget = page.index
-                    }
+                    iconButton("photo", L("Original zeigen")) { model.showOriginal(page: page.index) }
                     Menu {
                         Button(L("Seite neu erkennen")) { model.rerecognize(notebookID: notebook.id, page: page.index) }
                         if page.isCorrected {
@@ -357,6 +363,8 @@ struct BlockStack: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         case .table(let rows):
+            // plain Grid on purpose: a sideways ScrollView with fixed-size cells inside the reader's
+            // ScrollView sent SwiftUI into a layout loop (CI stress test)
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
                     GridRow {
@@ -416,17 +424,30 @@ struct ScanInspector: View {
     let notebook: NotebookRecord
     let page: Int
 
+    /// The page actually shown (falls back to the first if the notebook changed).
+    private var shown: PageRecord? { notebook.pages.first(where: { $0.index == page }) ?? notebook.pages.first }
+
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
+            HStack(spacing: 8) {
                 Text(L("Original")).font(.headline)
                 Spacer()
-                Text(L("Seite %ld von %ld", page + 1, notebook.pages.count))
-                    .font(.callout).foregroundStyle(.secondary).monospacedDigit()
+                if let p = shown, notebook.pages.count > 1 {
+                    Button { step(-1) } label: { Image(systemName: "chevron.left") }
+                        .buttonStyle(.borderless).disabled(p.index == notebook.pages.first?.index)
+                        .help(L("Vorherige Seite"))
+                    Text("\(p.index + 1) / \(notebook.pages.count)")
+                        .font(.callout).foregroundStyle(.secondary).monospacedDigit()
+                        .fixedSize()
+                        .help(L("Seite %ld von %ld", p.index + 1, notebook.pages.count))
+                    Button { step(1) } label: { Image(systemName: "chevron.right") }
+                        .buttonStyle(.borderless).disabled(p.index == notebook.pages.last?.index)
+                        .help(L("Nächste Seite"))
+                }
             }
             .padding(12)
             Divider()
-            if let p = notebook.pages.first(where: { $0.index == page }) ?? notebook.pages.first {
+            if let p = shown {
                 ZoomableImage(url: model.store.url(for: p.imageFile))
                     .id(p.imageFile + p.imageHash)
             }
@@ -439,14 +460,22 @@ struct ScanInspector: View {
                             .background(Theme.scanBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                             .overlay(RoundedRectangle(cornerRadius: 4)
-                                .strokeBorder(p.index == page ? Theme.accent : Theme.hairline, lineWidth: p.index == page ? 2 : 0.5))
-                            .onTapGesture { model.scrollTarget = p.index }
+                                .strokeBorder(p.index == shown?.index ? Theme.accent : Theme.hairline,
+                                              lineWidth: p.index == shown?.index ? 2 : 0.5))
+                            .onTapGesture { model.showOriginal(page: p.index) }
+                            .help(L("Seite %ld zeigen", p.index + 1))
                     }
                 }
                 .padding(10)
             }
             .frame(height: 82)
         }
+    }
+
+    private func step(_ delta: Int) {
+        guard let p = shown, let i = notebook.pages.firstIndex(where: { $0.index == p.index }) else { return }
+        let j = min(max(0, i + delta), notebook.pages.count - 1)
+        model.showOriginal(page: notebook.pages[j].index)
     }
 }
 
