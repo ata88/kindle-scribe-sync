@@ -62,6 +62,9 @@ public enum RecognitionPrompt {
     - Struktur erhalten: Überschriften (#, ##), Aufzählungen, nummerierte Listen, Einrückungen, \
     Absätze. Checkboxen als "- [ ]" bzw. "- [x]". Pfeile als →, ←, ↔. \
     Unterstrichene oder umrahmte Wörter als **fett**. Tabellen als Markdown-Tabelle.
+    - Zeilen und Leerzeilen wie auf dem Papier (liniert): Jede beschriebene Zeile wird eine Zeile. \
+    Eine frei gelassene Zeile wird genau EINE Leerzeile – nie mehrere, nie weglassen. \
+    Keine Trennlinien wie "---", "***" oder "___" ausgeben.
     - Durchgestrichenen Text weglassen. Unsichere Wörter: bester Versuch mit [?] dahinter.
     - Leere Seite: nur "(leere Seite)".
 
@@ -176,8 +179,8 @@ public enum RecognitionPrompt {
             lines.append(line.replacingOccurrences(of: #"\s+$"#, with: "", options: .regularExpression))
         }
         t = lines.joined(separator: "\n")
-        t = t.replacingOccurrences(of: #"\n{3,}"#, with: "\n\n", options: .regularExpression)
-        return t.trimmingCharacters(in: .whitespacesAndNewlines)
+        // separator lines ("---") become the blank line they stand for; runs of blank lines become one
+        return MarkdownBlocks.normalizedText(t).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func stripFences(_ s: String) -> String {
