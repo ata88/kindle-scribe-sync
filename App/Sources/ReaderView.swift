@@ -363,15 +363,14 @@ struct BlockStack: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         case .table(let rows):
-            // too wide for the column: scroll sideways instead of breaking words apart
-            ScrollView(.horizontal, showsIndicators: false) {
+            // plain Grid on purpose: a sideways ScrollView with fixed-size cells inside the reader's
+            // ScrollView sent SwiftUI into a layout loop (CI stress test)
             Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
                     GridRow {
                         ForEach(Array(row.enumerated()), id: \.offset) { _, cell in
                             Text(InlineStyler.attributed(cell, misspelled: misspelled))
                                 .font(i == 0 ? Theme.bodyFont.weight(.semibold) : Theme.bodyFont)
-                                .fixedSize()
                         }
                     }
                     if i == 0 { Divider().gridCellUnsizedAxes(.horizontal) }
@@ -379,7 +378,6 @@ struct BlockStack: View {
             }
             .padding(12)
             .background(RoundedRectangle(cornerRadius: 8).fill(.quaternary.opacity(0.4)))
-            }
         case .figure(let id):
             FigureView(page: page, figureID: id)
         case .spacer:
