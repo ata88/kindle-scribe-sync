@@ -6,12 +6,8 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject var model: AppModel
     @Environment(\.openWindow) private var openWindow
-    @State private var columns = NavigationSplitViewVisibility.all
-    /// The sidebar was hidden only to make room for the original scan.
-    @State private var hidSidebarForInspector = false
-
     var body: some View {
-        NavigationSplitView(columnVisibility: $columns) {
+        NavigationSplitView {
             SidebarView()
                 .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 320)
         } content: {
@@ -26,17 +22,6 @@ struct MainView: View {
             .navigationSplitViewColumnWidth(min: 270, ideal: 320, max: 440)
         } detail: {
             DetailRoot()
-        }
-        .onChange(of: model.showInspector) { _, open in
-            // a narrow window cannot hold four columns: make room by hiding the sidebar meanwhile
-            let width = NSApp.windows.first { ($0.identifier?.rawValue ?? "").hasPrefix("main") }?.frame.width ?? 2000
-            if open, width < 1280, columns == .all {
-                withAnimation(.snappy) { columns = .doubleColumn }
-                hidSidebarForInspector = true
-            } else if !open, hidSidebarForInspector {
-                withAnimation(.snappy) { columns = .all }
-                hidSidebarForInspector = false
-            }
         }
         .searchable(text: $model.search, placement: .sidebar, prompt: Text(L("Suchen")))
         .modifier(LibraryActionsModifier())
