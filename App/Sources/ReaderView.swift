@@ -308,7 +308,8 @@ struct BlockStack: View {
 
     var body: some View {
         let blocks = MarkdownParser.blocks(page.text)
-        VStack(alignment: .leading, spacing: 9) {
+        // lines follow each other closely; a blank line on the paper is one full empty line here
+        VStack(alignment: .leading, spacing: 4) {
             ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
                 view(for: block)
             }
@@ -381,7 +382,7 @@ struct BlockStack: View {
         case .figure(let id):
             FigureView(page: page, figureID: id)
         case .spacer:
-            Color.clear.frame(height: 2)
+            Color.clear.frame(height: 14)
         }
     }
 }

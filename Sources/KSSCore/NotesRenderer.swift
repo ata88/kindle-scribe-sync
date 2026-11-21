@@ -69,88 +69,56 @@ public enum NotesRenderer {
 
     // MARK: Markdown → HTML (the subset the recognizer produces)
 
+    /// Built from the same blocks the reader shows (`MarkdownBlocks`), so blank lines,
+    /// lists and sketches come out the same in Notes as in the app.
     public static func markdownToHTML(_ md: String, figure: (Int) -> String? = { _ in nil }) -> String {
         var out: [String] = []
         var listStack: [String] = []   // "ul" / "ol"
-        var table: [String] = []
-
         func closeLists(to depth: Int = 0) {
             while listStack.count > depth { out.append("</\(listStack.removeLast())>") }
         }
-        func flushTable() {
-            guard !table.isEmpty else { return }
-            let rows = table.filter { !$0.replacingOccurrences(of: " ", with: "").allSatisfy { "|:-".contains($0) } }
-            var html = "<table>"
-            for (i, row) in rows.enumerated() {
-                let cells = row.trimmingCharacters(in: .whitespaces)
-                    .trimmingCharacters(in: CharacterSet(charactersIn: "|"))
-                    .split(separator: "|", omittingEmptySubsequences: false)
-                let tag = i == 0 ? "th" : "td"
-                html += "<tr>" + cells.map { "<\(tag)>\(inline(String($0).trimmingCharacters(in: .whitespaces)))</\(tag)>" }.joined() + "</tr>"
-            }
-            out.append(html + "</table>")
-            table.removeAll()
-        }
-
-        for rawLine in md.components(separatedBy: "\n") {
-            let line = rawLine.replacingOccurrences(of: "\t", with: "    ")
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.hasPrefix("|") && trimmed.hasSuffix("|") && trimmed.count > 1 {
-                closeLists(); table.append(trimmed); continue
-            }
-            flushTable()
-            if trimmed.isEmpty { closeLists(); continue }
-
-            if let m = trimmed.firstMatch(of: /^\[\[Grafik (\d+)\]\]$/), let id = Int(m.1) {
-                closeLists()
+        for block in MarkdownBlocks.parse(md) {
+            if case .item = block {} else { closeLists() }
+            switch block {
+            case .heading(let level, let text):
+                out.append("<div><h\(level)>\(inline(text))</h\(level)></div>")
+            case .paragraph(let text):
+                out.append("<div>\(inline(text))</div>")
+            case .spacer:
+                out.append("<div><br></div>")        // one blank line, exactly like in the app
+            case .quote(let text):
+                out.append("<blockquote>\(inline(text))</blockquote>")
+            case .figure(let id):
                 out.append(figure(id) ?? "<div><i>[\(escape(L("Grafik %ld", id)))]</i></div>")
-                continue
-            }
-            if let m = trimmed.firstMatch(of: /^(#{1,3})\s+(.*)$/) {
-                closeLists()
-                let level = m.1.count
-                out.append("<div><h\(level)>\(inline(String(m.2)))</h\(level)></div>")
-                continue
-            }
-            if trimmed.hasPrefix(">") {
-                closeLists()
-                out.append("<blockquote>\(inline(String(trimmed.dropFirst()).trimmingCharacters(in: .whitespaces)))</blockquote>")
-                continue
-            }
-            let indent = line.prefix { $0 == " " }.count / 2
-            var item: String?
-            var kind = "ul"
-            if let m = trimmed.firstMatch(of: /^[-*•]\s+\[( |x|X)\]\s+(.*)$/) {
-                item = (m.1 == " " ? "☐ " : "☑ ") + inline(String(m.2))
-            } else if let m = trimmed.firstMatch(of: /^[-*•]\s+(.*)$/) {
-                item = inline(String(m.1))
-            } else if let m = trimmed.firstMatch(of: /^\d+[.)]\s+(.*)$/) {
-                item = inline(String(m.1)); kind = "ol"
-            }
-            if let item {
+            case .table(let rows):
+                var html = "<table>"
+                for (i, row) in rows.enumerated() {
+                    let tag = i == 0 ? "th" : "td"
+                    html += "<tr>" + row.map { "<\(tag)>\(inline($0))</\(tag)>" }.joined() + "</tr>"
+                }
+                out.append(html + "</table>")
+            case .item(let indent, let marker, let text, _):
+                let kind: String
+                let body: String
+                var start = 1
+                switch marker {
+                case .bullet: kind = "ul"; body = inline(text)
+                case .number(let n): kind = "ol"; body = inline(text); start = n
+                case .check(let done): kind = "ul"; body = (done ? "☑ " : "☐ ") + inline(text)
+                }
                 let depth = indent + 1
                 if listStack.count > depth { closeLists(to: depth) }
                 if listStack.count == depth, listStack.last != kind { closeLists(to: depth - 1) }
-                while listStack.count < depth { out.append("<\(kind)>"); listStack.append(kind) }
-                out.append("<li>\(item)</li>")
-                continue
+                while listStack.count < depth {
+                    // a list continued from the previous page keeps its numbers, as in the app
+                    out.append(kind == "ol" && start != 1 && listStack.count == depth - 1 ? "<ol start=\"\(start)\">" : "<\(kind)>")
+                    listStack.append(kind)
+                }
+                out.append("<li>\(body)</li>")
             }
-            closeLists()
-            out.append("<div>\(inlineWithFigures(trimmed, figure: figure))</div>")
         }
-        flushTable(); closeLists()
+        closeLists()
         return out.joined(separator: "\n")
-    }
-
-    static func inlineWithFigures(_ s: String, figure: (Int) -> String?) -> String {
-        var result = ""
-        var rest = Substring(s)
-        while let m = rest.firstMatch(of: /\[\[Grafik (\d+)\]\]/) {
-            result += inline(String(rest[..<m.range.lowerBound]))
-            result += figure(Int(m.1) ?? 0) ?? "<i>[\(escape(L("Grafik %ld", Int(m.1) ?? 0)))]</i>"
-            rest = rest[m.range.upperBound...]
-        }
-        return result + inline(String(rest))
     }
 
     static func inline(_ s: String) -> String {

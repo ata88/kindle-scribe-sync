@@ -116,6 +116,56 @@ import Testing
         #expect(html.contains("<table><tr><th>a</th><th>b</th></tr><tr><td>1</td><td>2</td></tr></table>"))
     }
 
+    @Test func blankLinesAreTheSameInReaderAndNotes() {
+        let md = "Erste Zeile\nZweite Zeile\n\n\n\nNach drei Leerzeilen\n---\nNach Trennlinie\n***\n\nNoch eine\n\n# Kopf\n\nText nach Kopf\n\n"
+        let blocks = MarkdownBlocks.parse(md)
+        #expect(blocks == [
+            .paragraph("Erste Zeile"), .paragraph("Zweite Zeile"), .spacer,
+            .paragraph("Nach drei Leerzeilen"), .spacer, .paragraph("Nach Trennlinie"), .spacer,
+            .paragraph("Noch eine"), .spacer, .heading(level: 1, text: "Kopf"), .spacer, .paragraph("Text nach Kopf"),
+        ])
+        let html = NotesRenderer.markdownToHTML(md)
+        #expect(html == """
+        <div>Erste Zeile</div>
+        <div>Zweite Zeile</div>
+        <div><br></div>
+        <div>Nach drei Leerzeilen</div>
+        <div><br></div>
+        <div>Nach Trennlinie</div>
+        <div><br></div>
+        <div>Noch eine</div>
+        <div><br></div>
+        <div><h1>Kopf</h1></div>
+        <div><br></div>
+        <div>Text nach Kopf</div>
+        """)
+        #expect(MarkdownBlocks.normalizedText(md)
+                == "Erste Zeile\nZweite Zeile\n\nNach drei Leerzeilen\n\nNach Trennlinie\n\nNoch eine\n\n# Kopf\n\nText nach Kopf")
+        // blank lines inside and after lists are kept too; table separator rows are not "---" gaps
+        let list = NotesRenderer.markdownToHTML("- a\n- b\n\nDanach\n| x | y |\n|---|---|\n| 1 | 2 |")
+        #expect(list == "<ul>\n<li>a</li>\n<li>b</li>\n</ul>\n<div><br></div>\n<div>Danach</div>\n<table><tr><th>x</th><th>y</th></tr><tr><td>1</td><td>2</td></tr></table>")
+    }
+
+    @Test func deepHeadingsAndContinuedNumbering() {
+        #expect(MarkdownBlocks.parse("#### Klein") == [.heading(level: 3, text: "Klein")])
+        let html = NotesRenderer.markdownToHTML("3. drei\n4. vier")
+        #expect(html == "<ol start=\"3\">\n<li>drei</li>\n<li>vier</li>\n</ol>")
+        #expect(NotesRenderer.markdownToHTML("1. eins").hasPrefix("<ol>\n"))
+    }
+
+    @Test func modelSeparatorsBecomeOneBlankLine() {
+        let raw = "<text>\nOben\n---\nUnten\n\n\n\nGanz unten\n</text><grafiken>[]</grafiken>"
+        #expect(RecognitionPrompt.parse(raw).markdown == "Oben\n\nUnten\n\nGanz unten")
+    }
+
+    @Test func checkboxLineNumbersSurviveBlankLines() {
+        // ticking a box edits the line the parser reported – blank lines and separators must not shift it
+        let md = "Liste\n\n---\n- [ ] eins\n\n- [ ] zwei"
+        let items = MarkdownBlocks.parse(md).compactMap { b -> Int? in if case .item(_, _, _, let line) = b { return line } else { return nil } }
+        #expect(items == [3, 5])
+        #expect(Tasks.toggled(md, line: 5, done: true).hasSuffix("- [x] zwei"))
+    }
+
     @Test func hashIgnoresTimestamp() {
         let nb = NotebookRecord(id: "a", title: "T", pages: [PageRecord(index: 0, imageHash: "h", imageFile: "f",
                                                                           ocrText: "x", status: .recognized)])

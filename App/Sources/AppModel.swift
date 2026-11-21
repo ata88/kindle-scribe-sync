@@ -572,7 +572,8 @@ final class AppModel: ObservableObject {
             if l.trimmingCharacters(in: .whitespaces).isEmpty && !line.trimmingCharacters(in: .whitespaces).isEmpty { continue }
             out.append(l)
         }
-        return out.joined(separator: "\n")
+        // same blank-line rules as the reader and Notes (one blank line, no "---")
+        return MarkdownBlocks.normalizedText(out.joined(separator: "\n"))
     }
 
     static func safeFileName(_ s: String) -> String {
