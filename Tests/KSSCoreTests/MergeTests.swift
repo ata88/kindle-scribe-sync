@@ -92,6 +92,34 @@ import Testing
         #expect(Merge.restoreDroppedEnding(corrected: "a\nb\nc", reading: "a\nb\nc") == nil)
     }
 
+    @Test func blankLineFromTheReadingWinsOverTheUsersTrailingNewline() {
+        // the editor left a trailing newline; the paper has a blank line before the new block
+        let merged = Merge.threeWay(base: base, ours: ours + "\n", theirs: ours + "\n\nNeuer Block")
+        #expect(merged == ours + "\n\nNeuer Block", "\(merged)")
+    }
+
+    @Test func gluedContinuationIsSeparated() {
+        let earlier = "Liste\n\nRechnung prüfen."
+        #expect(Merge.separateGluedContinuation("Liste\n\nRechnung prüfen.Neuer Block", earlier: [earlier])
+                == "Liste\n\nRechnung prüfen.\n\nNeuer Block")
+        #expect(Merge.separateGluedContinuation("Liste\n\nRechnung prufenNeuer Block", earlier: ["Liste\n\nRechnung prufen"])
+                == "Liste\n\nRechnung prufen\n\nNeuer Block")
+        // nothing glued, or just a longer reading of the same word: unchanged
+        #expect(Merge.separateGluedContinuation("Liste\n\nRechnung prüfen.\n\nNeu", earlier: [earlier]) == "Liste\n\nRechnung prüfen.\n\nNeu")
+        #expect(Merge.separateGluedContinuation("Rechnung prufenden", earlier: ["Rechnung prufen"]) == "Rechnung prufenden")
+        #expect(Merge.separateGluedContinuation("Rechnung prüfen. Weiter", earlier: [earlier]) == "Rechnung prüfen. Weiter")
+    }
+
+    @Test func newTextOnTheSameLineAsACorrectedSentence() {
+        // the model (given its own old reading) continues the last line with the new words
+        let b = "Montag\n\nDanach Unterlagen an Anan schicken und Rechnung prufen"
+        let o = "Montag\n\nDanach Unterlagen an Anna schicken und die Rechnung prüfen."
+        let t = "Montag\n\nDanach Unterlagen an Anan schicken und Rechnung prufen. Dann Mittag essen"
+        let merged = Merge.threeWay(base: b, ours: o, theirs: t)
+        #expect(!merged.contains("die die"), "\(merged)")
+        #expect(merged.contains("Anna") && merged.contains("die Rechnung prüfen") && merged.contains("Dann Mittag essen"), "\(merged)")
+    }
+
     @Test func tokenizeRoundTrips() {
         let s = "  Hallo  Welt\n\n- [ ] Punkt\t x "
         #expect(Merge.tokenize(s).joined() == s)
