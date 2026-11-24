@@ -18,6 +18,24 @@ public enum Merge {
         return merge(base: b, ours: ha, theirs: ht).joined()
     }
 
+    /// The model sometimes writes new text straight after the text it was shown, without a
+    /// space or line break ("…prüfen.Neuer Block"). New writing below old text is a new line on
+    /// the paper: put the blank line back where the earlier text ends.
+    public static func separateGluedContinuation(_ text: String, earlier: [String?]) -> String {
+        for e in earlier.compactMap({ $0 }) {
+            guard let last = e.components(separatedBy: "\n").map({ $0.trimmingCharacters(in: .whitespaces) })
+                .last(where: { !$0.isEmpty }), last.count >= 8,
+                  let r = text.range(of: last, options: .backwards) else { continue }
+            guard r.upperBound < text.endIndex else { continue }
+            let next = text[r.upperBound]
+            // glued: a letter or digit directly after the old last line (punctuation/space is fine)
+            guard next.isLetter || next.isNumber else { continue }
+            if let lastChar = last.last, (lastChar.isLetter || lastChar.isNumber) && next.isLowercase { continue }  // a word was just read longer
+            return String(text[..<r.upperBound]) + "\n\n" + String(text[r.upperBound...])
+        }
+        return text
+    }
+
     /// Repair for pages hit by the old merge: lines at the end of the model's reading that the
     /// corrected text lacks entirely (text written later, dropped by the old conflict rule) are
     /// appended to the correction. Returns nil when nothing is missing.
@@ -140,7 +158,10 @@ public enum Merge {
             out.append(contentsOf: a[pos..<h.lo])
             let kept = Array(a[h.lo..<h.hi])          // the user's words in this span stay
             let extra = h.replacement.count - kept.count
-            if kept.isEmpty {
+            if kept.allSatisfy({ $0.allSatisfy(\.isWhitespace) }) {
+                // only spacing differs: line breaks and blank lines come from the paper, i.e. the reading
+                out.append(contentsOf: h.replacement)
+            } else if kept.isEmpty {
                 out.append(contentsOf: h.replacement)   // only new text here: take it
             } else if extra > 0 {
                 // the new reading has more here than it replaces: keep the user's words and

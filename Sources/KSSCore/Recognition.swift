@@ -96,7 +96,9 @@ public enum RecognitionPrompt {
             \(earlier)
             </bisher>
             Wichtig: Transkribiere die GANZE Seite, wie sie jetzt ist – auch alles, was seitdem \
-            neu dazugeschrieben wurde (oft am Ende der Seite). Neuer Text darf nicht fehlen.
+            neu dazugeschrieben wurde (oft am Ende der Seite). Neuer Text darf nicht fehlen. \
+            Neuer Text unter dem bisherigen beginnt in einer neuen Zeile, nie direkt hinter dem \
+            letzten Wort; ist auf dem Papier eine Zeile frei, steht genau eine Leerzeile dazwischen.
             """
         }
         if !ctx.previousPageTail.isEmpty {

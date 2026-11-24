@@ -60,8 +60,9 @@ struct Harness {
         #expect(nb.pages[0].ocrText == "Termin mit Muller\nDanach Sport")
         #expect(h.notes.created == 1, "must update the existing note, not create a new one")
         #expect(h.notes.notes.values.first!.html.contains("Termin mit Müller"))
-        // the model was told what the page said before
-        #expect(h.recognizer.contexts.last?.earlierText == "Termin mit Müller")
+        // the model was told what it read before (not the correction): its new reading then only
+        // differs by the new lines, and the correction merges cleanly
+        #expect(h.recognizer.contexts.last?.earlierText == "Termin mit Muller")
     }
 
     /// The reported bug: last paragraph corrected, next day more written below it – the new
@@ -80,6 +81,21 @@ struct Harness {
         let text = try #require(h.store.notebook("a")).pages[0].text
         #expect(text == "Einkauf\n\nTermin mit Anna im Büro\n\nNoch Blumen kaufen")
         #expect(h.notes.notes.values.first!.html.contains("Noch Blumen kaufen"))
+    }
+
+    /// Reported: last block corrected, then a new block after a blank line – the model glued it on.
+    @Test func gluedNewBlockGetsItsBlankLineBack() async throws {
+        let h = try Harness()
+        h.recognizer.outputs["day1"] = "<text>Montag\n\nDanach Unterlagen an Anan schicken</text><grafiken>[]</grafiken>"
+        h.recognizer.outputs["day2"] = "<text>Montag\n\nDanach Unterlagen an Anan schickenNeuer Block vom Dienstag</text><grafiken>[]</grafiken>"
+        h.source.set("a", .init(title: "Tag", folder: [], mtime: 1, pages: [page("day1")]))
+        let engine = h.engine()
+        _ = try await engine.run()
+        try await engine.saveCorrection(notebookID: "a", pageIndex: 0, text: "Montag\n\nDanach Unterlagen an Anna schicken.\n")
+        h.source.mutate("a") { $0.pages = [page("day2")]; $0.mtime = 2 }
+        _ = try await engine.run()
+        let text = try #require(h.store.notebook("a")).pages[0].text
+        #expect(text.hasSuffix("Danach Unterlagen an Anna schicken.\n\nNeuer Block vom Dienstag"), "\(text)")
     }
 
     @Test func correctionMatchingOCRClearsUserText() async throws {

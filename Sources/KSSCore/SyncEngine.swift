@@ -298,15 +298,19 @@ public actor SyncEngine {
             return false
         }
         let previousTail = pi > 0 ? String(nb.pages[pi - 1].text.suffix(300)) : ""
-        let earlier = page.ocrText == nil ? nil : page.text
+        // the model sees what it read last time (not the user's corrections): then its new reading
+        // differs from the old one only by what was written since, and the corrections merge cleanly
+        let earlier = page.ocrText
         let ctx = RecognitionContext(notebookTitle: nb.title, pageNumber: page.index + 1, pageCount: nb.pages.count,
                                      previousPageTail: previousTail, earlierText: earlier)
         do {
             let nbID = nb.id, pageIdx = page.index, partial = onPartialText
-            let result = try await recognizer.recognize(png: png, context: ctx) { text in partial(nbID, pageIdx, text) }
+            var result = try await recognizer.recognize(png: png, context: ctx) { text in partial(nbID, pageIdx, text) }
+            result.markdown = Merge.separateGluedContinuation(result.markdown, earlier: [page.ocrText, page.userText])
             // keep manual corrections: merge them onto the new reading
             if let user = page.userText, let base = page.ocrText {
-                let merged = Merge.threeWay(base: base, ours: user, theirs: result.markdown)
+                // same blank-line rules as everywhere else (one blank line, none at the ends)
+                let merged = MarkdownBlocks.normalizedText(Merge.threeWay(base: base, ours: user, theirs: result.markdown))
                 page.userText = merged == result.markdown ? nil : merged
                 log.log(.sync, L("„%@“ Seite %ld: manuelle Korrekturen übernommen", nb.title, page.index + 1))
             }
